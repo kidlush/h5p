@@ -22,6 +22,7 @@ class H5peditor {
     'scripts/h5peditor-library.js',
     'scripts/h5peditor-dimensions.js',
     'scripts/h5peditor-coordinates.js',
+    'scripts/h5peditor-none.js',
     'ckeditor/ckeditor.js',
   );
   private $storage, $files_directory;
@@ -70,7 +71,7 @@ class H5peditor {
     $oldFiles = array();
     $newLibraries = array($newLibrary['machineName'] => $newLibrary);
     $oldLibraries = array($oldLibrary);
-
+    
     // Find new libraries and files.  
     $this->processSemantics($newFiles, $newLibraries, json_decode($this->storage->getSemantics($newLibrary['machineName'], $newLibrary['majorVersion'], $newLibrary['minorVersion'])), $newParameters);
 
@@ -84,7 +85,7 @@ class H5peditor {
       $librariesUsed[$library['machineName']]['preloaded'] = 1;
       $h5pStorage->getLibraryUsage($librariesUsed, $libraryFull);
     }
-    
+
     $h5pStorage->h5pF->deleteLibraryUsage($contentId);
     $h5pStorage->h5pF->saveLibraryUsage($contentId, $librariesUsed);
     
@@ -118,11 +119,7 @@ class H5peditor {
       if (!isset($params->{$field->name})) {
         continue;
       }
-      $libraryParams = $params->{$field->name};
-      if ($field->type === 'library') {
-        $libraryParams = $params;
-      }
-      $this->processField($field, $libraryParams, $files, $libraries);
+      $this->processField($field, $params->{$field->name}, $files, $libraries);
     }
   }
 

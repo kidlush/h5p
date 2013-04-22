@@ -95,6 +95,12 @@ ns.File.prototype.uploadFile = function () {
     return; // Wait for our turn :)
   }
   
+  this.$errors.html('');
+  
+  ns.File.changeCallback = function () {
+    that.$file.html('<div class="h5peditor-uploading">Uploading, please wait...</div>');
+  };
+  
   ns.File.callback = function (json) {
     try {
       var result = JSON.parse(json);
@@ -102,21 +108,48 @@ ns.File.prototype.uploadFile = function () {
         throw(result['error']);
       }
       
-      that.params = result;
+      that.params = {
+        path: result.path,
+        mime: result.mime,
+        tmp: true
+      };
+      
       that.setValue(that.field, that.params);
-      that.addFile();
       
       for (var i = 0; i < that.changes.length; i++) {
-        that.changes[i](result);
+        that.changes[i](that.params);
       }
     }
     catch (error) {
       that.$errors.append(ns.createError(error));
     }
+    
+    that.addFile();
   };
+  
+  if (this.field.mimes !== undefined) {
+    var mimes = '';
+    for (var i = 0; i < this.field.mimes.length; i++) {
+      if (mimes !== '') {
+        mimes += ',';
+      }
+      mimes += this.field.mimes[i];
+    }
+    ns.File.$file.attr('accept', mimes);
+  }
+  else if (this.field.type === 'image') {
+    ns.File.$file.attr('accept', 'image/jpeg,image/png,image/gif');
+  }
   
   ns.File.$field.val(JSON.stringify(this.field));
   ns.File.$file.click();
+};
+
+/**
+ * Validate this item
+ */
+ns.File.prototype.validate = function () {
+  return true;
 };
 
 /**
@@ -150,6 +183,9 @@ ns.File.addIframe = function () {
     ns.File.$file = $form.children('input[type="file"]');
     
     ns.File.$file.change(function () {
+      if (ns.File.changeCallback !== undefined) {
+        ns.File.changeCallback();
+      }
       ns.File.$field = 0;
       ns.File.$file = 0;
       $form.submit();

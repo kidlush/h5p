@@ -1,0 +1,52 @@
+[
+  {
+    "name": "title",
+    "type": "text",
+    "label": "Tittel"
+  },
+  {
+    "name": "description",
+    "type": "text",
+    "label": "Oppgavetekst"
+  },
+  {
+    "name": "dialogs",
+    "type": "list",
+    "label": "Dialogs",
+    "entity": "dialogs",
+    "max": 20,
+    "field": {
+      "name": "question",
+      "type": "group",
+      "label": "Question",
+      "fields": [
+        {
+          "name": "text",
+          "type": "text",
+          "label": "Tekst",
+          "optional": true
+        },
+        {
+          "name": "answer",
+          "type": "text",
+          "label": "Svar",
+          "optional": true
+        }
+      ]
+    }
+  },
+  {
+    "label": "Text for the next button",
+    "type": "text",
+    "name": "next",
+    "hint": "Next",
+    "common": true
+  },
+  {
+    "label": "Text for the answer button",
+    "name": "answer",
+    "type": "text",
+    "hint": "Answer",
+    "common": true
+  }
+]

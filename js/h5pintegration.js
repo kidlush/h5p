@@ -5,5 +5,11 @@ H5PIntegration.getJsonContent = function (contentId) {
 };
 
 H5PIntegration.getContentPath = function (contentId) {
-  return Drupal.settings.h5p.jsonContentPath + contentId + '/';
+  if (Drupal.settings.h5p !== undefined) {
+    return Drupal.settings.h5p.jsonContentPath + contentId + '/';
+  }
+};
+
+H5PIntegration.getFullscreen = function (contentId) {
+  return Drupal.settings.h5p.fullScreen[contentId] === '1';
 };

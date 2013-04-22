@@ -15,6 +15,7 @@ ns.AV = function (parent, field, params, setValue) {
   this.params = params;
   this.setValue = setValue;
   this.$files = [];
+  this.changes = [];
 };
 
 /**
@@ -97,6 +98,10 @@ ns.AV.prototype.uploadFile = function () {
   
   this.$errors.html('');
   
+  ns.File.changeCallback = function () {
+    that.$uploading = ns.$('<div class="h5peditor-uploading">Uploading, please wait...</div>').insertAfter(that.$add.hide());
+  };
+  
   ns.File.callback = function (json) {
     try {
       var result = JSON.parse(json);
@@ -104,26 +109,60 @@ ns.AV.prototype.uploadFile = function () {
         throw(result['error']);
       }
       
-      
       if (that.params === undefined) {
         that.params = [];
         that.setValue(that.field, that.params);
       }
-  
-      that.params.push({
-        path: result.path,
-        mime: result.mime
-      });
       
-      that.addFile(result);
+      var file = {
+        path: result.path,
+        mime: result.mime,
+        tmp: true
+      };
+      that.params.push(file);
+      
+      that.addFile(file);
+      
+      for (var i = 0; i < that.changes.length; i++) {
+        that.changes[i](file);
+      }
     }
     catch (error) {
       that.$errors.append(ns.createError(error));
     }
+
+    if (that.$uploading !== undefined && that.$uploading.length !== 0) {
+      that.$uploading.remove();
+      that.$add.show();
+    }
   };
+  
+  if (this.field.mimes !== undefined) {
+    var mimes = '';
+    for (var i = 0; i < this.field.mimes.length; i++) {
+      if (mimes !== '') {
+        mimes += ',';
+      }
+      mimes += this.field.mimes[i];
+    }
+    ns.File.$file.attr('accept', mimes);
+  }
+  else if (this.field.type === 'audio') {
+    ns.File.$file.attr('accept', 'audio/mpeg,audio/x-wav,audio/ogg');
+  }
+  else if (this.field.type === 'video') {
+    ns.File.$file.attr('accept', 'video/mp4,video/webm,video/ogg');
+  }
   
   ns.File.$field.val(JSON.stringify(this.field));
   ns.File.$file.click();
+};
+
+/**
+ * Validate this item
+ */
+ns.AV.prototype.validate = function () {  
+  return true;
 };
 
 /**

@@ -170,6 +170,14 @@ interface H5PFrameworkInterface {
    *  FALSE if the library doesn't exist
    */
   public function loadLibrary($machineName, $majorVersion, $minorVersion);
+
+  /**
+   * Delete all dependencies belonging to given library
+   *
+   * @param int $libraryId
+   *  Library Id
+   */
+  public function deleteLibraryDependencies($libraryId);
 }
 
 /**
@@ -252,10 +260,10 @@ class H5PValidator {
       'type' => '/^(css|js)$/',
     ),
     'preloadedJs' => array(
-      'path' => '/^((\\\|\/)?[a-z_\-\s0-9]+)+\.js$/i',
+      'path' => '/^((\\\|\/)?[a-z_\-\s0-9\.]+)+\.js$/i',
     ),
     'preloadedCss' => array(
-      'path' => '/^((\\\|\/)?[a-z_\-\s0-9]+)+\.css$/i',
+      'path' => '/^((\\\|\/)?[a-z_\-\s0-9\.]+)+\.css$/i',
     ),
     'dropLibraryCss' => array(
       'machineName' => '/^[\w0-9\-\.]{1,255}$/i',
@@ -263,6 +271,7 @@ class H5PValidator {
     'w' => '/^[0-9]{1,4}$/',
     'h' => '/^[0-9]{1,4}$/',
     'embedTypes' => array('iframe', 'div'),
+    'fullscreen' => '/^(0|1)$/',
   );
 
   /**
@@ -413,11 +422,16 @@ class H5PValidator {
       $this->h5pC->mainJsonData = $mainH5pData;
       $this->h5pC->contentJsonData = $contentJsonData;
       
-      $libraries['mainH5pData'] = $mainH5pData;
+      $libraries['mainH5pData'] = $mainH5pData; // Check for the dependencies in h5p.json as well as in the libraries
       $missingLibraries = $this->getMissingLibraries($libraries);
       foreach ($missingLibraries as $missing) {
         if ($this->h5pF->getLibraryId($missing['machineName'], $missing['majorVersion'], $missing['minorVersion'])) {
           unset($missingLibraries[$missing['machineName']]);
+        }
+      }
+      if (!empty($missingLibraries)) {
+        foreach ($missingLibraries as $library) {
+          $this->h5pF->setErrorMessage($this->h5pF->t('Missing required library @library', array('@library' => $this->h5pC->libraryToString($library))));
         }
       }
       $valid = empty($missingLibraries) && $valid;
@@ -441,13 +455,13 @@ class H5PValidator {
     $missing = array();
     foreach ($libraries as $library) {
       if (isset($library['preloadedDependencies'])) {
-        array_merge($missing, $this->getMissingDependencies($library['preloadedDependencies'], $libraries));
+        $missing = array_merge($missing, $this->getMissingDependencies($library['preloadedDependencies'], $libraries));
       }
       if (isset($library['dynamicDependencies'])) {
-        array_merge($missing, $this->getMissingDependencies($library['dynamicDependencies'], $libraries));
+        $missing = array_merge($missing, $this->getMissingDependencies($library['dynamicDependencies'], $libraries));
       }
       if (isset($library['editorDependencies'])) {
-        array_merge($missing, $this->getMissingDependencies($library['editorDependencies'], $libraries));
+        $missing = array_merge($missing, $this->getMissingDependencies($library['editorDependencies'], $libraries));
       }
     }
     return $missing;
@@ -754,6 +768,7 @@ class H5PStorage {
     // Save the libraries we processed during validation
     foreach ($this->h5pC->librariesJsonData as $key => &$library) {
       $libraryId = $this->h5pF->getLibraryId($key, $library['majorVersion'], $library['minorVersion']);
+      $library['saveDependencies'] = TRUE;
       if (!$libraryId) {
         $new = TRUE;
       }
@@ -762,26 +777,31 @@ class H5PStorage {
         $library['libraryId'] = $libraryId;
       }
       else {
+        $library['libraryId'] = $libraryId;
         // We already have the same or a newer version of this library
+        $library['saveDependencies'] = FALSE;
         continue;
       }
       $this->h5pF->saveLibraryData($library, $new);
       
       $current_path = $this->h5pF->getUploadedH5pFolderPath() . DIRECTORY_SEPARATOR . $key;
-      $destination_path = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'libraries' . DIRECTORY_SEPARATOR . $library['libraryId'];
+      $destination_path = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'libraries' . DIRECTORY_SEPARATOR . $this->h5pC->libraryToString($library, TRUE);
       $this->h5pC->delTree($destination_path);
       rename($current_path, $destination_path);
     }
-    // All libraries have been saved, we now save all the dependencies
+
     foreach ($this->h5pC->librariesJsonData as $key => &$library) {
-      if (isset($library['preloadedDependencies'])) {
-        $this->h5pF->saveLibraryDependencies($library['libraryId'], $library['preloadedDependencies'], 'preloaded');
-      }
-      if (isset($library['dynamicDependencies'])) {
-        $this->h5pF->saveLibraryDependencies($library['libraryId'], $library['dynamicDependencies'], 'dynamic');
-      }
-      if (isset($library['editorDependencies'])) {
-        $this->h5pF->saveLibraryDependencies($library['libraryId'], $library['editorDependencies'], 'editor');
+      if ($library['saveDependencies']) {
+        $this->h5pF->deleteLibraryDependencies($library['libraryId']);
+        if (isset($library['preloadedDependencies'])) {
+          $this->h5pF->saveLibraryDependencies($library['libraryId'], $library['preloadedDependencies'], 'preloaded');
+        }
+        if (isset($library['dynamicDependencies'])) {
+          $this->h5pF->saveLibraryDependencies($library['libraryId'], $library['dynamicDependencies'], 'dynamic');
+        }
+        if (isset($library['editorDependencies'])) {
+          $this->h5pF->saveLibraryDependencies($library['libraryId'], $library['editorDependencies'], 'editor');
+        }
       }
     }
     // Move the content folder
@@ -887,6 +907,9 @@ class H5PStorage {
  */
 class H5PCore {
   
+  public static $styles = array(
+    'styles/h5p.css',
+  );
   public static $scripts = array(
     'js/jquery.js',
     'js/h5p.js',
@@ -972,6 +995,18 @@ class H5PCore {
         }
     }
     closedir($dir);
+  }
+
+  /**
+   * Writes library data as string on the form {machineName} {majorVersion}.{minorVersion}
+   *
+   * @param array $library
+   *  With keys machineName, majorVersion and minorVersion
+   * @return string
+   *  On the form {machineName} {majorVersion}.{minorVersion}
+   */
+  public function libraryToString($library, $folderName = FALSE) {
+    return $library['machineName'] . ($folderName ? '-' : ' ') . $library['majorVersion'] . '.' . $library['minorVersion'];
   }
 }
 ?>

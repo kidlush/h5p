@@ -1,0 +1,20 @@
+{
+  "title": "Fluency – Make up sentences",
+  "description": "Sit in pairs and make up sentences where you include the expressions below.<br/>Example: I should have said yes, HOWEVER I kept my mouth shut.",
+  "dialogs": [
+    {
+      "text": "Unless (Hvis ikke, med mindre)",
+      "answer": "Indeed (Virkelig)"
+    },
+    {
+      "text": "As such (Som sådan)",
+      "answer": "Likewise (På samme måte)"
+    },
+    {
+      "text": "At last (Til sist)",
+      "answer": "In addition to (I tillegg til)"
+    }
+  ],
+  "next": "Next",
+  "answer": "Answer"
+}

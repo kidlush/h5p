@@ -3,30 +3,42 @@
   "description": "Skriv inn navnet på dyret i feltet under.",
   "questions": [
     {
-       "text": "As well as (Så vel som)"
-    },
-    {
+      "text": "What animal?",
       "image": {
-        "path": "img/image1.jpg"
+        "path": "img/image1.jpg",
+        "width": 250,
+        "height": 200
       },
       "answer": "and"
     },
     {
       "image": {
-        "path": "img/image2.jpg"
+        "path": "img/image1.jpg",
+        "width": 250,
+        "height": 200
+      },
+      "answer": "and"
+    },
+    {
+      "image": {
+        "path": "img/image2.png",
+        "width": 400,
+        "height": 300
       },
       "answer": "hest"
     },
     {
       "image": {
-        "path": "img/image3.jpg"
+        "path": "img/image3.jpg",
+        "width": 267,
+        "height": 200
       },
       "answer": "elefant"
     }
   ],
-  "label": "Oppgave @task av @total",
+  "progressText": "Oppgave @task av @total",
   "next": "neste",
   "previous": "forrige",
-  "score": "fasit"
+  "checkAnswerText": "fasit"
 }
 

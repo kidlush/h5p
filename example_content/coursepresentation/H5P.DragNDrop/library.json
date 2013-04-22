@@ -1,6 +1,7 @@
 {
-  "title": "H5P.DragNDrop",
-  "contentType": "H5P.DragNDrop",
+  "title": "Drag N Drop",
+  "contentType": "API",
+  "description": "A library that aims to make drag and drop operations easier for other libraries by providing an api.",
   "majorVersion": 1,
   "minorVersion": 0,
   "patchVersion": 0,
@@ -9,7 +10,12 @@
   "author": "Frode Petterson",
   "preloadedJs": [
     {
-      "path": "scripts/drag-N-drop.js"
+      "path": "scripts/drag-n-drop.js"
+    }
+  ],
+  "preloadedCss": [
+    {
+      "path": "styles/dragndrop.css"
     }
   ]
 }

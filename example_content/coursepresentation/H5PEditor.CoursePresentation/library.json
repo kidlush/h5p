@@ -1,5 +1,5 @@
 {
-  "title": "H5PEditor.CoursePresentation",
+  "title": "Course Presentation",
   "majorVersion": 1,
   "minorVersion": 0,
   "patchVersion": 0,
@@ -19,6 +19,46 @@
   "preloadedDependencies": [
     {
       "machineName": "H5P.DragNSort",
+      "majorVersion": 1,
+      "minorVersion": 0
+    },
+    {
+      "machineName": "H5P.DragNBar",
+      "majorVersion": 1,
+      "minorVersion": 0
+    },
+    {
+      "machineName": "jQuery.ui",
+      "majorVersion": 1,
+      "minorVersion": 10
+    },
+    {
+      "machineName": "H5P.Image",
+      "majorVersion": 1,
+      "minorVersion": 0
+    },
+    {
+      "machineName": "H5P.Text",
+      "majorVersion": 1,
+      "minorVersion": 0
+    },
+    {
+      "machineName": "H5P.Table",
+      "majorVersion": 1,
+      "minorVersion": 0
+    },
+    {
+      "machineName": "H5P.Video",
+      "majorVersion": 1,
+      "minorVersion": 0
+    },
+    {
+      "machineName": "H5P.Audio",
+      "majorVersion": 1,
+      "minorVersion": 0
+    },
+    {
+      "machineName": "H5P.Blanks",
       "majorVersion": 1,
       "minorVersion": 0
     }

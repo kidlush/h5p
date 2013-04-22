@@ -111,10 +111,19 @@ function h5peditor_h5p_content_node_form_after_build($element) {
   }
   $done = TRUE;
   
-  // Add JS from the H5P module.
-  $h5p_module_path = drupal_get_path('module', 'h5p'); 
-  foreach(H5PCore::$scripts as $script) {
-    drupal_add_js($h5p_module_path . '/library/' . $script);
+  $node = menu_get_object();
+  if (isset($node)) {
+    h5p_add_files_and_settings($node);
+  }
+  else {
+    $module_path = drupal_get_path('module', 'h5p');
+    foreach (H5PCore::$styles as $style) {
+      drupal_add_css($module_path . '/library/' . $style);
+    }
+    foreach (H5PCore::$scripts as $script) {
+      drupal_add_js($module_path . '/library/' . $script);
+    }
+    drupal_add_js($module_path . '/js/h5pintegration.js');
   }
   
   $h5peditor_module_path = drupal_get_path('module', 'h5peditor');
