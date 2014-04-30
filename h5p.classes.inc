@@ -240,7 +240,7 @@ class H5PDrupal implements H5PFrameworkInterface {
   /**
    * Implements saveContentData
    */
-  public function saveContentData($contentId, $contentJson, $mainJsonData, $mainLibraryId, $contentMainId = NULL) {
+  public function saveContentData($contentJson, $mainJsonData, $mainLibraryId, $contentMainId = NULL, $contentId = NULL) {
     $embedTypes = '';
     if (isset($mainJsonData['embedTypes'])) {
       $embedTypes = implode(', ', $mainJsonData['embedTypes']);
@@ -252,6 +252,8 @@ class H5PDrupal implements H5PFrameworkInterface {
       $contentId, $contentMainId, $contentJson, $embedTypes, $mainLibraryId
     );
     // TODO: Add support for allowing the user to select embed type
+    
+    return $contentId;
   }
 
   /**
