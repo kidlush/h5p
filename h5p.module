@@ -131,7 +131,10 @@ function h5p_embed($node) {
   $id = h5p_get_content_id($node);
   $h5p = _h5p_get_instance('core');
   $settings = array();
-  h5p_add_iframe_assets($settings, $id, $h5p->loadContentDependencies($id, 'preloaded'), 'h5p-' . $node->nid . '-' . $node->vid);
+  
+  $preloaded_dependencies = $core->loadContentDependencies($id, 'preloaded');
+  $files = $core->getDependenciesFiles($preloaded_dependencies);
+  h5p_add_iframe_assets($settings, $id, $files, 'h5p-' . $node->nid . '-' . $node->vid);
   
   if (variable_get('h5p_export', 1)) {
     $e = _h5p_get_instance('export');
@@ -473,6 +476,7 @@ function h5p_add_core_assets() {
   static $assets;
   
   if ($assets === NULL) {
+    $cache_buster = '?' . variable_get('css_js_query_string', '')
     $module_path = drupal_get_path('module', 'h5p');
     $assets = array(
       'css' => array(),
@@ -482,7 +486,7 @@ function h5p_add_core_assets() {
     foreach (H5PCore::$styles as $style) {
       $css = $module_path . '/library/' . $style;
       drupal_add_css($css);
-      $assets['css'][] = $css; 
+      $assets['css'][] = $css . $cache_buster; ; 
     }
     
     $js = $module_path . '/js/h5pintegration.js';
@@ -491,16 +495,15 @@ function h5p_add_core_assets() {
     foreach (H5PCore::$scripts as $script) {
       $js = $module_path . '/library/' . $script;
       drupal_add_js($js);
-      $assets['js'][] = $js;
+      $assets['js'][] = $js . $cache_buster; ;
     }
     
     $H5pI = _h5p_get_instance('interface');
     drupal_add_js(array(
       'h5p' => array(
         'contentPath' => base_path() . _h5p_get_h5p_path() . '/content/',
-        'exportEnabled' => $H5pI->isExportEnabled(),
+        'exportEnabled' => (bool) variable_get('h5p_export', 1),
         'h5pIconInActionBar' => variable_get('h5p_icon_in_action_bar', '1') == 1,
-        'cacheBuster' => variable_get('css_js_query_string', ''),
         'libraryPath' => _h5p_get_h5p_path() . '/libraries/',
       )
     ), 'setting');
@@ -533,7 +536,14 @@ function h5p_add_files_and_settings($node, $embed_type) {
 
   if (variable_get('h5p_export', 1)) {
     $e = _h5p_get_instance('export');
-    $h5p_path = base_path() . $e->getExportPath($content_id, $node->title, $node->language);
+    $h5p_path = base_path() . $e->getExportPath(array(
+      'id' => $content_id,
+      'title' => $node->title,
+      'params' => $node->json_content,
+      'language' => $node->language,
+      'library' => $node->main_library,
+      'embedType' => 'div',
+    ));
   }
 
   $settings = array(
@@ -549,22 +559,26 @@ function h5p_add_files_and_settings($node, $embed_type) {
       )
     )
   );
+
+  $core = _h5p_get_instance('core');
+  $preloaded_dependencies = $core->loadContentDependencies($content_id, 'preloaded');
+  $files = $core->getDependenciesFiles($preloaded_dependencies);
   
-  $h5p = _h5p_get_instance('core');
-  $files = $h5p->loadContentDependencies($content_id, 'preloaded');
   if ($embed_type === 'div') {
-    foreach ($files['scripts'] as $js_path) {
-      if (!isset($added_js[$js_path])) {
-        drupal_add_js($js_path);
-        $settings['h5p']['loadedJs'][] = $js_path;
-        $added_js[$js_path] = TRUE;
+    foreach ($files['scripts'] as $script) {
+      $url = $script->path . $script->version;
+      if (!isset($added_js[$url])) {
+        drupal_add_js($script->path);
+        $settings['h5p']['loadedJs'][] = $url;
+        $added_js[$url] = TRUE;
       }
     }
-    foreach ($files['styles'] as $css_path) {
-      if (!isset($added_css[$css_path])) {
-        drupal_add_css($css_path);
-        $settings['h5p']['loadedCss'][] = $css_path;
-        $added_css[$css_path] = TRUE;
+    foreach ($files['styles'] as $style) {
+      $url = $style->path . $style->version;
+      if (!isset($added_css[$url])) {
+        drupal_add_css($style->path);
+        $settings['h5p']['loadedCss'][] = $url;
+        $added_css[$url] = TRUE;
       }
     }
   }
@@ -601,20 +615,21 @@ function h5p_add_iframe_assets(&$settings, $content_id, $files, $cache_file_pref
 
   // Aggregate library styles and scripts for faster loading when using iframe. 
   // Core files are not included to leverage browser caching! See http://css-tricks.com/one-two-three
-
+  $core = _h5p_get_instance('core');
+  
   if ($is_writable && $preprocess_css) {
     $filename = $cache_file_prefix . '.css';
     
     // Refactor styles array to Drupal eatable format.
     $styles = array('module' => array());
     foreach ($files['styles'] as $style) {
-      $styles['module'][$style] = TRUE;
+      $styles['module'][$style->path] = TRUE;
     }
     
     $settings['h5p']['cid-' . $content_id]['styles'] = array(drupal_build_css_cache($styles, $filename));
   }
   else {
-    $settings['h5p']['cid-' . $content_id]['styles'] = $files['styles'];
+    $settings['h5p']['cid-' . $content_id]['styles'] = $core->getAssetsUrls($files['styles']);
   }
   
   if ($is_writable && $preprocess_js) {
@@ -623,14 +638,14 @@ function h5p_add_iframe_assets(&$settings, $content_id, $files, $cache_file_pref
     // Refactor scripts array to Drupal eatable format.
     $scripts = array();
     foreach ($files['scripts'] as $script) {
-      $scripts[$script] = array(
+      $scripts[$script->path] = array(
         'preprocess' => TRUE,
       );
     }
     $settings['h5p']['cid-' . $content_id]['scripts'] = array(drupal_build_js_cache($scripts, $filename));
   }
   else {
-    $settings['h5p']['cid-' . $content_id]['scripts'] = $files['scripts'];
+    $settings['h5p']['cid-' . $content_id]['scripts'] = $core->getAssetsUrls($files['scripts']);
   }
 }
 
