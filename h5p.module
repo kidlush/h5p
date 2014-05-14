@@ -476,7 +476,7 @@ function h5p_add_core_assets() {
   static $assets;
   
   if ($assets === NULL) {
-    $cache_buster = '?' . variable_get('css_js_query_string', '')
+    $cache_buster = '?' . variable_get('css_js_query_string', '');
     $module_path = drupal_get_path('module', 'h5p');
     $assets = array(
       'css' => array(),
