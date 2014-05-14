@@ -57,4 +57,16 @@ ns.init = function () {
   });
 };
 
+ns.getAjaxUrl = function (action, parameters) {
+  var url = Drupal.settings.h5peditor.ajaxPath + action;
+
+  if (parameters !== undefined) {
+    for (var key in parameters) {
+      url += '/' + parameters[key];
+    }
+  }
+
+  return url;
+};
+
 $(document).ready(ns.init);

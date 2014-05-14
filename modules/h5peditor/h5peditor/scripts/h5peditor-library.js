@@ -57,7 +57,7 @@ ns.Library.prototype.appendTo = function ($wrapper) {
   this.$select = $field.children('select');
   this.$libraryWrapper = $field.children('.libwrap');
 
-  ns.$.post(ns.ajaxPath + 'libraries', {libraries: that.field.options}, function (data) {
+  ns.$.post(ns.getAjaxUrl('libraries'), {libraries: that.field.options}, function (data) {
     that.libraries = data;
 
     var options = ns.createOption('-', '-');
@@ -121,7 +121,7 @@ ns.Library.prototype.loadLibrary = function (libraryName, preserveParams) {
       // Reset params
       that.params.params = {};
     }
-
+    
     ns.processSemanticsChunk(semantics, that.params.params, that.$libraryWrapper.html(''), that);
 
     if (that.libraries !== undefined) {
