@@ -131,7 +131,8 @@ function h5p_embed($node) {
   $id = h5p_get_content_id($node);
   $h5p = _h5p_get_instance('core');
   $settings = array();
-  
+
+  $core = _h5p_get_instance('core');  
   $preloaded_dependencies = $core->loadContentDependencies($id, 'preloaded');
   $files = $core->getDependenciesFiles($preloaded_dependencies);
   h5p_add_iframe_assets($settings, $id, $files, 'h5p-' . $node->nid . '-' . $node->vid);
