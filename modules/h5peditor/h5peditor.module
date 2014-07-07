@@ -260,7 +260,7 @@ function h5peditor_files_callback() {
     $files_directory .= '/h5peditor';
   }
 
-  $file = new H5peditorFile($files_directory);
+  $file = new H5peditorFile(_h5p_get_instance('interface'), $files_directory);
 
   if (!$file->isLoaded()) {
     drupal_not_found();
@@ -294,8 +294,9 @@ function h5peditor_get_instance() {
     $instance = new H5peditor(
       _h5p_get_instance('core'),
       new H5peditorDrupalStorage(), 
-      file_directory_path(), // TODO: Refactor and use h5p_get_path()?
-      base_path()
+      base_path(),
+      _h5p_get_h5p_path(),
+      file_directory_path() . DIRECTORY_SEPARATOR . 'h5peditor'
     );
   }
 
@@ -303,7 +304,7 @@ function h5peditor_get_instance() {
 }
 
 /**
- * TODO
+ * TODO: Rather use core functions than this?
  */
 function h5peditor_get_library_property($library, $property = 'all') {
   $matches = array();

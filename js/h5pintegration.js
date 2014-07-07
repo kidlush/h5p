@@ -75,11 +75,11 @@ H5PIntegration.getHeadTags = function (contentId) {
 
   var createUrl = function (path) {
     if (path.substring(0,7) !== 'http://') {
-      // Not external, add base path and cache buster.
-      path = basePath + path + '?' + Drupal.settings.h5p.cacheBuster;
+      // Not external, add base path.
+      path = basePath + path;
     }
     return path;
-  }
+  };
 
   var createStyleTags = function (styles) {
     var tags = '';
