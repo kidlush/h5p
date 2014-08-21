@@ -350,16 +350,17 @@ function h5p_insert($node) {
   if (isset($_SESSION['h5p_upload'])) {
     $h5p_core = _h5p_get_instance('storage');
     $h5p_core->savePackage(h5p_get_content_id($node), $node->nid);
-    
-    // TODO: Consider only running if a library has been updated or content dependencies has changed.
-    _h5p_clear_js_and_css_cache();
   }
   else {
-    db_query(
-      "INSERT INTO {h5p_nodes}
-      (content_id, nid, json_content, embed_type, main_library_id)
-      VALUES (%d, %d, '%s', '%s', %d)", h5p_get_content_id($node), $node->nid, $node->json_content, $node->embed_type, $node->main_library_id
-    );
+    $core = _h5p_get_instance('core');
+    $core->saveContent(array(
+      'id' => h5p_get_content_id($node),
+      'params' => $node->json_content,
+      'embed_type' => $node->embed_type,
+      'library' => array(
+        'libraryId' => $node->main_library_id
+      )
+    ), $node->nid);
   }
 }
 
@@ -367,51 +368,30 @@ function h5p_insert($node) {
  * Implementation of hook_update().
  */
 function h5p_update($node) {
-  $content_id = h5p_get_content_id($node);
-
-  if (isset($_SESSION['h5p_upload'])) {
-    if ($node->revision && variable_get('h5p_revisioning', 1)) {
-      h5p_insert($node);
+  if ($node->revision && variable_get('h5p_revisioning', 1)) {
+    // Create new revision
+    $h5p_storage = _h5p_get_instance('storage');
+    if (isset($_SESSION['h5p_upload'])) {
+      // Use newly uploaded package
+      $h5p_storage->savePackage($node->vid, $node->nid);
     }
     else {
-      $h5p_core = _h5p_get_instance('storage');
-      $h5p_core->updatePackage($content_id, $node->nid);
-
-      // TODO: Consider only running if a library has been updated or content dependencies has changed.
-      _h5p_clear_js_and_css_cache();
+      // Copy old package
+      $h5p_storage->copyPackage($node->vid, $node->old_vid, $node->nid);
+      // Insert content:
+      h5p_insert($node);
     }
-  }
-  elseif ($node->revision && variable_get('h5p_revisioning', 1)) {
-    $h5p_core = _h5p_get_instance('storage');
-    $h5p_core->copyPackage($node->vid, $node->old_vid, $node->nid);
-    h5p_insert($node);
   }
   else {
-    // Make sure a row exists before we try updating it.
-    $content_id = db_result(db_query("SELECT content_id FROM {h5p_nodes} WHERE content_id = %d", $content_id));
-    
-    if ($content_id !== FALSE) {
-      db_query(
-        "UPDATE {h5p_nodes}
-        SET json_content = '%s', embed_type = '%s', main_library_id = '%d'
-        WHERE content_id = %d", $node->json_content, $node->embed_type, $node->main_library_id, $content_id
-      );
+    if (isset($_SESSION['h5p_upload'])) {
+      // Replace old package
+      $h5p_storage = _h5p_get_instance('storage');
+      $h5p_storage->updatePackage(h5p_get_content_id($node), $node->nid);
     }
     else {
-      // No rows, insert new row. (this happens if the module is reinstalled)
       h5p_insert($node);
     }
-    
-    // TODO: Consider only running if a library has been updated or content dependencies has changed.
-    _h5p_clear_js_and_css_cache();
   }
-
-  // TODO: Consider creating the .h5p for export here, or use rewrite like image cacheing 
-  // in Drupal 7. This way we can prevent broken links if somebody links directly to the .h5p file.
-  // Also we won't have to check if the file exists all the time.
-
-  $export = _h5p_get_instance('export');
-  $export->deleteExport($content_id);
 }
 
 /**
@@ -419,14 +399,13 @@ function h5p_update($node) {
  */
 function h5p_delete($node) {
   $h5p_core = _h5p_get_instance('storage');
+  $h5p_export = _h5p_get_instance('export');
 
   $res = db_query("SELECT content_id FROM {h5p_nodes} WHERE nid = %d", $node->nid);
   while ($content_id = db_result($res)) {
     $h5p_core->deletePackage($content_id);
+    $h5p_export->deleteExport($content_id);
   }
-  
-  $export = _h5p_get_instance('export');
-  $export->deleteExport($content_id);
 }
 
 /**
@@ -780,20 +759,6 @@ function _h5p_get_instance($type) {
  */
 function _h5p_get_h5p_path() {
   return file_directory_path() . '/' . variable_get('h5p_default_path', 'h5p');
-}
-
-/**
- * Clears the js and css cache. Needed when updating and
- * adding libraries
- */
-function _h5p_clear_js_and_css_cache() {
-  // Clear caches to make sure new versions are used.
-  _drupal_flush_css_js();
-  drupal_clear_js_cache();
-  drupal_clear_css_cache();
-
-  // Need to clear JSON content cache too.
-  cache_clear_all('validated_json_', 'cache', TRUE);
 }
 
 /**

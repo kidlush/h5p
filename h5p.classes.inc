@@ -539,8 +539,8 @@ class H5PDrupal implements H5PFrameworkInterface {
    */
   public function invalidateContentCache($library_id) {
     $contents = db_query("SELECT DISTINCT content_id FROM {h5p_nodes_libraries} WHERE library_id = %d", $library_id);
-    while ($content = db_fetch_array($contents)) {
-      $this->cacheDel('parameters', $content['content_id']);
+    while ($content_id = db_result($contents)) {
+      $this->cacheDel('parameters', $content_id);
     }
   }
   
