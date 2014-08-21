@@ -47,7 +47,42 @@ class H5PDrupal implements H5PFrameworkInterface {
   public function getUploadedH5pPath() {
     return $_SESSION['h5p_upload'];
   }
+  
+  /**
+   * Implements loadLibraries
+   */
+  public function loadLibraries() {
+    $res = db_query('SELECT library_id as id, machine_name as name, title, major_version, minor_version, patch_version FROM {h5p_libraries} ORDER BY title ASC, major_version ASC, minor_version ASC');
+  
+    $libraries = array();
+    foreach ($res as $library) {
+      $libraries[$library->name][] = $library;
+    }
+  
+    return $libraries;
+  }
 
+  /**
+   * Implementation of getUnsupportedLibraries
+   */
+  public function getUnsupportedLibraries() {
+    return variable_get('h5p_unsupported_libraries', NULL);
+  }
+  
+  /**
+   * Implementation of setUnsupportedLibraries
+   */
+  public function setUnsupportedLibraries($libraries) {
+    variable_set('h5p_unsupported_libraries', $libraries);
+  }
+  
+  /**
+   * Implements getAdminUrl
+   */
+  public function getAdminUrl() {
+    return url('admin/content/h5p/libraries');
+  }
+  
   /**
    * Implements getLibraryId
    */
@@ -92,20 +127,20 @@ class H5PDrupal implements H5PFrameworkInterface {
     return user_access('update h5p libraries');
   }
 
-  /**
+   /**
    * Implements getLibraryUsage
    *  
    * Get number of content/nodes using a library, and the number of 
    * dependencies to other libraries
    * 
-   * @param int $library_id
+   * @param int $libraryId
    * @return array The array contains two elements, keyed by 'content' and 'libraries'. 
    *               Each element contains a number
    */
-  public function getLibraryUsage($libraryId) {
+  public function getLibraryUsage($libraryId, $skipContent = FALSE) {
     $usage = array();
     
-    $usage['content'] = intval(db_result(db_query(
+    $usage['content'] = $skipContent ? -1 : intval(db_result(db_query(
       'SELECT COUNT(distinct n.nid)
       FROM {h5p_libraries} l JOIN {h5p_nodes_libraries} nl ON l.library_id = nl.library_id JOIN {h5p_nodes} n ON nl.content_id = n.content_id
       WHERE l.library_id = %d', $libraryId)));
@@ -236,11 +271,29 @@ class H5PDrupal implements H5PFrameworkInterface {
       );
     }
   }
-
+  
   /**
-   * Implements saveContentData
+   * Implements updateContent
    */
-  public function saveContentData($content, $contentMainId = NULL) {
+  public function updateContent($content, $contentMainId = NULL) {
+    $content_id = db_result(db_query("SELECT content_id FROM {h5p_nodes} WHERE content_id = %d", $content['id']));
+    if ($content_id === FALSE) {
+      // This can happen in Drupal when module is reinstalled. (since the ID is predetermined)
+      $this->insertContent($content, $contentMainId);
+      return;
+    }
+    
+    db_query("UPDATE {h5p_nodes}
+        SET jscon_content = '%s', embed_type = 'div', main_library = %d
+        WHERE content_id = %d", 
+        $content['params'], $content['library']['libraryId'], $content_id
+    );
+  }
+  
+  /**
+   * Implements insertContent
+   */
+  public function insertContent($content, $contentMainId = NULL) {
     db_query(
         "INSERT INTO {h5p_nodes}
           (content_id, nid, json_content, embed_type, main_library_id)
@@ -445,4 +498,63 @@ class H5PDrupal implements H5PFrameworkInterface {
     return $dependencies;
   }  
   
+  /**
+   * Implements cacheGet
+   */
+  public function cacheGet($group, $key) {
+    $data = cache_get('h5p:' . $group . ':' . $key);
+    return $data === FALSE ? NULL : $data->data;
+  }
+  
+  
+  /**
+   * Implements cacheSet
+   */
+  public function cacheSet($group, $key, $data) {
+    cache_set('h5p:' . $group . ':' . $key, $data);
+  }
+  
+  /**
+   * Implements cacheDel
+   */
+  public function cacheDel($group, $key = NULL) {
+    // Clear the given caches
+    if ($key === NULL) {
+      cache_clear_all('h5p:' . $group, 'cache', TRUE);
+    }
+    else {
+      cache_clear_all('h5p:' . $group . ':' . $key, 'cache');
+    }
+  
+    if ($group === 'parameters') {
+      // Clear Drupal's JS & CSS caches.
+      _drupal_flush_css_js();
+      drupal_clear_js_cache();
+      drupal_clear_css_cache();
+    }
+  }
+  
+  /**
+   * Implements invalidateContentCache.
+   */
+  public function invalidateContentCache($library_id) {
+    $contents = db_query("SELECT DISTINCT content_id FROM {h5p_nodes_libraries} WHERE library_id = %d", $library_id);
+    while ($content = db_fetch_array($contents)) {
+      $this->cacheDel('parameters', $content['content_id']);
+    }
+  }
+  
+  /**
+   * Implements getNotCached.
+   */
+  public function getNotCached() {
+    return db_result(db_query("SELECT COUNT(hn.content_id) FROM h5p_nodes hn LEFT JOIN cache c ON CONCAT('h5p:parameters:', hn.content_id) = c.cid WHERE cid IS NULL"));
+  }
+  
+  /**
+   * Implements getNumContent.
+   */
+  public function getNumContent($library_id) {
+    return db_result(db_query('SELECT COUNT(content_id) FROM {h5p_nodes} WHERE main_library_id = %d',  $library_id));
+  }
 }
