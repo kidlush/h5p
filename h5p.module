@@ -103,7 +103,10 @@ function _h5p_make_urls_absolute($urls, $remove = array()) {
       continue;
     }
 
-    $urls[$i] =  $base_url . '/' . $urls[$i];
+    // Skip URLs who already have a base, like aggregated assets.
+    if (substr($urls[$i], 0, strlen($base_url)) !== $base_url) {
+      $urls[$i] =  $base_url . '/' . $urls[$i];
+    }
   }
   return $urls;
 }
@@ -485,6 +488,7 @@ function h5p_view($node, $teaser = FALSE, $page = FALSE) {
  */
 function h5p_add_core_assets() {
   static $assets;
+  global $user;
   
   if ($assets === NULL) {
     $cache_buster = '?' . variable_get('css_js_query_string', '');
@@ -497,7 +501,7 @@ function h5p_add_core_assets() {
     foreach (H5PCore::$styles as $style) {
       $css = $module_path . '/library/' . $style;
       drupal_add_css($css);
-      $assets['css'][] = $css . $cache_buster; ; 
+      $assets['css'][] = $css . $cache_buster;
     }
     
     $js = $module_path . '/js/h5pintegration.js';
@@ -506,7 +510,7 @@ function h5p_add_core_assets() {
     foreach (H5PCore::$scripts as $script) {
       $js = $module_path . '/library/' . $script;
       drupal_add_js($js);
-      $assets['js'][] = $js . $cache_buster; ;
+      $assets['js'][] = $js . $cache_buster;
     }
     
     $H5pI = _h5p_get_instance('interface');
@@ -516,6 +520,8 @@ function h5p_add_core_assets() {
         'exportEnabled' => (bool) variable_get('h5p_export', 1),
         'h5pIconInActionBar' => variable_get('h5p_icon_in_action_bar', '1') == 1,
         'libraryPath' => _h5p_get_h5p_path() . '/libraries/',
+        'postUserStatistics' => $user->uid > 0,
+        'ajaxPath' => url('h5p-ajax') . '/',
       )
     ), 'setting');
   }
