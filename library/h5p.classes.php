@@ -543,11 +543,11 @@ class H5PValidator {
         
         if ($libraryH5PData !== FALSE) {
           // Library's directory name and machineName in library.json must match
-          if ($libraryH5PData['machineName'] !== $file) {
-            $this->h5pF->setErrorMessage($this->h5pF->t('Library directory name must match machineName in library.json. (Directory: %directoryName , machineName: %machineName)', array('%directoryName' => $file, '%machineName' => $libraryH5PData['machineName'])));
-            $valid = FALSE;
-            continue;
-          }
+          //if ($libraryH5PData['machineName'] !== $file) {
+          //  $this->h5pF->setErrorMessage($this->h5pF->t('Library directory name must match machineName in library.json. (Directory: %directoryName , machineName: %machineName)', array('%directoryName' => $file, '%machineName' => $libraryH5PData['machineName'])));
+          //  $valid = FALSE;
+          //  continue;
+          //}
           $libraries[$libraryH5PData['machineName']] = $libraryH5PData;
         }
         else {
@@ -1019,13 +1019,23 @@ class H5PStorage {
    *  TRUE if one or more libraries were updated
    *  FALSE otherwise
    */
-  public function savePackage($content = NULL, $contentMainId = NULL, $skipContent = FALSE) {
+  public function savePackage($content = NULL, $contentMainId = NULL, $skipContent = FALSE, $upgradeOnly = FALSE) {
     // Save the libraries we processed during validation
     $library_saved = FALSE;
+    $upgradedLibsCount = 0;
     $mayUpdateLibraries = $this->h5pF->mayUpdateLibraries();
     foreach ($this->h5pC->librariesJsonData as $key => &$library) {
       $libraryId = $this->h5pF->getLibraryId($key, $library['majorVersion'], $library['minorVersion']);
       $library['saveDependencies'] = TRUE;
+      $library['skip'] = FALSE;
+      if ($upgradeOnly) {
+        // Is this library already installed?
+        if ($this->h5pF->loadLibrary($library['machineName'], $library['majorVersion'], $library['minorVersion']) === FALSE) {
+          $library['skip'] = TRUE;
+          continue;
+        }
+      }
+      
       if (!$libraryId) {
         $new = TRUE;
       }
@@ -1060,7 +1070,7 @@ class H5PStorage {
     }
 
     foreach ($this->h5pC->librariesJsonData as $key => &$library) {
-      if ($library['saveDependencies']) {
+      if ($library['saveDependencies'] && !$library['skip']) {
         $this->h5pF->deleteLibraryDependencies($library['libraryId']);
         if (isset($library['preloadedDependencies'])) {
           $this->h5pF->saveLibraryDependencies($library['libraryId'], $library['preloadedDependencies'], 'preloaded');
@@ -1074,6 +1084,8 @@ class H5PStorage {
         
         // Make sure libraries dependencies, parameter filtering and export files gets regenerated for all content who uses this library.
         $this->h5pF->invalidateContentCache($library['libraryId']);
+        
+        $upgradedLibsCount++;
       }
     }
     
@@ -1111,7 +1123,12 @@ class H5PStorage {
     }
     
     // Update supported library list if neccessary:
-    $this->h5pC->validateLibrarySupport();
+    $this->h5pC->validateLibrarySupport(TRUE);
+    
+    if ($upgradeOnly) {
+      // TODO - support translation
+      $this->h5pF->setInfoMessage($upgradedLibsCount . ' libraries were upgraded!');
+    }
 
     return $library_saved;
   }
@@ -1586,7 +1603,19 @@ class H5PCore {
   }
   
   /**
-   * Recusive. Goes through the dependency tree for the given library and 
+   * Deletes a library
+   * 
+   * @param unknown $libraryId
+   */
+  public function deleteLibrary($libraryId) {
+    $this->h5pF->deleteLibrary($libraryId);
+    
+    // Force update of unsupported libraries list:
+    $this->validateLibrarySupport(TRUE);
+  }
+  
+  /**
+   * Recursive. Goes through the dependency tree for the given library and 
    * adds all the dependencies to the given array in a flat format.
    * 
    * @param array $librariesUsed Flat list of all dependencies.
@@ -1847,16 +1876,11 @@ class H5PCore {
           $minimumVersions = $minimumLibraryVersions[$machine_name]['versions'];
           // For each version of this library, check if it is supported
           foreach ($libraryList as $library) {
-            
-            // Get usage
-            $usage = $this->h5pF->getLibraryUsage($library->id);
-            
-            if ($usage['content'] !== 0 && !self::isLibraryVersionSupported($library, $minimumVersions)) {
+            if (!self::isLibraryVersionSupported($library, $minimumVersions)) {
               // Current version of this library is not supported
               $unsupportedLibraries[] = array (
                 'name' => $machine_name,
                 'downloadUrl' => $minimumLibraryVersions[$machine_name]['downloadUrl'],
-                'usage' => $usage['content'],
                 'currentVersion' => array (
                   'major' => $library->major_version,
                   'minor' => $library->minor_version,
@@ -1915,7 +1939,6 @@ class H5PCore {
     foreach ($libraries as $library) {
       $downloadUrl = $library['downloadUrl'];
       $libraryName = $library['name'];
-      $usage = $library['usage'];
       $currentVersion = $library['currentVersion']['major'] . '.' . $library['currentVersion']['minor'] .'.' . $library['currentVersion']['patch'];
       $minimumVersions = '';
       $prefix = '';
@@ -1924,10 +1947,10 @@ class H5PCore {
         $prefix = ' or ';
       }
       
-      $html .= "<li><a href=\"$downloadUrl\">$libraryName</a> - $usage instances found (Current version: $currentVersion. Minimum version(s): $minimumVersions)</li>";
+      $html .= "<li><a href=\"$downloadUrl\">$libraryName</a> (Current version: $currentVersion. Minimum version(s): $minimumVersions)</li>";
     }
     
-    $html .= '</ul><span><br>These libraries may cause problems on this site. To update, do the following: <ol><li>Take a database backup</li><li>Download the latest version of each library from h5p.org</li><li>Upload these libraries using the <a href="'. $this->h5pF->getAdminUrl() .'">library admin page</a></li><li>Push the upgrade button for upgradable libraries if needed</li></ol></span><a href="http://h5p.org/support/unsupported-library-versions">Read more</a></div>';
+    $html .= '</ul><span><br>These libraries may cause problems on this site.</div>';
     return $html;
   }
 }
