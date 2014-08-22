@@ -47,21 +47,21 @@ class H5PDrupal implements H5PFrameworkInterface {
   public function getUploadedH5pPath() {
     return $_SESSION['h5p_upload'];
   }
-  
+
   /**
    * Implements loadLibraries
    */
   public function loadLibraries() {
     $res = db_query('SELECT library_id as id, machine_name as name, title, major_version, minor_version, patch_version FROM {h5p_libraries} ORDER BY title ASC, major_version ASC, minor_version ASC');
-  
+    
     $libraries = array();
-    foreach ($res as $library) {
+    while ($library = db_fetch_object($res)) {
       $libraries[$library->name][] = $library;
     }
-  
+    
     return $libraries;
   }
-
+  
   /**
    * Implementation of getUnsupportedLibraries
    */
@@ -127,7 +127,7 @@ class H5PDrupal implements H5PFrameworkInterface {
     return user_access('update h5p libraries');
   }
 
-   /**
+  /**
    * Implements getLibraryUsage
    *  
    * Get number of content/nodes using a library, and the number of 
@@ -284,7 +284,7 @@ class H5PDrupal implements H5PFrameworkInterface {
     }
     
     db_query("UPDATE {h5p_nodes}
-        SET jscon_content = '%s', embed_type = 'div', main_library = %d
+        SET json_content = '%s', embed_type = 'div', main_library_id = %d
         WHERE content_id = %d", 
         $content['params'], $content['library']['libraryId'], $content_id
     );
@@ -312,7 +312,7 @@ class H5PDrupal implements H5PFrameworkInterface {
   public function getWhitelist($isLibrary, $defaultContentWhitelist, $defaultLibraryWhitelist) {
     $whitelist = variable_get('h5p_whitelist', $defaultContentWhitelist);
     if ($isLibrary) {
-      $whitelist .= ' ' . variable_get('h5p_library_whitelist_extras', $defaultLibraryWhitelist);;
+      $whitelist .= ' ' . variable_get('h5p_library_whitelist_extras', $defaultLibraryWhitelist);
     }
     return $whitelist;
   }
@@ -385,14 +385,14 @@ class H5PDrupal implements H5PFrameworkInterface {
       AND minor_version = %d",
       $machineName, $majorVersion, $minorVersion));
     $result = db_query(
-      "SELECT hl.machine_name as machineName, hl.major_version as majorVersion, hl.minor_version as minorVersion, hll.dependency_type as dependencyType
+      "SELECT hl.machine_name as name, hl.major_version as majorVersion, hl.minor_version as minorVersion, hll.dependency_type as dependencyType
       FROM {h5p_libraries_libraries} hll
       JOIN {h5p_libraries} hl ON hll.required_library_id = hl.library_id
       WHERE hll.library_id = %d", $library['libraryId']
     );
     while ($dependency = db_fetch_array($result)) {
       $library[$dependency['dependencyType'] . 'Dependencies'][] = array(
-        'machineName' => $dependency['machineName'],
+        'machineName' => $dependency['name'],
         'majorVersion' => $dependency['majorVersion'],
         'minorVersion' => $dependency['minorVersion'],
       );
