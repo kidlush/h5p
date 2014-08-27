@@ -1904,7 +1904,7 @@ class H5PCore {
       
       // For each version of this library, check if it is supported
       foreach ($versions as $library) {
-        if (!self::isLibraryVersionSupported($library, $min->versions)) {
+        if (!$this->isLibraryVersionSupported($library, $min->versions)) {
           // Current version of this library is not supported
           $unsupportedLibraries[] = array (
             'name' => $library_name,
@@ -1958,7 +1958,7 @@ class H5PCore {
    * @param array An array containing versions
    * @return boolean TRUE if supported, otherwise FALSE
    */
-  public static function isLibraryVersionSupported ($library, $minimumVersions) {
+  public function isLibraryVersionSupported ($library, $minimumVersions) {
     $major_supported = $minor_supported = $patch_supported = false;
     foreach ($minimumVersions as $minimumVersion) {
       // A library is supported if:
