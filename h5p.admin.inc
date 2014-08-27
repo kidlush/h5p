@@ -125,30 +125,27 @@ function h5p_library_list() {
   
   $core = _h5p_get_instance('core');
   $notCached = $core->h5pF->getNotCached();
-
-  // Get the libraries
-  $res = db_query('SELECT library_id as id, machine_name as name, title, major_version, minor_version, patch_version FROM {h5p_libraries} ORDER BY title ASC, major_version ASC, minor_version ASC');
-  $libraries = array();
-  while ($library = db_fetch_object($res)) {
-    // Get library usage
-    $library->usage = $core->h5pF->getLibraryUsage($library->id, $notCached ? TRUE : FALSE);
-    
-    // Group different versions of this library
-    $libraries[$library->name][] = $library;
-  }
+  $libraries = $core->h5pF->loadLibraries();
   
   // Add settings for each library
   $settings = array();
   foreach ($libraries as $versions) {
     foreach ($versions as $library) {
-      $upgrades = $core->getUpgrades($library, $versions);
+      $usage = $core->h5pF->getLibraryUsage($library->id, $notCached ? TRUE : FALSE);
+      if ($library->runnable) {
+        $upgrades = $core->getUpgrades($library, $versions);
+        $upgradeUrl = empty($upgrades) ? FALSE : url('admin/content/h5p/libraries/' . $library->id . '/upgrade', array('query' => drupal_get_destination()));
+      }
+      else {
+        $upgradeUrl = NULL;
+      }
       
       $settings['h5p']['libraries']['listData'][] = array(
         'title' => $library->title . ' (' . H5PCore::libraryVersion($library) . ')',
         'numContent' => $core->h5pF->getNumContent($library->id),
-        'numContentDependencies' => $library->usage['content'],
-        'numLibraryDependencies' => $library->usage['libraries'],
-        'upgradeUrl' => empty($upgrades) ? NULL : url('admin/content/h5p/libraries/' . $library->id . '/upgrade', array('query' => drupal_get_destination())),
+        'numContentDependencies' => $usage['content'],
+        'numLibraryDependencies' => $usage['libraries'],
+        'upgradeUrl' => $upgradeUrl,
         'detailsUrl' => url('admin/content/h5p/libraries/' . $library->id),
         'deleteUrl' => url('admin/content/h5p/libraries/' . $library->id . '/delete', array('query' => drupal_get_destination()))
       );
@@ -172,11 +169,13 @@ function h5p_library_list() {
   _h5p_admin_add_generic_css_and_js($module_path);
   drupal_add_js($module_path . '/library/js/h5p-library-list.js');
   
+  $upgrade_all_libraries = variable_get('h5p_unsupported_libraries', NULL) === NULL ? '' : '<p>' . t('Click <a href="@url">here</a> to upgrade all installed libraries', array('@url' => url('admin/content/h5p/libraries/upgrade-all'))) . '</p>';
+  
   // Create the container which all admin content 
   // will appends it's data to. This id is used by h5pintegration
   // to find where to put the admin content. 
   $upload_form = drupal_get_form('h5p_library_upload_form');
-  return '<h3 class="h5p-admin-header">' . t('Add libraries') . '</h3>' . $upload_form . '<h3 class="h5p-admin-header">' . t('Installed libraries') . '</h3><div id="h5p-admin-container"></div>';
+  return '<h3 class="h5p-admin-header">' . t('Add libraries') . '</h3>' . $upload_form . '<h3 class="h5p-admin-header">' . t('Installed libraries') . '</h3>' . $upgrade_all_libraries . '<div id="h5p-admin-container"></div>';
 }
 
 /**
@@ -315,20 +314,24 @@ function h5p_library_upload_form($form_state) {
  * Form validation.
  */
 function h5p_library_upload_form_validate($form, &$form_state) {
+  h5p_validate_h5p_file_upload($form, $form_state);
+}
+
+function h5p_validate_h5p_file_upload($form, &$form_state, $upgradeOnly = FALSE){
   $validators = array(
     'file_validate_extensions' => array('h5p'),
   );
   // New uploads need to be saved in temp in order to be viewable
   // during node preview.
   $temporary_file_path = file_create_path(file_directory_path() . '/' . variable_get('h5p_default_path', 'h5p') . '/temp/' . uniqid('h5p-'));
-
+  
   if ($file = file_save_upload('h5p', $validators, $temporary_file_path)) {
     // These has to be set instead of sending parameteres to the validation function.
     $_SESSION['h5p_upload'] = $file->filepath;
     $_SESSION['h5p_upload_folder'] = $temporary_file_path;
-    
+  
     $validator = _h5p_get_instance('validator');
-    if ($validator->isValidPackage(TRUE) === FALSE) {
+    if ($validator->isValidPackage(TRUE, $upgradeOnly) === FALSE) {
       form_set_error('h5p', t('The uploaded file was not a valid h5p package'));
       // Maintain session variables.
       unset($_SESSION['h5p_upload'], $_SESSION['h5p_upload_folder']);
@@ -377,7 +380,7 @@ function h5p_rebuild_cache() {
     }
   }
   
-  print ($contents->row_count - $done);
+  print ($contents->num_rows - $done);
 }
 
 /**
@@ -414,8 +417,12 @@ function h5p_content_upgrade($library_id) {
   }
   $core = _h5p_get_instance('core');
   
-  $versions = db_query('SELECT hl2.library_id as id, hl2.machine_name as name, hl2.title, hl2.major_version, hl2.minor_version, hl2.patch_version FROM {h5p_libraries} hl1 JOIN {h5p_libraries} hl2 ON hl1.machine_name = hl2.machine_name WHERE hl1.library_id = %d ORDER BY hl2.title ASC, hl2.major_version ASC, hl2.minor_version ASC', $library_id);
-  while ($library = db_fetch_object($versions)) {
+  $result = db_query('SELECT hl2.library_id as id, hl2.machine_name as name, hl2.title, hl2.major_version, hl2.minor_version, hl2.patch_version FROM {h5p_libraries} hl1 JOIN {h5p_libraries} hl2 ON hl1.machine_name = hl2.machine_name WHERE hl1.library_id = %d ORDER BY hl2.title ASC, hl2.major_version ASC, hl2.minor_version ASC', $library_id);
+  $versions = array();
+  while ($version = db_fetch_object($result)) {
+    $versions[] = $version;
+  }
+  foreach ($versions as $library) {
     if ($library->id === $library_id) {
       $upgrades = $core->getUpgrades($library, $versions);
       break;
@@ -423,7 +430,7 @@ function h5p_content_upgrade($library_id) {
   }
   
   drupal_set_title(t('Upgrade @library content', array('@library' => $library->title . ' (' . H5PCore::libraryVersion($library) . ')')));
-  if ($versions->num_rows < 2) {
+  if (sizeof($versions) < 2) {
     return t("There are no available upgrades for this library.");
   }
   
@@ -450,7 +457,7 @@ function h5p_content_upgrade($library_id) {
           'name' => $library->name,
           'version' => $library->major_version . '.' . $library->minor_version,
         ),
-        'libraryBaseUrl' => url('admin/content/h5p/upgrade/library'),
+        'libraryBaseUrl' => url('admin/content/h5p/upgrade-library'),
         'versions' => $upgrades,
         'contents' => $contents,
         'buttonLabel' => t('Upgrade'),
@@ -521,8 +528,8 @@ function h5p_content_upgrade_progress($library_id) {
     }
   }
 
-  drupal_add_http_header('Cache-Control', 'no-cache');
-  drupal_add_http_header('Content-type', 'application/json');
+  drupal_set_header('Cache-Control: no-cache');
+  drupal_set_header('Content-type: application/json');
   print json_encode($out);
 }
 
@@ -557,7 +564,69 @@ function h5p_content_upgrade_library($name, $major, $minor) {
     $library->upgradesScript = base_path() . $upgrades_script;
   }
   
-  drupal_add_http_header('Cache-Control', 'no-cache');
-  drupal_add_http_header('Content-type', 'application/json');
+  drupal_set_header('Cache-Control: no-cache');
+  drupal_set_header('Content-type: application/json');
   print json_encode($library);
 }
+
+/**
+ * Selective upgrade off all installed libraries (with upgrades.h5p as input)
+ */
+function h5p_upgrade_all_libraries() {
+  // Create form
+  return drupal_get_form('h5p_all_libraries_upgrade_upload_form');
+}
+
+/**
+ * Create upload all libraries form
+ */
+function h5p_all_libraries_upgrade_upload_form($form_state) {
+  $form['#attributes'] = array(
+    'enctype' => 'multipart/form-data',
+    'class' => 'h5p-admin-upload-libraries-form',
+  );
+
+  // TODO - support translation
+  $form['info-message'] = array(
+    '#type' => 'markup',
+    '#value' =>
+      '<div>
+        To upgrade all installed libraries, do the following:
+        <ol>
+          <li>Download <a href="http://h5p.org/sites/default/files/upgrades.h5p">upgrades.h5p</a>
+          <li>Click the <em>Select file</em> button below, and select the downloaded upgrades.h5p file
+          <li>Click the <em>Upload</em> button 
+        </ol> 
+      </div>',
+  );
+  
+  $form['h5p'] = array(
+    '#title' => t('H5P'),
+    '#type' => 'file',
+    '#description' => t('Upload the upgrades.h5p (downloaded from h5p.org) here'),
+  );
+
+  $form['submit'] = array(
+    '#value' => t('Upload'),
+    '#type' => 'submit',
+  );
+
+  return $form;
+}
+
+function h5p_all_libraries_upgrade_upload_form_validate($form, &$form_state) {
+  h5p_validate_h5p_file_upload($form, $form_state, TRUE);
+}
+
+function h5p_all_libraries_upgrade_upload_form_submit($form, &$form_state) {
+  // Save package
+  $h5p_core = _h5p_get_instance('storage');
+  $h5p_core->savePackage(NULL, NULL, TRUE, TRUE);
+  
+  // Maintain session variables.
+  unset($_SESSION['h5p_upload'], $_SESSION['h5p_upload_folder']);
+  
+  // Redirect to libraries overview:
+  drupal_goto('admin/content/h5p/libraries');
+}
+

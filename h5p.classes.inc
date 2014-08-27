@@ -52,7 +52,7 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements loadLibraries
    */
   public function loadLibraries() {
-    $res = db_query('SELECT library_id as id, machine_name as name, title, major_version, minor_version, patch_version FROM {h5p_libraries} ORDER BY title ASC, major_version ASC, minor_version ASC');
+    $res = db_query('SELECT library_id as id, machine_name as name, title, major_version, minor_version, patch_version, runnable FROM {h5p_libraries} ORDER BY title ASC, major_version ASC, minor_version ASC');
     
     $libraries = array();
     while ($library = db_fetch_object($res)) {
@@ -145,7 +145,7 @@ class H5PDrupal implements H5PFrameworkInterface {
       FROM {h5p_libraries} l JOIN {h5p_nodes_libraries} nl ON l.library_id = nl.library_id JOIN {h5p_nodes} n ON nl.content_id = n.content_id
       WHERE l.library_id = %d', $libraryId)));
     
-    $usage['libraries'] = intval(db_result(db_query('SELECT COUNT(*) FROM {h5p_libraries_libraries} WHERE required_library_id = %d', $libraryId)));
+    $usage['libraries'] = intval(db_result(db_query("SELECT COUNT(*) FROM {h5p_libraries_libraries} WHERE required_library_id = %d", $libraryId)));
     
     return $usage;
   }
@@ -241,7 +241,6 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements deleteLibrary. Will delete a library's data both in the database and file system
    */
   public function deleteLibrary($libraryId) {
-    
     $library = db_fetch_object(db_query("select * from {h5p_libraries} where library_id = %d", $libraryId));
     
     // Delete files:
@@ -257,7 +256,6 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements saveLibraryDependencies
    */
   public function saveLibraryDependencies($libraryId, $dependencies, $dependency_type) {
-//    drupal_set_message('Adding deps for ' . $libraryId);
     foreach ($dependencies as $dependency) {
       db_query(
         "INSERT INTO {h5p_libraries_libraries} (library_id, required_library_id, dependency_type)
@@ -375,26 +373,45 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements loadLibrary
    */
   public function loadLibrary($machineName, $majorVersion, $minorVersion) {
-    $library = db_fetch_array(db_query(
-      "SELECT library_id as libraryId, machine_name as machineName, title, major_version as majorVersion, minor_version as minorVersion,
-        patch_version as patchVersion, embed_types as embedTypes, preloaded_js as preloadedJs, preloaded_css as preloadedCss, drop_library_css as dropLibraryCss,
-        fullscreen, runnable, semantics
-      FROM {h5p_libraries}
-      WHERE machine_name = '%s'
-      AND major_version = %d
-      AND minor_version = %d",
+    $library = db_fetch_object(db_query(
+        "SELECT library_id,
+                machine_name,
+                title,
+                major_version,
+                minor_version,
+                patch_version,
+                embed_types,
+                preloaded_js,
+                preloaded_css,
+                drop_library_css,
+                fullscreen, 
+                runnable, 
+                semantics
+          FROM {h5p_libraries}
+          WHERE machine_name = '%s'
+          AND major_version = %d
+          AND minor_version = %d",
       $machineName, $majorVersion, $minorVersion));
+    
+    if ($library === FALSE) {
+      return FALSE;
+    }
+    $library = H5PCore::snakeToCamel($library);
+    
     $result = db_query(
-      "SELECT hl.machine_name as name, hl.major_version as majorVersion, hl.minor_version as minorVersion, hll.dependency_type as dependencyType
+      "SELECT hl.machine_name as name,
+              hl.major_version as major,
+              hl.minor_version as minor,
+              hll.dependency_type as type
       FROM {h5p_libraries_libraries} hll
       JOIN {h5p_libraries} hl ON hll.required_library_id = hl.library_id
       WHERE hll.library_id = %d", $library['libraryId']
     );
-    while ($dependency = db_fetch_array($result)) {
-      $library[$dependency['dependencyType'] . 'Dependencies'][] = array(
-        'machineName' => $dependency['name'],
-        'majorVersion' => $dependency['majorVersion'],
-        'minorVersion' => $dependency['minorVersion'],
+    while ($dependency = db_fetch_object($result)) {
+      $library[$dependency->type . 'Dependencies'][] = array(
+        'machineName' => $dependency->name,
+        'majorVersion' => $dependency->major,
+        'minorVersion' => $dependency->minor,
       );
     }
     if ($this->isInDevMode()) {
@@ -427,12 +444,14 @@ class H5PDrupal implements H5PFrameworkInterface {
     }
     else {
       $semantics = db_result(db_query(
-        "SELECT semantics
-         FROM {h5p_libraries}
-         WHERE machine_name = '%s'
-         AND major_version = %d
-         AND minor_version = %d",
-        $machineName, $majorVersion, $minorVersion));
+          "SELECT semantics
+            FROM {h5p_libraries}
+            WHERE machine_name = '%s'
+            AND major_version = %d
+            AND minor_version = %d",
+        $machineName,
+        $majorVersion,
+        $minorVersion));
     }
     return ($semantics === FALSE ? NULL : $semantics);
   }
@@ -448,20 +467,24 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements loadContent().
    */
   public function loadContent($id) {
-    $content = db_fetch_array(db_query(
-      "SELECT hn.json_content AS params
-            , hn.embed_type AS embedType 
-            , hl.library_id AS libraryId 
-            , hl.machine_name AS libraryName
-            , hl.major_version AS libraryMajorVersion
-            , hl.minor_version AS libraryMinorVersion
-            , hl.embed_types AS libraryEmbedTypes
-            , hl.fullscreen AS libraryFullscreen
-       FROM {h5p_nodes} hn
-       JOIN {h5p_libraries} hl ON hl.library_id = hn.main_library_id
-       WHERE content_id = %d", $id));
-       
-    return ($content === FALSE ? NULL : $content);
+    $content = db_fetch_object(db_query(
+        "SELECT hn.content_id AS id,
+                hn.json_content AS params,
+                hn.embed_type,
+                n.title,
+                n.language,
+                hl.library_id,
+                hl.machine_name AS library_name,
+                hl.major_version AS library_major_version,
+                hl.minor_version AS library_minor_version,
+                hl.embed_types AS library_embed_types,
+                hl.fullscreen AS library_fullscreen
+          FROM {h5p_nodes} hn
+          JOIN {node} n ON n.nid = hn.nid
+          JOIN {h5p_libraries} hl ON hl.library_id = hn.main_library_id
+          WHERE content_id = %d", $id));
+
+    return ($content === FALSE ? NULL : H5PCore::snakeToCamel($content));
   }
 
   /**
@@ -469,18 +492,18 @@ class H5PDrupal implements H5PFrameworkInterface {
    */
   public function loadContentDependencies($id, $type = NULL) {
     $query = 
-      "SELECT hl.library_id, 
-              hl.machine_name AS machineName, 
-              hl.major_version AS majorVersion, 
-              hl.minor_version AS minorVersion, 
-              hl.patch_version AS patchVersion, 
-              hl.preloaded_css AS preloadedCss, 
-              hl.preloaded_js AS preloadedJs, 
-              hnl.drop_css AS dropCss,
-              hnl.dependency_type AS dependencyType
-        FROM {h5p_nodes_libraries} hnl
-        JOIN {h5p_libraries} hl ON hnl.library_id = hl.library_id
-        WHERE hnl.content_id = %d";
+        "SELECT hl.library_id,
+                hl.machine_name,
+                hl.major_version,
+                hl.minor_version, 
+                hl.patch_version,
+                hl.preloaded_css,
+                hl.preloaded_js,
+                hnl.drop_css,
+                hnl.dependency_type
+          FROM {h5p_nodes_libraries} hnl
+          JOIN {h5p_libraries} hl ON hnl.library_id = hl.library_id
+          WHERE hnl.content_id = %d";
     $queryArgs = array($id);
     
     if ($type !== NULL) {
@@ -491,12 +514,12 @@ class H5PDrupal implements H5PFrameworkInterface {
     $result = db_query($query, $queryArgs);
     
     $dependencies = array();
-    while ($dependency = db_fetch_array($result)) {
-      $dependencies[] = $dependency;
+    while ($dependency = db_fetch_object($result)) {
+      $dependencies[] = H5PCore::snakeToCamel($dependency);
     }
 
     return $dependencies;
-  }  
+  }
   
   /**
    * Implements cacheGet
@@ -518,6 +541,8 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements cacheDel
    */
   public function cacheDel($group, $key = NULL) {
+    static $drupal_cache_cleared;
+    
     // Clear the given caches
     if ($key === NULL) {
       cache_clear_all('h5p:' . $group, 'cache', TRUE);
@@ -526,11 +551,13 @@ class H5PDrupal implements H5PFrameworkInterface {
       cache_clear_all('h5p:' . $group . ':' . $key, 'cache');
     }
   
-    if ($group === 'parameters') {
+    if ($group === 'parameters' && !$drupal_cache_cleared) {
       // Clear Drupal's JS & CSS caches.
       _drupal_flush_css_js();
       drupal_clear_js_cache();
       drupal_clear_css_cache();
+      
+      $drupal_cache_cleared = TRUE;
     }
   }
   
