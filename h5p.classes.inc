@@ -575,13 +575,13 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements getNotCached.
    */
   public function getNotCached() {
-    return db_result(db_query("SELECT COUNT(hn.content_id) FROM h5p_nodes hn LEFT JOIN cache c ON CONCAT('h5p:parameters:', hn.content_id) = c.cid WHERE cid IS NULL"));
+    return intval(db_result(db_query("SELECT COUNT(hn.content_id) FROM h5p_nodes hn LEFT JOIN cache c ON CONCAT('h5p:parameters:', hn.content_id) = c.cid WHERE cid IS NULL")));
   }
   
   /**
    * Implements getNumContent.
    */
   public function getNumContent($library_id) {
-    return db_result(db_query('SELECT COUNT(content_id) FROM {h5p_nodes} WHERE main_library_id = %d',  $library_id));
+    return intval(db_result(db_query('SELECT COUNT(content_id) FROM {h5p_nodes} WHERE main_library_id = %d',  $library_id)));
   }
 }
