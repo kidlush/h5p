@@ -143,7 +143,7 @@ function h5p_library_list() {
       $settings['h5p']['libraries']['listData'][] = array(
         'title' => $library->title . ' (' . H5PCore::libraryVersion($library) . ')',
         'numContent' => $core->h5pF->getNumContent($library->id),
-        'numContentDependencies' => $usage['content'],
+        'numContentDependencies' => $usage['content'] === -1 ? '' : $usage['content'],
         'numLibraryDependencies' => $usage['libraries'],
         'upgradeUrl' => $upgradeUrl,
         'detailsUrl' => url('admin/content/h5p/libraries/' . $library->id),
@@ -158,7 +158,6 @@ function h5p_library_list() {
   // Make it possible to rebuild all caches.
   if ($notCached) {
     $settings['h5p']['libraries']['notCached'] = h5p_get_not_cached_settings($notCached);
-    $settings['h5p']['libraries']['notCached']['message'] .= t('This is required before you can delete any libraries.');
   }
       
   // Include libraries and more to Drupal setting
@@ -188,7 +187,8 @@ function h5p_get_not_cached_settings($num) {
   return array(
     'num' => $num,
     'url' => url('admin/content/h5p/rebuild-cache'),
-    'message' => t('%num need to get their cache rebuilt before content dependencies can be display.', array('%num' => format_plural($num, '1 content instance', '@count content instances'))),
+    'message' => t('Not all content has gotten their cache rebuilt. This is required to be able to delete libraries, and to display how many contents that uses the library.'),
+    'progress' => format_plural($num, '1 content need to get its cache rebuilt.', '@count contents needs to get their cache rebuilt.'),
     'button' => t('Rebuild cache')
   );
 }
@@ -254,11 +254,11 @@ function h5p_library_details($library_id) {
 }
 
 /**
+ * Display page for library delete form.
  * 
  * @param string $library_id
  */
 function h5p_library_delete($library_id) {
-  
   // Is library deletable ?
   $h5p_drupal = _h5p_get_instance('interface');
   $notCached = $h5p_drupal->getNotCached();
@@ -271,6 +271,37 @@ function h5p_library_delete($library_id) {
     // May not delete this one
     return t('Library is in use by content, or is dependent by other librarie(s), and can therefore not be deleted');
   }
+}
+
+/**
+ * Library delete form
+ */
+function h5p_library_delete_form(&$form_state, $library_id, $library_name) {
+  
+  $form['library_id'] = array(
+    '#type' => 'hidden',
+    '#value' => $library_id
+  );
+  
+  $form['info'] = array(
+    '#type' => 'markup',
+    '#value' => '<span>' . t('Are you sure you would like to delete the @library_name H5P library?', array('@library_name' => $library_name)) . '</span>'
+  );
+  
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Delete')
+  );
+  
+  return $form;
+}
+
+/**
+ * Handle library delete form submission.
+ */
+function h5p_library_delete_form_submit($form, &$form_state) {
+  // Do the actual deletion:
+  _h5p_get_instance('interface')->deleteLibrary($form_state['values']['library_id']);
 }
 
 /**
@@ -490,7 +521,7 @@ function h5p_content_upgrade_progress($library_id) {
   }
   
   // Get the library we're upgrading to
-  $to_library = db_result(db_query('SELECT library_id AS id, machine_name AS name, major_version, minor_version FROM {h5p_libraries} WHERE library_id = %d', filter_input(INPUT_POST, 'libraryId')));
+  $to_library = db_fetch_object(db_query('SELECT library_id AS id, machine_name AS name, major_version, minor_version FROM {h5p_libraries} WHERE library_id = %d', filter_input(INPUT_POST, 'libraryId')));
   if (!$to_library) {
     print t('Error: Your library is missing!');
     return;
