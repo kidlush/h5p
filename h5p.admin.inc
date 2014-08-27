@@ -400,6 +400,7 @@ function h5p_rebuild_cache() {
   
   $core = _h5p_get_instance('core');
   $contents = db_query("SELECT hn.content_id FROM h5p_nodes hn LEFT JOIN cache c ON CONCAT('h5p:parameters:', hn.content_id) = c.cid WHERE cid IS NULL");
+  $left = db_affected_rows();
   $done = 0;
   while ($content_id = db_result($contents)) {
     $content = $core->loadContent($content_id);
@@ -411,7 +412,7 @@ function h5p_rebuild_cache() {
     }
   }
   
-  print ($contents->num_rows - $done);
+  print ($left - $done);
 }
 
 /**
