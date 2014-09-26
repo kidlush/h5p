@@ -18,7 +18,7 @@ function h5p_install() {
  */
 function h5p_uninstall() {
   drupal_uninstall_schema('h5p');
-  
+
   variable_del('h5p_export');
   variable_del('h5p_revisioning');
   variable_del('h5p_content_dev_mode');
@@ -259,10 +259,17 @@ function h5p_schema() {
         'description' => 'Meta description as defined in h5p.json',
         'type' => 'text',
       ),
+      'filtered' => array(
+        'description' => 'Keeps track of the filtered content parameters.',
+        'type' => 'text',
+        'not null' => TRUE,
+        'size' => 'big',
+        'default' => ''
+      ),
     ),
     'primary key' => array('content_id'),
   );
-  
+
   $schema['h5p_points'] = array(
     'description' => 'Stores user statistics.',
     'fields' => array(
@@ -306,7 +313,7 @@ function h5p_schema() {
     ),
     'primary key' => array('content_id', 'uid'),
   );
-  
+
   return $schema;
 }
 
@@ -459,17 +466,17 @@ function h5p_update_6104() {
 
 /**
  * Implementation of hook_update_N().
- * 
+ *
  * Renames the h5p_nodes_libraries.preloaded field to dependency_type,
  * and converts it to contain an integer.
- * 
+ *
  * Updates h5p_nodes_libraries to get all dependencies.
  */
 function h5p_update_6105(&$sandbox) {
   $ret = array();
 
   if (isset($sandbox['content']) === FALSE) {
-    
+
     if (db_column_exists('h5p_nodes_libraries', 'preloaded')) {
       db_drop_primary_key($ret, 'h5p_nodes_libraries');
       db_change_field($ret, 'h5p_nodes_libraries', 'preloaded', 'dependency_type', array(
@@ -481,23 +488,23 @@ function h5p_update_6105(&$sandbox) {
       ), array(
         'primary key' => array('content_id', 'library_id', 'dependency_type')
       ));
-      
+
       $result = end($ret);
       if ($result['success'] === FALSE) {
         return $ret; // Do not update nodes if update failed.
       }
     }
-  
+
     // Update h5p_nodes_libraries to get all dependencies.
     $result = db_query("
-      SELECT hn.content_id AS id, 
-             hl.machine_name AS libraryName, 
-             hl.major_version AS libraryMajorVersion, 
+      SELECT hn.content_id AS id,
+             hl.machine_name AS libraryName,
+             hl.major_version AS libraryMajorVersion,
              hl.minor_version AS libraryMinorVersion
       FROM {h5p_nodes} hn
       JOIN {h5p_libraries} hl ON hl.library_id = hn.main_library_id
     ");
-    
+
     // Update h5p_nodes_libraries since column has changed type
     db_query("UPDATE {h5p_nodes_libraries} set dependency_type='preloaded' where dependency_type='1'");
     db_query("UPDATE {h5p_nodes_libraries} set dependency_type='dynamic' where dependency_type='0'");
@@ -506,11 +513,11 @@ function h5p_update_6105(&$sandbox) {
     while ($content = db_fetch_object($result)) {
       $sandbox['content'][] = $content;
     }
-    
+
     $sandbox['current'] = 0;
     $sandbox['max'] = count($sandbox['content']);
   }
-  
+
   if ($sandbox['max'] === 0) {
     $ret['#finished'] = 1;
   }
@@ -519,20 +526,20 @@ function h5p_update_6105(&$sandbox) {
     $sandbox['current']++;
     $ret['#finished'] = ($sandbox['current'] / $sandbox['max']);
   }
-  
+
   return $ret;
 }
 
 
 /**
  * Implementation of hook_update_N().
- * 
+ *
  * - Adds H5P points table
  * - Validates library support
  */
 function h5p_update_6106() {
   $ret = array();
-  
+
   db_create_table($ret, 'h5p_points', array(
     'description' => 'Stores user statistics.',
     'fields' => array(
@@ -576,9 +583,9 @@ function h5p_update_6106() {
     ),
     'primary key' => array('content_id', 'uid'),
   ));
-  
+
   h5p_validate_library_support();
-  
+
   return $ret;
 }
 
@@ -600,27 +607,46 @@ function h5p_validate_library_support() {
 function h5p_save_content_dependencies($content) {
   $i = _h5p_get_instance('interface');
   $core = _h5p_get_instance('core');
-  
+
   $library = $i->loadLibrary($content->libraryName, $content->libraryMajorVersion, $content->libraryMinorVersion);
-  
+
   $dependencies = array();
   $core->findLibraryDependencies($dependencies, $library);
-  
+
   $dropLibraryCssList = array();
   foreach ($dependencies as $dependency) {
     if (!empty($dependency['library']['dropLibraryCss'])) {
       $dropLibraryCssList = array_merge($dropLibraryCssList, explode(', ', $dependency['library']['dropLibraryCss']));
     }
   }
-  
+
   foreach ($dependencies as $dependency) {
     $dropCss = in_array($dependency['library']['machineName'], $dropLibraryCssList) ? 1 : 0;
     db_query(
-        "INSERT INTO {h5p_nodes_libraries} 
+        "INSERT INTO {h5p_nodes_libraries}
           (content_id, library_id, dependency_type, drop_css)
           VALUES (%d, %d, '%s', %d)
           ON DUPLICATE KEY UPDATE drop_css = %d",
         $content->id, $dependency['library']['libraryId'], $dependency['type'], $dropCss, $dropCss
     );
   }
+}
+
+/**
+ * Implementation of hook_update_N().
+ *
+ * Add DB field to keep track of filtered parameters for H5P content.
+ */
+function h5p_update_6107() {
+  $ret = array();
+
+  db_add_field($ret, 'h5p_nodes', 'filtered', array(
+    'description' => 'Keeps track of the filtered content parameters.',
+    'type' => 'text',
+    'not null' => TRUE,
+    'size' => 'big',
+    'default' => ''
+  ));
+
+  return $ret;
 }
