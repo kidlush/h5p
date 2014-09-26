@@ -36,7 +36,6 @@ var H5PLibraryList= H5PLibraryList || {};
     $.each (libraries.listData, function (index, library) {
       var $libraryRow = H5PUtils.createTableRow([
         library.title,
-        '<input class="h5p-admin-restricted" type="checkbox"/>',
         {
           text: library.numContent,
           class: 'h5p-admin-center'
@@ -56,8 +55,6 @@ var H5PLibraryList= H5PLibraryList || {};
         </div>'
       ]);
       
-      H5PLibraryList.addRestricted($('.h5p-admin-restricted', $libraryRow), library.restrictedUrl, library.restricted);
-
       var hasContent = !(library.numContent === '' || library.numContent === 0);
       if (library.upgradeUrl === null) {
         $('.h5p-admin-upgrade-library', $libraryRow).remove();
@@ -94,34 +91,6 @@ var H5PLibraryList= H5PLibraryList || {};
     return $table;
   };
  
-  H5PLibraryList.addRestricted = function ($checkbox, url, selected) {
-    if (selected === null) {
-      $checkbox.remove();
-    }
-    else {
-      $checkbox.change(function () {
-        $checkbox.attr('disabled', true);
-
-        $.ajax({
-          dataType: 'json',
-          url: url,
-          cache: false
-        }).fail(function () {
-          $checkbox.attr('disabled', false);
-
-          // Reset
-          $checkbox.attr('checked', !$checkbox.is(':checked'));
-        }).done(function (result) {
-          url = result.url;
-          $checkbox.attr('disabled', false);
-        });
-      });
-
-      if (selected) {
-        $checkbox.attr('checked', true);
-      }
-    }
-  };
   
   // Initialize me:
   $(document).ready(function () {
