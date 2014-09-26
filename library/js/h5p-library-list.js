@@ -36,9 +36,19 @@ var H5PLibraryList= H5PLibraryList || {};
     $.each (libraries.listData, function (index, library) {
       var $libraryRow = H5PUtils.createTableRow([
         library.title,
-        library.numContent,
-        library.numContentDependencies,
-        library.numLibraryDependencies,
+        '<input class="h5p-admin-restricted" type="checkbox"/>',
+        {
+          text: library.numContent,
+          class: 'h5p-admin-center'
+        },
+        {
+          text: library.numContentDependencies,
+          class: 'h5p-admin-center'
+        },
+        {
+          text: library.numLibraryDependencies,
+          class: 'h5p-admin-center'
+        },
         '<div class="h5p-admin-buttons-wrapper">\
           <button class="h5p-admin-upgrade-library"></button>\
           <button class="h5p-admin-view-library" title="' + t.viewLibrary + '"></button>\
@@ -46,10 +56,13 @@ var H5PLibraryList= H5PLibraryList || {};
         </div>'
       ]);
       
+      H5PLibraryList.addRestricted($('.h5p-admin-restricted', $libraryRow), library.restrictedUrl, library.restricted);
+
+      var hasContent = !(library.numContent === '' || library.numContent === 0);
       if (library.upgradeUrl === null) {
         $('.h5p-admin-upgrade-library', $libraryRow).remove();
       }
-      else if (library.upgradeUrl === false || library.numContent === 0) {
+      else if (library.upgradeUrl === false || !hasContent) {
         $('.h5p-admin-upgrade-library', $libraryRow).attr('disabled', true);
       }
       else {
@@ -64,7 +77,7 @@ var H5PLibraryList= H5PLibraryList || {};
       });
       
       var $deleteButton = $('.h5p-admin-delete-library', $libraryRow);
-      if (libraries.notCached !== undefined || library.numContent !== 0 || (library.numContentDependencies !== '' && library.numContentDependencies !== 0) || (library.numLibraryDependencies !== '' && library.numLibraryDependencies !== 0)) {
+      if (libraries.notCached !== undefined || hasContent || (library.numContentDependencies !== '' && library.numContentDependencies !== 0) || (library.numLibraryDependencies !== '' && library.numLibraryDependencies !== 0)) {
         // Disabled delete if content.
         $deleteButton.attr('disabled', true);
       }
@@ -81,6 +94,34 @@ var H5PLibraryList= H5PLibraryList || {};
     return $table;
   };
  
+  H5PLibraryList.addRestricted = function ($checkbox, url, selected) {
+    if (selected === null) {
+      $checkbox.remove();
+    }
+    else {
+      $checkbox.change(function () {
+        $checkbox.attr('disabled', true);
+
+        $.ajax({
+          dataType: 'json',
+          url: url,
+          cache: false
+        }).fail(function () {
+          $checkbox.attr('disabled', false);
+
+          // Reset
+          $checkbox.attr('checked', !$checkbox.is(':checked'));
+        }).done(function (result) {
+          url = result.url;
+          $checkbox.attr('disabled', false);
+        });
+      });
+
+      if (selected) {
+        $checkbox.attr('checked', true);
+      }
+    }
+  };
   
   // Initialize me:
   $(document).ready(function () {
