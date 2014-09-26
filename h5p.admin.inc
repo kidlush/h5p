@@ -140,11 +140,12 @@ function h5p_library_list() {
         $upgradeUrl = NULL;
       }
       
+      $num = $core->h5pF->getNumContent($library->id);
       $settings['h5p']['libraries']['listData'][] = array(
         'title' => $library->title . ' (' . H5PCore::libraryVersion($library) . ')',
-        'numContent' => $core->h5pF->getNumContent($library->id),
-        'numContentDependencies' => $usage['content'] === -1 ? '' : $usage['content'],
-        'numLibraryDependencies' => $usage['libraries'],
+        'numContent' => $num < 1 ? '' : $num,
+        'numContentDependencies' => $usage['content'] < 1 ? '' : $usage['content'],
+        'numLibraryDependencies' => $usage['libraries'] < 1 ? '' : $usage['libraries'],
         'upgradeUrl' => $upgradeUrl,
         'detailsUrl' => url('admin/content/h5p/libraries/' . $library->id),
         'deleteUrl' => url('admin/content/h5p/libraries/' . $library->id . '/delete', array('query' => drupal_get_destination()))
@@ -153,8 +154,23 @@ function h5p_library_list() {
   }
 
   // All translations are made server side
-  $settings['h5p']['libraries']['listHeaders'] = array(t('Title'), t('Instances'), t('Instance Dependencies'), t('Library dependencies'), t('Actions')); 
-  
+  $settings['h5p']['libraries']['listHeaders'] = array(
+      t('Title'), 
+      array(
+        'text' => t('Contents'),
+        'class' => 'h5p-admin-center'
+      ),
+      array(
+        'text' => t('Contents using it'),
+        'class' => 'h5p-admin-center'
+      ),
+      array(
+        'text' => t('Libraries using it'),
+        'class' => 'h5p-admin-center'
+      ),
+      t('Actions')
+    );   
+
   // Make it possible to rebuild all caches.
   if ($notCached) {
     $settings['h5p']['libraries']['notCached'] = h5p_get_not_cached_settings($notCached);
