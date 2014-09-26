@@ -558,10 +558,7 @@ function h5p_content_upgrade_progress($library_id) {
     // Update params.
     $params = json_decode($params);
     foreach ($params as $id => $param) {
-      db_query("UPDATE {h5p_nodes} set main_library_id = %d, json_content = '%s' where content_id = %d", $to_library->id, $param, $id);
-
-      // Clear content cache
-      $interface->cacheDel('parameters', $id);
+      db_query("UPDATE {h5p_nodes} SET main_library_id = %d, json_content = '%s', filtered = '' WHERE content_id = %d", $to_library->id, $param, $id);
     }
   }
 

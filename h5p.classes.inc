@@ -282,7 +282,7 @@ class H5PDrupal implements H5PFrameworkInterface {
     }
 
     db_query("UPDATE {h5p_nodes}
-        SET json_content = '%s', embed_type = 'div', main_library_id = %d
+        SET json_content = '%s', embed_type = 'div', main_library_id = %d, filtered = ''
         WHERE content_id = %d",
         $content['params'], $content['library']['libraryId'], $content_id
     );
