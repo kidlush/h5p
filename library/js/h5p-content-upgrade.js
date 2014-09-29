@@ -219,18 +219,18 @@ var H5PUpgrades = H5PUpgrades || {};
         }
       }
       catch (event) {
-        return next(info.errorContent.replace('%id', id));
+        return next(info.errorContent.replace('%id', id) + ' ' + info.errorParamsBroken);
       }
 
       // Upgrade this content.
-      self.upgrade(info.library.name, new Version(info.library.version), self.version, id, params, function (err, params) {
+      self.upgrade(info.library.name, new Version(info.library.version), self.version, params, function (err, params) {
         if (!err) {
           upgraded[id] = JSON.stringify(params);
 
           current++;
           self.throbber.setProgress(Math.round((info.total - self.left + current) / (info.total / 100)) + ' %');
         }
-        next(err);
+        next(info.errorContent.replace('%id', id) + ' ' + err);
       });
 
     }, function (err) {
@@ -258,7 +258,7 @@ var H5PUpgrades = H5PUpgrades || {};
    * @param {Function} next
    * @returns {undefined}
    */
-  ContentUpgrade.prototype.upgrade = function (name, oldVersion, newVersion, id, params, next) {
+  ContentUpgrade.prototype.upgrade = function (name, oldVersion, newVersion, params, next) {
     var self = this;
 
     // Load library details and upgrade routines
@@ -268,7 +268,7 @@ var H5PUpgrades = H5PUpgrades || {};
       }
 
       // Run upgrade routines on params
-      self.processParams(library, oldVersion, newVersion, id, params, function (err, params) {
+      self.processParams(library, oldVersion, newVersion, params, function (err, params) {
         if (err) {
           return next(err);
         }
@@ -355,7 +355,7 @@ var H5PUpgrades = H5PUpgrades || {};
    * @param {Object} params
    * @param {Function} next
    */
-  ContentUpgrade.prototype.processParams = function (library, oldVersion, newVersion, id, params, next) {
+  ContentUpgrade.prototype.processParams = function (library, oldVersion, newVersion, params, next) {
     if (H5PUpgrades[library.name] === undefined) {
       if (library.upgradesScript) {
         // Upgrades script should be loaded so the upgrades should be here.
@@ -389,8 +389,8 @@ var H5PUpgrades = H5PUpgrades || {};
                 nextMinor(err);
               });
             }
-            catch (event) {
-              next(info.errorContent.replace('%id', id));
+            catch (err) {
+              next(err);
             }
           }
         }, nextMajor);
