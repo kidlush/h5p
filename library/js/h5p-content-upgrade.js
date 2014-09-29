@@ -214,13 +214,16 @@ var H5PUpgrades = H5PUpgrades || {};
       try {
         // Make params possible to work with
         params = JSON.parse(params);
+        if (!(params instanceof Object)) {
+          throw true;
+        }
       }
       catch (event) {
-        return next('Unable to upgrade content with id ' + id + '. Parameters are broken.');
+        return next(info.errorContent.replace('%id', id));
       }
 
       // Upgrade this content.
-      self.upgrade(info.library.name, new Version(info.library.version), self.version, params, function (err, params) {
+      self.upgrade(info.library.name, new Version(info.library.version), self.version, id, params, function (err, params) {
         if (!err) {
           upgraded[id] = JSON.stringify(params);
 
@@ -255,7 +258,7 @@ var H5PUpgrades = H5PUpgrades || {};
    * @param {Function} next
    * @returns {undefined}
    */
-  ContentUpgrade.prototype.upgrade = function (name, oldVersion, newVersion, params, next) {
+  ContentUpgrade.prototype.upgrade = function (name, oldVersion, newVersion, id, params, next) {
     var self = this;
 
     // Load library details and upgrade routines
@@ -265,7 +268,7 @@ var H5PUpgrades = H5PUpgrades || {};
       }
 
       // Run upgrade routines on params
-      self.processParams(library, oldVersion, newVersion, params, function (err, params) {
+      self.processParams(library, oldVersion, newVersion, id, params, function (err, params) {
         if (err) {
           return next(err);
         }
@@ -352,7 +355,7 @@ var H5PUpgrades = H5PUpgrades || {};
    * @param {Object} params
    * @param {Function} next
    */
-  ContentUpgrade.prototype.processParams = function (library, oldVersion, newVersion, params, next) {
+  ContentUpgrade.prototype.processParams = function (library, oldVersion, newVersion, id, params, next) {
     if (H5PUpgrades[library.name] === undefined) {
       if (library.upgradesScript) {
         // Upgrades script should be loaded so the upgrades should be here.
@@ -378,14 +381,16 @@ var H5PUpgrades = H5PUpgrades || {};
           }
           else {
             // We found an upgrade hook, run it
-            if (upgrade.contentUpgrade !== undefined && typeof upgrade.contentUpgrade === 'function') {
-              upgrade.contentUpgrade(params, function (err, upgradedParams) {
+            var unnecessaryWrapper = (upgrade.contentUpgrade !== undefined ? upgrade.contentUpgrade : upgrade);
+
+            try {
+              unnecessaryWrapper(params, function (err, upgradedParams) {
                 params = upgradedParams;
                 nextMinor(err);
               });
             }
-            else {
-              nextMinor(info.errorScript.replace('%lib', library.name + ' ' + newVersion));
+            catch (event) {
+              next(info.errorContent.replace('%id', id));
             }
           }
         }, nextMajor);

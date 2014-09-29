@@ -500,6 +500,7 @@ function h5p_content_upgrade($library_id) {
         'error' => t('An error occurred while processing parameters:'),
         'errorData' => t('Could not load data for library %lib.'),
         'errorScript' => t('Could not load upgrades script for %lib.'),
+        'errorContent' => t('Unable to upgrade content with id %id. Parameters are broken.'),
         'done' => t('You have successfully upgraded %num.', array('%num' => $contents_plural)) . ($return ? ' ' . l(t('Return'), $return) : ''),
         'library' => array(
           'name' => $library->name,

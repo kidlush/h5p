@@ -16,12 +16,16 @@ ns.LibrarySelector = function (libraries, defaultLibrary, defaultParams) {
 
   try {
     this.defaultParams = JSON.parse(defaultParams);
+    if (!(this.defaultParams instanceof Object)) {
+      throw true;
+    }
   }
   catch (event) {
     // Content parameters are broken. Reset. (This allows for broken content to be reused without deleting it)
     this.defaultParams = {};
     // TODO: Inform the user?
   }
+  
   this.defaultLibrary = this.currentLibrary = defaultLibrary;
   this.defaultLibraryParameterized = defaultLibrary ? defaultLibrary.replace('.', '-').toLowerCase() : undefined;
 
