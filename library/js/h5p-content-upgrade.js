@@ -224,13 +224,15 @@ var H5PUpgrades = H5PUpgrades || {};
 
       // Upgrade this content.
       self.upgrade(info.library.name, new Version(info.library.version), self.version, params, function (err, params) {
-        if (!err) {
-          upgraded[id] = JSON.stringify(params);
-
-          current++;
-          self.throbber.setProgress(Math.round((info.total - self.left + current) / (info.total / 100)) + ' %');
+        if (err) {
+          return next(info.errorContent.replace('%id', id) + ' ' + err);
         }
-        next(info.errorContent.replace('%id', id) + ' ' + err);
+
+        upgraded[id] = JSON.stringify(params);
+
+        current++;
+        self.throbber.setProgress(Math.round((info.total - self.left + current) / (info.total / 100)) + ' %');
+        next();
       });
 
     }, function (err) {
