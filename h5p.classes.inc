@@ -564,7 +564,7 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements getNumNotFiltered().
    */
   public function getNumNotFiltered() {
-    return (int) db_result(db_query("SELECT COUNT(content_id) FROM {h5p_nodes} WHERE filtered = ''"));
+    return (int) db_result(db_query("SELECT COUNT(content_id) FROM {h5p_nodes} WHERE filtered = '' AND main_library_id > 0"));
   }
 
   /**
