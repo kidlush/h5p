@@ -420,7 +420,9 @@ function h5p_rebuild_cache() {
   $done = 0;
   while ($content_id = db_result($contents)) {
     $content = $core->loadContent($content_id);
-    $core->filterParameters($content);
+    if (isset($content)) {
+      $core->filterParameters($content);
+    }
     $done++;
 
     if ((microtime(TRUE) - $start) > 5) {
