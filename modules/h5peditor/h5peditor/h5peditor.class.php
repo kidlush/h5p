@@ -30,7 +30,7 @@ class H5peditor {
 
   /**
    * Constructor for the core editor library.
-   * 
+   *
    * @param \H5PCore $h5p Instance of core.
    * @param mixed $storage Instance of h5peditor storage.
    * @param string $basePath Url path to prefix assets with.
@@ -44,7 +44,7 @@ class H5peditor {
     $this->contentFilesDir = $filesDir . DIRECTORY_SEPARATOR . 'content';
     $this->editorFilesDir = ($editorFilesDir === NULL ? $filesDir . DIRECTORY_SEPARATOR . 'editor' : $editorFilesDir);
   }
-  
+
   /**
    * Get list of libraries.
    *
@@ -62,17 +62,17 @@ class H5peditor {
             'uberName' => $libraryName,
             'name' => $matches[1][0],
             'majorVersion' => $matches[2][0],
-            'minorVersion' => $matches[3][0]        
+            'minorVersion' => $matches[3][0]
           );
         }
       }
     }
-  
+
     $libraries = $this->storage->getLibraries(!isset($libraries) ? NULL : $libraries);
-    
+
     if ($this->h5p->development_mode & H5PDevelopment::MODE_LIBRARY) {
       $devLibs = $this->h5p->h5pD->getLibraries();
-      
+
       // Replace libraries with devlibs
       for ($i = 0, $s = count($libraries); $i < $s; $i++) {
         $lid = $libraries[$i]->name . ' ' . $libraries[$i]->majorVersion . '.' . $libraries[$i]->minorVersion;
@@ -88,10 +88,10 @@ class H5peditor {
         }
       }
     }
-    
+
     return json_encode($libraries);
   }
-  
+
   /**
    * Keep track of temporary files.
    *
@@ -113,7 +113,7 @@ class H5peditor {
     if (!is_dir($this->contentFilesDir)) {
       mkdir($this->contentFilesDir, 0777, true);
     }
-    
+
     $sub_directories = array('', 'files', 'images', 'videos', 'audios');
     foreach ($sub_directories AS $sub_directory) {
       $sub_directory = $this->content_directory . $sub_directory;
@@ -236,7 +236,7 @@ class H5peditor {
         if (isset($params->library) && isset($params->params)) {
           $library = H5PCore::libraryFromString($params->library);
           $semantics = $this->h5p->loadLibrarySemantics($library['machineName'], $library['majorVersion'], $library['minorVersion']);
-            
+
           // Process parameters for the library.
           $this->processSemantics($files, $semantics, $params->params);
         }
@@ -288,7 +288,7 @@ class H5peditor {
     $library = $this->h5p->loadLibrary($machineName, $majorVersion, $minorVersion);
     $dependencies = array();
     $this->h5p->findLibraryDependencies($dependencies, $library);
-    
+
     $editorLibraries = array();
     foreach ($dependencies as $dependency) {
       if ($dependency['type'] !== 'editor') {
@@ -296,7 +296,7 @@ class H5peditor {
       }
       $editorLibraries[$dependency['library']['libraryId']] = $dependency['library'];
     }
-    
+
     return $editorLibraries;
   }
 

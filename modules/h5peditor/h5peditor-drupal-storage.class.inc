@@ -75,29 +75,29 @@ class H5peditorDrupalStorage implements H5peditorStorage {
           $librariesWithDetails[] = $library;
         }
       }
-      
+
       return $librariesWithDetails;
     }
-    
+
     $libraries = array();
 
     $libraries_result = db_query(
-      "SELECT machine_name AS name, 
-              title, 
-              major_version, 
+      "SELECT machine_name AS name,
+              title,
+              major_version,
               minor_version
-       FROM {h5p_libraries} 
-       WHERE runnable = 1 
-       AND semantics IS NOT NULL 
+       FROM {h5p_libraries}
+       WHERE runnable = 1
+       AND semantics IS NOT NULL
        ORDER BY title");
     while ($library = db_fetch_object($libraries_result)) {
       // Convert result object properties to camelCase.
       $library = H5PCore::snakeToCamel($library, true);
-      
+
       // Make sure we only display the newest version of a library.
       foreach ($libraries as $existingLibrary) {
         if ($library->name === $existingLibrary->name) {
-          
+
           // Mark old ones
           // This is the newest
           if (($library->majorVersion === $existingLibrary->majorVersion && $library->minorVersion > $existingLibrary->minorVersion) ||
@@ -109,12 +109,12 @@ class H5peditorDrupalStorage implements H5peditorStorage {
           }
         }
       }
-      
+
       // Add new library
       $libraries[] = $library;
     }
-    
+
     return $libraries;
   }
-  
+
 }

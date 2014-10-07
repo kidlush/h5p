@@ -6,7 +6,7 @@
 var ns = H5PEditor = window.parent.H5PEditor;
 ns.$ = H5P.jQuery;
 
-// Load needed resources from parent. 
+// Load needed resources from parent.
 H5PIntegration = window.parent.H5PIntegration;
 
 /**
