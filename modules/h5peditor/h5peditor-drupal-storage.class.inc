@@ -13,8 +13,7 @@ class H5peditorDrupalStorage implements H5peditorStorage {
   /**
    * TODO
    */
-  public function getLanguage($machineName, $majorVersion, $minorVersion) {
-    global $language;
+  public function getLanguage($machineName, $majorVersion, $minorVersion, $language) {
     $lang = db_result(db_query(
       "SELECT language_json
       FROM {h5p_libraries_languages} hlt
@@ -23,8 +22,8 @@ class H5peditorDrupalStorage implements H5peditorStorage {
       AND hl.major_version = %d
       AND hl.minor_version = %d
       AND hlt.language_code = '%s'",
-      $machineName, $majorVersion, $minorVersion, $language->language));
-      
+      $machineName, $majorVersion, $minorVersion, $language));
+
     return ($lang === FALSE ? NULL : $lang);
   }
 
@@ -60,14 +59,14 @@ class H5peditorDrupalStorage implements H5peditorStorage {
       $librariesWithDetails = array();
       foreach ($libraries as $library) {
         $details = db_fetch_object(db_query(
-          "SELECT title, runnable 
-           FROM {h5p_libraries} 
-           WHERE machine_name = '%s' 
-           AND major_version = %d 
-           AND minor_version = %d 
-           AND semantics IS NOT NULL", 
-         $library->name, 
-         $library->majorVersion, 
+          "SELECT title, runnable
+           FROM {h5p_libraries}
+           WHERE machine_name = '%s'
+           AND major_version = %d
+           AND minor_version = %d
+           AND semantics IS NOT NULL",
+         $library->name,
+         $library->majorVersion,
          $library->minorVersion));
         if ($details !== FALSE) {
           $library->title = $details->title;

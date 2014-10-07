@@ -17,13 +17,22 @@ var ns = H5PEditor;
     ns.fileIcon = Drupal.settings.h5peditor.fileIcon;
     ns.ajaxPath = Drupal.settings.h5peditor.ajaxPath;
     ns.filesPath = Drupal.settings.h5peditor.filesPath;
-    
+    ns.contentLanguage = ns.$('#edit-language').val();
+
+    var $lang = ns.$('#edit-language');
+    var setLang = function () {
+      ns.contentLanguage = $lang.val();
+    };
+    $lang.change(setLang);
+    setLang();
+
+
     // Semantics describing what copyright information can be stored for media.
     ns.copyrightSemantics = Drupal.settings.h5peditor.copyrightSemantics;
-    
+
     // Required styles and scripts for the editor
     ns.assets = Drupal.settings.h5peditor.assets;
-    
+
     // Required for assets
     ns.baseUrl = Drupal.settings.basePath;
 

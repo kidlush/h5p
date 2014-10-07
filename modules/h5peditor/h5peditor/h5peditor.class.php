@@ -264,19 +264,19 @@ class H5peditor {
   /**
    * TODO: Consider moving to core.
    */
-  public function getLibraryLanguage($machineName, $majorVersion, $minorVersion) {
+  public function getLibraryLanguage($machineName, $majorVersion, $minorVersion, $languageCode) {
     if ($this->h5p->development_mode & H5PDevelopment::MODE_LIBRARY) {
       // Try to get language development library first.
-      $language = $this->h5p->h5pD->getLanguage($machineName, $majorVersion, $minorVersion);
+      $language = $this->h5p->h5pD->getLanguage($machineName, $majorVersion, $minorVersion, $languageCode);
     }
-    
+
     if (isset($language) === FALSE) {
-      $language = $this->storage->getLanguage($machineName, $majorVersion, $minorVersion);
+      $language = $this->storage->getLanguage($machineName, $majorVersion, $minorVersion, $languageCode);
     }
-    
+
     return ($language === FALSE ? NULL : $language);
   }
-  
+
   /**
    * Return all libraries used by the given editor library.
    *
@@ -306,22 +306,22 @@ class H5peditor {
    * @param string $library_name
    *  Name of the library we want to fetch data for
    */
-  public function getLibraryData($machineName, $majorVersion, $minorVersion) {
+  public function getLibraryData($machineName, $majorVersion, $minorVersion, $languageCode) {
     $libraryData = new stdClass();
-    
+
     $libraries = $this->findEditorLibraries($machineName, $majorVersion, $minorVersion);
     $libraryData->semantics = $this->h5p->loadLibrarySemantics($machineName, $majorVersion, $minorVersion);
-    $libraryData->language = $this->storage->getLanguage($machineName, $majorVersion, $minorVersion);
+    $libraryData->language = $this->storage->getLanguage($machineName, $majorVersion, $minorVersion, $languageCode);
 
     $files = $this->h5p->getDependenciesFiles($libraries);
-    
+
     // Javascripts
     if (!empty($files['scripts'])) {
       foreach ($files['scripts'] as $script) {
         $libraryData->javascript[$script->path . $script->version] = "\n" . file_get_contents($script->path);
       }
     }
-    
+
     // Stylesheets
     if (!empty($files['styles'])) {
       foreach ($files['styles'] as $css) {
@@ -332,7 +332,7 @@ class H5peditor {
 
     // Add translations for libraries.
     foreach ($libraries as $library) {
-      $language = $this->getLibraryLanguage($library['machineName'], $library['majorVersion'], $library['minorVersion']);
+      $language = $this->getLibraryLanguage($library['machineName'], $library['majorVersion'], $library['minorVersion'], $languageCode);
       if ($language !== NULL) {
         $lang = '; H5PEditor.language["' . $library['machineName'] . '"] = ' . $language . ';';
         $libraryData->javascript[md5($lang)] = $lang;

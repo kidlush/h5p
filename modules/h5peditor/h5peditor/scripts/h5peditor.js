@@ -55,8 +55,17 @@ ns.loadLibrary = function (libraryName, callback) {
       ns.loadedSemantics[libraryName] = 0; // Indicates that others should queue.
       ns.semanticsLoaded[libraryName] = []; // Other callbacks to run once loaded.
       var library = ns.libraryFromString(libraryName);
+
+      var url = ns.getAjaxUrl('libraries', library);
+
+      // Add content language to URL
+      if (ns.contentLanguage !== undefined) {
+        url += (url.indexOf('?') === -1 ? '?' : '&') + 'language=' + ns.contentLanguage;
+      }
+
+      // Fire away!
       ns.$.ajax({
-        url: ns.getAjaxUrl('libraries', library),
+        url: url,
         success: function (libraryData) {
           var semantics = libraryData.semantics;
           if (libraryData.language !== null) {

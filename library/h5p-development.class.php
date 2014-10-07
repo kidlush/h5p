@@ -137,32 +137,32 @@ class H5PDevelopment {
    */
   public function getSemantics($name, $majorVersion, $minorVersion) {
     $library = H5PDevelopment::libraryToString($name, $majorVersion, $minorVersion);
-    
+
     if (isset($this->libraries[$library]) === FALSE) {
       return NULL;
     }
-    
+
     return $this->getFileContents($this->libraries[$library]['path'] . '/semantics.json');
   }
-  
+
   /**
    * Get translations for the given library.
-   * 
+   *
    * @param string $name of the library.
    * @param int $majorVersion of the library.
    * @param int $minorVersion of the library.
    * @return string Translation
    */
-  public function getLanguage($name, $majorVersion, $minorVersion) {
+  public function getLanguage($name, $majorVersion, $minorVersion, $language) {
     $library = H5PDevelopment::libraryToString($name, $majorVersion, $minorVersion);
-    
+
     if (isset($this->libraries[$library]) === FALSE) {
       return NULL;
     }
-    
-    return $this->getFileContents($this->libraries[$library]['path'] . '/language/' . $this->language . '.json');
+
+    return $this->getFileContents($this->libraries[$library]['path'] . '/language/' . $language . '.json');
   }
-  
+
   /**
    * Writes library as string on the form "name majorVersion.minorVersion"
    *
