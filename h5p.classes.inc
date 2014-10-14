@@ -385,8 +385,7 @@ class H5PDrupal implements H5PFrameworkInterface {
                 preloaded_css,
                 drop_library_css,
                 fullscreen,
-                runnable,
-                semantics
+                runnable
           FROM {h5p_libraries}
           WHERE machine_name = '%s'
           AND major_version = %d
@@ -414,12 +413,7 @@ class H5PDrupal implements H5PFrameworkInterface {
         'minorVersion' => $dependency->minor,
       );
     }
-    if ($this->isInDevMode()) {
-      $semantics = $this->getSemanticsFromFile($library['machineName'], $library['majorVersion'], $library['minorVersion']);
-      if ($semantics) {
-        $library['semantics'] = $semantics;
-      }
-    }
+
     return $library;
   }
 
