@@ -17,7 +17,6 @@ var ns = H5PEditor;
     ns.fileIcon = Drupal.settings.h5peditor.fileIcon;
     ns.ajaxPath = Drupal.settings.h5peditor.ajaxPath;
     ns.filesPath = Drupal.settings.h5peditor.filesPath;
-    ns.contentLanguage = ns.$('#edit-language').val();
 
     var $lang = ns.$('#edit-language');
     var setLang = function () {
