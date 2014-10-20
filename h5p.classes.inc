@@ -286,6 +286,12 @@ class H5PDrupal implements H5PFrameworkInterface {
         WHERE content_id = %d",
         $content['params'], $content['library']['libraryId'], $content_id
     );
+
+    // TODO: Use more specific code to remove just h5p-X-X.js/css ?
+    // TODO: Use own cache busting string for each content ? 
+    _drupal_flush_css_js();
+    drupal_clear_js_cache();
+    drupal_clear_css_cache();
   }
 
   /**
@@ -552,6 +558,12 @@ class H5PDrupal implements H5PFrameworkInterface {
       WHERE main_library_id = %d",
       $library_id
     );
+
+    // TODO: Use more specific code to remove just h5p-X-X.js/css ?
+    // TODO: Use own cache busting string for each content ?
+    _drupal_flush_css_js();
+    drupal_clear_js_cache();
+    drupal_clear_css_cache();
   }
 
   /**
