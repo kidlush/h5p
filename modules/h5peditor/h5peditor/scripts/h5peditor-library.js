@@ -24,6 +24,7 @@ ns.Library = function (parent, field, params, setValue) {
   this.parent = parent;
   this.changes = [];
   this.optionsLoaded = false;
+  this.library = parent.library + '/' + field.name;
 
   this.passReadies = true;
   parent.ready(function () {
@@ -56,13 +57,15 @@ ns.Library.prototype.appendTo = function ($wrapper) {
   this.$select = $field.children('select');
   this.$libraryWrapper = $field.children('.libwrap');
 
-  ns.$.post(ns.ajaxPath + 'libraries', {libraries: that.field.options}, function (data) {
+  ns.$.post(ns.getAjaxUrl('libraries'), {libraries: that.field.options}, function (data) {
     that.libraries = data;
 
     var options = ns.createOption('-', '-');
     for (var i = 0; i < data.length; i++) {
       var library = data[i];
-      options += ns.createOption(library.uberName, library.title, library.uberName === that.params.library);
+      if (library.title !== undefined) {
+        options += ns.createOption(library.uberName, library.title, library.uberName === that.params.library);
+      }
     }
 
     that.$select.html(options).change(function () {
@@ -105,20 +108,21 @@ ns.Library.prototype.loadLibrary = function (libraryName, preserveParams) {
   if (libraryName === '-') {
     delete this.params.library;
     delete this.params.params;
+    this.$libraryWrapper.attr('class', 'libwrap');
     return;
   }
 
-  this.$libraryWrapper.html(ns.t('core', 'loading', {':type': 'semantics'}));
+  this.$libraryWrapper.html(ns.t('core', 'loading', {':type': 'semantics'})).addClass(libraryName.split(' ')[0].toLowerCase().replace('.', '-') + '-editor');
 
   ns.loadLibrary(libraryName, function (semantics) {
-    that.library = libraryName;
+    that.currentLibrary = libraryName;
     that.params.library = libraryName;
 
     if (preserveParams === undefined || !preserveParams) {
       // Reset params
       that.params.params = {};
     }
-
+    
     ns.processSemanticsChunk(semantics, that.params.params, that.$libraryWrapper.html(''), that);
 
     if (that.libraries !== undefined) {
@@ -144,7 +148,7 @@ ns.Library.prototype.change = function (callback) {
     // Find library
     var library;
     for (var i = 0; i < this.libraries.length; i++) {
-      if (this.libraries[i].uberName === this.library) {
+      if (this.libraries[i].uberName === this.currentLibrary) {
         library = this.libraries[i];
         break;
       }
@@ -197,7 +201,7 @@ ns.Library.prototype.ready = function (ready) {
  * @returns {unresolved}
  */
 ns.Library.prototype.removeChildren = function () {
-  if (this.library === '-' || this.children === undefined) {
+  if (this.currentLibrary === '-' || this.children === undefined) {
     return;
   }
 
@@ -206,7 +210,7 @@ ns.Library.prototype.removeChildren = function () {
   for (var libraryPath in ancestor.commonFields) {
     var library = libraryPath.split('/')[0];
 
-    if (library === this.library) {
+    if (library === this.currentLibrary) {
       var remove = false;
 
       for (var fieldName in ancestor.commonFields[libraryPath]) {

@@ -14,27 +14,54 @@ ns.LibrarySelector = function (libraries, defaultLibrary, defaultParams) {
   var firstTime = true;
   var options = '<option value="-">-</option>';
 
-  this.defaultParams = defaultParams;
-  this.defaultLibrary = defaultLibrary;
+  try {
+    this.defaultParams = JSON.parse(defaultParams);
+    if (!(this.defaultParams instanceof Object)) {
+      throw true;
+    }
+  }
+  catch (event) {
+    // Content parameters are broken. Reset. (This allows for broken content to be reused without deleting it)
+    this.defaultParams = {};
+    // TODO: Inform the user?
+  }
+  
+  this.defaultLibrary = this.currentLibrary = defaultLibrary;
   this.defaultLibraryParameterized = defaultLibrary ? defaultLibrary.replace('.', '-').toLowerCase() : undefined;
 
   for (var i = 0; i < libraries.length; i++) {
     var library = libraries[i];
     var libraryName = ns.libraryToString(library);
-    options += '<option value="' + libraryName + '"';
-    if (libraryName === defaultLibrary || library.name === this.defaultLibraryParameterized) {
-      options += ' selected="selected"';
+
+    // Allow old version of library only if used by existing content
+    if (library.isOld !== true || (library.isOld === true && this.defaultLibrary === libraryName)) {
+      options += '<option value="' + libraryName + '"';
+      if (libraryName === defaultLibrary || library.name === this.defaultLibraryParameterized) {
+        options += ' selected="selected"';
+      }
+      options += '>' + library.title + (library.isOld===true ? ' (deprecated)' : '') + '</option>';
     }
-    options += '>' + library.title + '</option>';
   }
 
   this.$selector = ns.$('<select name="h5peditor-library" title="' + ns.t('core', 'selectLibrary') + '">' + options + '</select>').change(function () {
-    if (firstTime || confirm(H5PEditor.t('core', 'confirmChangeLibrary'))) {
-      var library = that.$selector.val();
-      if (library !== '-') {
-        firstTime = false;
-      }
+    var library;
+    var changeLibrary = true;
+
+    if (!firstTime) {
+      changeLibrary = confirm(H5PEditor.t('core', 'confirmChangeLibrary'));
+    }
+
+    if (changeLibrary) {
+      library = that.$selector.val();
       that.loadSemantics(library);
+      that.currentLibrary = library;
+    }
+    else {
+      that.$selector.val(that.currentLibrary);
+    }
+
+    if (library !== '-') {
+      firstTime = false;
     }
   });
 };
@@ -74,7 +101,7 @@ ns.LibrarySelector.prototype.loadSemantics = function (library) {
   this.$parent.attr('class', 'h5peditor ' + library.split(' ')[0].toLowerCase().replace('.', '-') + '-editor');
 
   // Display loading message
-  var $loading = ns.$('<div class="h5peditor-loading">' + ns.t('core', 'loading', {':type': 'semantics'}) + '</div>').appendTo(this.$parent);
+  var $loading = ns.$('<div class="h5peditor-loading h5p-throbber">' + ns.t('core', 'loading', {':type': 'semantics'}) + '</div>').appendTo(this.$parent);
 
   this.$selector.attr('disabled', true);
 
