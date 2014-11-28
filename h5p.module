@@ -554,7 +554,10 @@ function _h5p_display_unsupported_libraries($display_details = FALSE) {
       $message = $core->createMarkupForUnsupportedLibraryList($unsupported_libraries);
     }
     else {
-      $message = t('You have %num_libs H5P libraries with versions not supported anymore. ', array('%num_libs' => sizeof($unsupported_libraries)));
+      // Important, in D6 % placeholders may not be used here since this function is called from hook_init
+      // We're using @ instead
+      // https://www.drupal.org/node/219910
+      $message = t('You have <em>@num_libs</em> H5P libraries with versions not supported anymore. ', array('@num_libs' => sizeof($unsupported_libraries)));
     }
 
     $message .= t('Please upgrade all H5P libraries <a href="@url">here</a>', array('@url' => url('admin/content/h5p/libraries/upgrade-all')));
