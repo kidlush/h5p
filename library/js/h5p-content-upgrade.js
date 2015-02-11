@@ -1,3 +1,4 @@
+/*jshint -W083 */
 var H5PUpgrades = H5PUpgrades || {};
 
 (function ($) {
@@ -211,6 +212,7 @@ var H5PUpgrades = H5PUpgrades || {};
 
     var current = 0; // Track progress
     asyncSerial(parameters, function (id, params, next) {
+
       try {
         // Make params possible to work with
         params = JSON.parse(params);
