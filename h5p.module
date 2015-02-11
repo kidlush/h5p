@@ -376,7 +376,64 @@ function h5p_form(&$node, $form_state) {
     '#default_value' => isset($node->embed_type) ? $node->embed_type : 'div',
   );
 
+  // Display options
+  if (variable_get('h5p_frame', TRUE)) {
+    $form['h5p_options'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('H5P Options'),
+      '#collapsible' => true,
+      '#collapsed' => true,
+      '#weight' => $form['h5p']['#weight'] + 1,
+      '#attributes' => array(
+        'class' => 'h5p-action-bar-settings'
+      ),
+      '#after_build' => array('_h5p_load_disable_js')
+    );
+
+    if (!isset($node->disable)) {
+      $node->disable = H5PCore::DISABLE_NONE;
+    }
+
+    $labels = _h5p_get_disable_labels();
+    foreach (H5PCore::$disable as $bit => $name) {
+      if (variable_get('h5p_' . ($bit & H5PCore::DISABLE_DOWNLOAD ? 'export' : $name), TRUE)) {
+        $form['h5p_options'][$name] = array(
+          '#type' => 'checkbox',
+          '#title' => $labels[$bit],
+          '#default_value' => !($node->disable & $bit)
+        );
+      }
+    }
+
+    $form['#submit'][] = '_h5p_form_submit';
+  }
+
   return $form;
+}
+
+function _h5p_load_disable_js($form_element, &$form_state) {
+  drupal_add_js(drupal_get_path('module', 'h5p') . '/library/js/disable.js');
+  return $form_element;
+}
+
+/**
+ * Handle h5p node form submission
+ */
+function _h5p_form_submit($form, &$form_state) {
+  $form_state['values']['disable'] = H5PCore::getDisable($form_state['values']);
+}
+
+/**
+ * Provide human readable labels for display options.
+ */
+function _h5p_get_disable_labels() {
+  return array(
+    H5PCore::DISABLE_FRAME => t('Display action bar and frame'),
+    H5PCore::DISABLE_DOWNLOAD => t('Download button'),
+    H5PCore::DISABLE_EMBED => t('Embed button'),
+    H5PCore::DISABLE_COPYRIGHT => t('Copyright button'),
+    H5PCore::DISABLE_ABOUT => t('About H5P button')
+  );
 }
 
 /**
@@ -435,7 +492,8 @@ function h5p_insert($node) {
       'embed_type' => $node->embed_type,
       'library' => array(
         'libraryId' => $node->main_library_id
-      )
+      ),
+      'disable' => $node->disable
     ), $node->nid);
   }
 }
@@ -498,6 +556,7 @@ function h5p_load($node) {
     $additions->main_library_id = $content['library']['id'];
     $additions->embed_type = $content['embedType'];
     $additions->main_library = $content['library'];
+    $node->disable = $content['disable'];
   }
   return $additions;
 }
@@ -703,6 +762,11 @@ function h5p_add_files_and_settings($node, $embed_type) {
   );
   $core = _h5p_get_instance('core');
 
+  $node->disable |= $core->getGlobalDisable();
+  if (!variable_get('h5p_icon_in_action_bar', TRUE)) {
+    $node->disable |= H5PCore::DISABLE_ABOUT;
+  }
+
   $settings = array(
     'h5p' => array(
       'content' => array(
@@ -711,7 +775,8 @@ function h5p_add_files_and_settings($node, $embed_type) {
           'jsonContent' => $core->filterParameters($content),
           'fullScreen' => $node->main_library['fullscreen'],
           'exportUrl' => h5p_get_export_path($content['id']),
-          'embedCode' => _h5p_generate_embed_code($node->nid)
+          'embedCode' => _h5p_generate_embed_code($node->nid),
+          'disable' => $node->disable
         )
       )
     )
@@ -944,6 +1009,11 @@ function h5p_content_extra_fields($type_name) {
       'description' => t('Upload interactive content.'),
       'weight' => 2,
     );
+    $extra['h5p_options'] = array(
+      'label' => t('H5P Options'),
+      'description' => t('Display options for interactive content.'),
+      'weight' => 3,
+    );
   }
   return $extra;
 }
@@ -994,4 +1064,30 @@ function h5p_access_user_points($account = NULL) {
     }
   }
   return FALSE;
+}
+
+/**
+ * Implements hook_cron().
+ */
+function h5p_cron() {
+  // Contact the mothership for updates
+  _h5p_fetch_library_updates();
+}
+
+/**
+ * Looks for library updates
+ */
+function _h5p_fetch_library_updates($disable = FALSE) {
+  $time = time();
+  if (variable_get('h5p_allow_communication_with_h5p_org', TRUE) &&
+      ($disable ||
+       intval(variable_get('h5p_fetched_library_metadata_on', 0)) + 86400 < $time)) {
+
+    // Fetch the library-metadata:
+    $core = _h5p_get_instance('core');
+    $core->fetchLibrariesMetadata($disable);
+
+    // Log when the last updates were fetched
+    variable_set('h5p_fetched_library_metadata_on', $time);
+  }
 }

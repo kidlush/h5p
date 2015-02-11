@@ -1,8 +1,37 @@
 <?php
+
 /**
  * Menu callback - Form builder function for settings.
  */
 function h5p_admin_settings() {
+  $form['h5p_display_options'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Display Options'),
+    '#attributes' => array(
+      'class' => 'h5p-action-bar-settings'
+    ),
+    '#after_build' => array('_h5p_load_disable_js')
+  );
+
+  $labels = _h5p_get_disable_labels();
+  foreach (H5PCore::$disable as $bit => $name) {
+    $name = ($bit & H5PCore::DISABLE_DOWNLOAD ? 'export' : $name);
+    $form['h5p_display_options']['h5p_' . $name] = array(
+      '#type' => 'checkbox',
+      '#title' => $labels[$bit],
+      '#default_value' => variable_get('h5p_' . $name, TRUE)
+    );
+  }
+  // TODO: Should we remove existing H5P files when export gets disabled?
+
+  // Disable/enable the H5P icon below each H5P
+  $form['h5p_display_options']['h5p_icon_in_action_bar'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('About H5P button'),
+    '#default_value' => variable_get('h5p_icon_in_action_bar', TRUE)
+  );
+
+
   $form['h5p_default_path'] = array(
     '#type' => 'textfield',
     '#title' => t('Default h5p package path'),
@@ -20,22 +49,6 @@ function h5p_admin_settings() {
     '#default_value' => variable_get('h5p_revisioning', '1'),
     '#description' => t("Disable this feature to save disk space. This value can't be changed if there are existing h5p nodes."),
     '#disabled' => $h5p_nodes_exists,
-  );
-
-  $form['h5p_export'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Enable export of all H5P content'),
-    '#default_value' => variable_get('h5p_export', '1'),
-    '#description' => t("With this feature enabled all H5P content will be downloadable as H5P files. The H5P Editor module must be enabled for export to work."),
-  );
-  // TODO: Should we remove existing H5P files when export gets disabled?
-
-  // Disable/enable the H5P icon below each H5P
-  $form['h5p_icon_in_action_bar'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Display the H5P icon below each H5P'),
-    '#default_value' => variable_get('h5p_icon_in_action_bar', '1'),
-    '#description' => t("The H5P icon is a link to h5p.org"),
   );
 
   // make sure core is loaded
@@ -81,6 +94,13 @@ function h5p_admin_settings() {
     '#description' => t('Check to enabled development of libraries in the %dev folder.', array('%dev' => file_directory_path() . '/' . variable_get('h5p_default_path', 'h5p') . '/development')),
   );*/
 
+  $form['h5p_allow_communication_with_h5p_org'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Get updates from h5p.org'),
+    '#default_value' => variable_get('h5p_allow_communication_with_h5p_org', '1'),
+    '#description' => t('Currently only tutorials are being updated, but in the future notification about code updates and more will be fetched from H5P.org'),
+  );
+
   // Make changes to the settings before passing them off to
   // system_settings_form_submit().
   $form['#submit'][] = 'h5p_admin_settings_submit';
@@ -113,6 +133,10 @@ function h5p_admin_settings_submit($form, &$form_state) {
   $form_state['values']['h5p_default_path'] = rtrim($form_state['values']['h5p_default_path'], '/\\');
   // Ensure that the h5p white list is always stored in lower case.
   $form_state['values']['h5p_whitelist'] = mb_strtolower($form_state['values']['h5p_whitelist']);
+
+  if (!$form_state['values']['h5p_allow_communication_with_h5p_org']) {
+    _h5p_fetch_library_updates(TRUE);
+  }
 }
 
 /**

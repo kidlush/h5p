@@ -282,13 +282,13 @@ class H5PDrupal implements H5PFrameworkInterface {
     }
 
     db_query("UPDATE {h5p_nodes}
-        SET json_content = '%s', embed_type = 'div', main_library_id = %d, filtered = ''
+        SET json_content = '%s', embed_type = 'div', main_library_id = %d, filtered = '', disable = '%s'
         WHERE content_id = %d",
-        $content['params'], $content['library']['libraryId'], $content_id
+        $content['params'], $content['library']['libraryId'], $content['disable'], $content_id
     );
 
     // TODO: Use more specific code to remove just h5p-X-X.js/css ?
-    // TODO: Use own cache busting string for each content ? 
+    // TODO: Use own cache busting string for each content ?
     _drupal_flush_css_js();
     drupal_clear_js_cache();
     drupal_clear_css_cache();
@@ -300,9 +300,9 @@ class H5PDrupal implements H5PFrameworkInterface {
   public function insertContent($content, $contentMainId = NULL) {
     db_query(
         "INSERT INTO {h5p_nodes}
-          (content_id, nid, json_content, embed_type, main_library_id)
-          VALUES (%d, %d, '%s', '%s', %d)",
-        $content['id'], $contentMainId, $content['params'], 'div', $content['library']['libraryId']
+          (content_id, nid, json_content, embed_type, main_library_id, disable)
+          VALUES (%d, %d, '%s', '%s', %d, '%s')",
+        $content['id'], $contentMainId, $content['params'], 'div', $content['library']['libraryId'], $content['disable']
     );
     // TODO: Add support for allowing the user to select embed type. Should be validated against what's possible for the library.
 
@@ -479,7 +479,8 @@ class H5PDrupal implements H5PFrameworkInterface {
                 hl.minor_version AS library_minor_version,
                 hl.embed_types AS library_embed_types,
                 hl.fullscreen AS library_fullscreen,
-                hn.filtered
+                hn.filtered,
+                hn.disable
           FROM {h5p_nodes} hn
           JOIN {node} n ON n.nid = hn.nid
           JOIN {h5p_libraries} hl ON hl.library_id = hn.main_library_id
@@ -579,4 +580,38 @@ class H5PDrupal implements H5PFrameworkInterface {
   public function getNumContent($library_id) {
     return (int) db_result(db_query('SELECT COUNT(content_id) FROM {h5p_nodes} WHERE main_library_id = %d', $library_id));
   }
+
+  /**
+   * Implements getPlatformInfo
+   */
+  public function getPlatformInfo() {
+    // Could call system_get_info(), but performance-wise it
+    // does not seem to be smart
+    $h5p_info = unserialize(db_result(db_query("SELECT info FROM {system} WHERE name = 'h5p'")));
+
+    return array(
+      'name' => 'Drupal',
+      'version' => VERSION,
+      'h5pVersion' => isset($h5p_info->version) ? $h5p_info->version : NULL,
+    );
+  }
+
+  /**
+   * Implements fetchExternalData
+   */
+  public function fetchExternalData($url) {
+    $response = drupal_http_request($url);
+    return isset($response->error) ? NULL : $response->data;
+  }
+
+  /**
+   * Implements setLibraryTutorialUrl
+   */
+  public function setLibraryTutorialUrl($machineName, $tutorialUrl) {
+    db_query("UPDATE h5p_libraries SET tutorial_url='%s' WHERE machine_name = '%s'", $tutorial_url, $machineName);
+  }
+
+  // Only use if you have a feather in your hat!
+  public function lockDependencyStorage() {}
+  public function unlockDependencyStorage() {}
 }
