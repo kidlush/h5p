@@ -154,6 +154,10 @@ function h5p_schema() {
         'type' => 'text',
         'not null' => TRUE,
       ),
+      'tutorial_url' => array(
+        'type' => 'varchar',
+        'length' => 2047
+      ),
     ),
     'primary key' => array('library_id'),
   );
@@ -666,6 +670,7 @@ function h5p_update_6107() {
  * Implementation of hook_update_N().
  *
  * Add field to keep track of disabled display options.
+ * Add field for tutorial url.
  */
 function h5p_update_6108() {
   $ret = array();
@@ -676,6 +681,12 @@ function h5p_update_6108() {
       'unsigned' => TRUE,
       'not null' => TRUE,
       'default' => 0
+    ));
+  }
+  if (!db_column_exists('h5p_libraries', 'tutorial_url')) {
+    db_add_field($ret, 'h5p_libraries', 'tutorial_url', array(
+      'type' => 'varchar',
+      'length' => 2047
     ));
   }
 
