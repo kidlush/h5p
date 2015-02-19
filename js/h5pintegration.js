@@ -1,4 +1,4 @@
-// TODO: Would it be easier if h5pintegration.js just hooked into the H5P namespace instead 
+// TODO: Would it be easier if h5pintegration.js just hooked into the H5P namespace instead
 // of creating its own? This way we wouldn't have lots of "empty" wrapper functions.
 var H5PIntegration = H5PIntegration || {};
 var H5P = H5P || {};
@@ -39,7 +39,7 @@ H5PIntegration.getContentPath = function (contentId) {
   if (Drupal.settings.h5p === undefined) {
     return;
   }
-  
+
   return Drupal.settings.h5p.contentPath + contentId;
 };
 
@@ -145,8 +145,8 @@ H5PIntegration.i18n = {
 
 /**
  *  Returns an object containing a library metadata
- *  
- *  @returns {object} { listData: object containing libraries, listHeaders: array containing table headers (translation done server-side) } 
+ *
+ *  @returns {object} { listData: object containing libraries, listHeaders: array containing table headers (translation done server-side) }
  */
 H5PIntegration.getLibraryList = function () {
   return Drupal.settings.h5p.libraries;
@@ -154,8 +154,8 @@ H5PIntegration.getLibraryList = function () {
 
 /**
  *  Returns an object containing detailed info for a library
- *  
- *  @returns {object} { info: object containing libraryinfo, content: array containing content info, translations: an object containing key/value } 
+ *
+ *  @returns {object} { info: object containing libraryinfo, content: array containing content info, translations: an object containing key/value }
  */
 H5PIntegration.getLibraryInfo = function () {
   return Drupal.settings.h5p.library;
@@ -163,9 +163,26 @@ H5PIntegration.getLibraryInfo = function () {
 
 /**
  * Get the DOM element where the admin UI should be rendered
- * 
+ *
  * @returns {jQuery object} The jquery object where the admin UI should be rendered
  */
 H5PIntegration.getAdminContainer = function () {
-  return H5P.jQuery('#h5p-admin-container'); 
+  return H5P.jQuery('#h5p-admin-container');
+};
+
+/**
+ * Get current user for xAPI.
+ */
+H5PIntegration.getUser = function() {
+  return Drupal.settings.h5p.user;
+};
+
+/**
+ * Get unique content url for xAPI.
+ *
+ * @param {number} contentId
+ * @returns {string} URL
+ */
+H5PIntegration.getContentUrl = function (contentId) {
+  return Drupal.settings.h5p.content['cid-' + contentId].url;
 };

@@ -725,6 +725,10 @@ function h5p_add_core_assets() {
         'libraryPath' => _h5p_get_h5p_path() . '/libraries/',
         'postUserStatistics' => $user->uid > 0,
         'ajaxPath' => url('h5p-ajax') . '/',
+        'user' => array(
+          'name' => $user->name,
+          'mail' => $user->mail
+        )
       )
     ), 'setting');
   }
@@ -776,7 +780,8 @@ function h5p_add_files_and_settings($node, $embed_type) {
           'fullScreen' => $node->main_library['fullscreen'],
           'exportUrl' => h5p_get_export_path($content['id']),
           'embedCode' => _h5p_generate_embed_code($node->nid),
-          'disable' => $node->disable
+          'disable' => $node->disable,
+          'url' => url('node/' . $node->nid, array('absolute' => TRUE))
         )
       )
     )
