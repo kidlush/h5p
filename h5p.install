@@ -69,6 +69,13 @@ function h5p_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
+      'weight' => array(
+        'description' => 'Determines the order in which the preloaded libraries will be loaded',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 999999,
+      ),
     ),
     'primary key' => array('content_id', 'library_id', 'dependency_type'),
   );
@@ -687,6 +694,27 @@ function h5p_update_6108() {
     db_add_field($ret, 'h5p_libraries', 'tutorial_url', array(
       'type' => 'varchar',
       'length' => 2047
+    ));
+  }
+
+  return $ret;
+}
+
+/**
+ * Implementation of hook_update_N().
+ *
+ * Add field to keep track of dependency weight
+ */
+function h5p_update_6109() {
+  $ret = array();
+
+  if (!db_column_exists('h5p_nodes_libraries', 'weight')) {
+    db_add_field($ret, 'h5p_nodes_libraries', 'weight', array(
+      'description' => 'Determines the order in which the preloaded libraries will be loaded',
+      'type' => 'int',
+      'unsigned' => TRUE,
+      'not null' => TRUE,
+      'default' => 999999,
     ));
   }
 

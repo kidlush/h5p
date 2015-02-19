@@ -326,8 +326,8 @@ class H5PDrupal implements H5PFrameworkInterface {
    */
   public function copyLibraryUsage($contentId, $copyFromId, $contentMainId = NULL) {
     db_query(
-      "INSERT INTO {h5p_nodes_libraries} (content_id, library_id, dependency_type, drop_css)
-      SELECT %d, hnl.library_id, hnl.dependency_type, hnl.drop_css
+      "INSERT INTO {h5p_nodes_libraries} (content_id, library_id, dependency_type, drop_css, weight)
+      SELECT %d, hnl.library_id, hnl.dependency_type, hnl.drop_css, hnl.weight
       FROM {h5p_nodes_libraries} hnl
       WHERE hnl.content_id = %d", $contentId, $copyFromId
     );
@@ -368,9 +368,9 @@ class H5PDrupal implements H5PFrameworkInterface {
       // Remember that not all systems can do INSERT IGNORE or ON DUPLICATE KEY UPDATE.
       db_query(
           "INSERT INTO {h5p_nodes_libraries}
-            (content_id, library_id, dependency_type, drop_css)
-            VALUES (%d, %d, '%s', %d)",
-          $contentId, $dependency['library']['libraryId'], $dependency['type'], $dropCss
+            (content_id, library_id, dependency_type, drop_css, weight)
+            VALUES (%d, %d, '%s', %d, %d)",
+          $contentId, $dependency['library']['libraryId'], $dependency['type'], $dropCss, $dependency['weight']
       );
     }
   }
@@ -512,7 +512,7 @@ class H5PDrupal implements H5PFrameworkInterface {
       $query .= " AND hnl.dependency_type = '%s'";
       $queryArgs[] = $type;
     }
-
+    $query .= " ORDER BY hnl.weight";
     $result = db_query($query, $queryArgs);
 
     $dependencies = array();
