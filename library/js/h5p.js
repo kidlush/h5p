@@ -8,6 +8,8 @@ H5P.isFramed = (window.self !== window.top);
 // Useful jQuery object.
 H5P.$window = H5P.jQuery(window);
 
+H5P.instances = [];
+
 // Detect if we support fullscreen, and what prefix to use.
 if (document.documentElement.requestFullScreen) {
   H5P.fullScreenBrowserPrefix = '';
@@ -28,29 +30,7 @@ else if (document.documentElement.msRequestFullscreen) {
   H5P.fullScreenBrowserPrefix = 'ms';
 }
 
-/** @const {Number} */
-H5P.DISABLE_NONE = 0;
-
-/** @const {Number} */
-H5P.DISABLE_FRAME = 1;
-
-/** @const {Number} */
-H5P.DISABLE_DOWNLOAD = 2;
-
-/** @const {Number} */
-H5P.DISABLE_EMBED = 4;
-
-/** @const {Number} */
-H5P.DISABLE_COPYRIGHT = 8;
-
-/** @const {Number} */
-H5P.DISABLE_ABOUT = 16;
-
-/**
- * Keep track of when the H5Ps where started.
- *
- * @type {Array}
- */
+// Keep track of when the H5Ps where started
 H5P.opened = {};
 
 /**
@@ -88,49 +68,32 @@ H5P.init = function () {
       });
     }
 
-    // Create action bar
     var $actions = H5P.jQuery('<ul class="h5p-actions"></ul>');
-
-    if (!(contentData.disable & H5P.DISABLE_DOWNLOAD)) {
-      // Add export button
+    if (contentData.exportUrl !== '') {
+      // Display export button
       H5P.jQuery('<li class="h5p-button h5p-export" role="button" tabindex="1" title="' + H5P.t('downloadDescription') + '">' + H5P.t('download') + '</li>').appendTo($actions).click(function () {
         window.location.href = contentData.exportUrl;
       });
     }
-    if (!(contentData.disable & H5P.DISABLE_COPYRIGHT) && instance.getCopyrights !== undefined) {
-      // Add copyrights button
-      H5P.jQuery('<li class="h5p-button h5p-copyrights" role="button" tabindex="1" title="' + H5P.t('copyrightsDescription') + '">' + H5P.t('copyrights') + '</li>').appendTo($actions).click(function () {
-        H5P.openCopyrightsDialog($actions, instance, library.params, contentId);
-      });
-    }
-    if (!(contentData.disable & H5P.DISABLE_EMBED)) {
-      // Add embed button
+
+    // Display copyrights button
+    H5P.jQuery('<li class="h5p-button h5p-copyrights" role="button" tabindex="1" title="' + H5P.t('copyrightsDescription') + '">' + H5P.t('copyrights') + '</li>').appendTo($actions).click(function () {
+      H5P.openCopyrightsDialog($actions, instance, library.params, contentId);
+    });
+
+    if (contentData.embedCode !== undefined) {
+      // Display embed button
       H5P.jQuery('<li class="h5p-button h5p-embed" role="button" tabindex="1" title="' + H5P.t('embedDescription') + '">' + H5P.t('embed') + '</li>').appendTo($actions).click(function () {
         H5P.openEmbedDialog($actions, contentData.embedCode);
       });
     }
-    if (!(contentData.disable & H5P.DISABLE_ABOUT)) {
-      // Add about H5P button icon
+    if (H5PIntegration.showH5PIconInActionBar()) {
       H5P.jQuery('<li><a class="h5p-link" href="http://h5p.org" target="_blank" title="' + H5P.t('h5pDescription') + '"></a></li>').appendTo($actions);
     }
-
-    // Insert action bar if it has any content
-    if ($actions.children().length) {
-      $actions.insertAfter($container);
-    }
-    else {
-      $element.addClass('h5p-no-frame');
-    }
+    $actions.insertAfter($container);
 
     // Keep track of when we started
     H5P.opened[contentId] = new Date();
-
-    // Handle events when the user finishes the content. Useful for logging exercise results.
-    instance.$.on('finish', function (event) {
-      if (event.data !== undefined) {
-        H5P.setFinished(contentId, event.data.score, event.data.maxScore, event.data.time);
-      }
-    });
 
     if (H5P.isFramed) {
       // Make it possible to resize the iframe when the content changes size. This way we get no scrollbars.
@@ -155,28 +118,32 @@ H5P.init = function () {
       };
 
       var resizeDelay;
-      instance.$.on('resize', function () {
+      H5P.on(instance, 'resize', function () {
         // Use a delay to make sure iframe is resized to the correct size.
         clearTimeout(resizeDelay);
         resizeDelay = setTimeout(function () {
           resizeIframe();
         }, 1);
       });
+      H5P.instances.push(instance);
     }
+
+    H5P.on(instance, 'xAPI', H5P.xAPICompletedListener);
+    H5P.on(instance, 'xAPI', H5P.externalDispatcher.trigger);
 
     // Resize everything when window is resized.
     $window.resize(function () {
       if (window.parent.H5P.isFullscreen) {
         // Use timeout to avoid bug in certain browsers when exiting fullscreen. Some browser will trigger resize before the fullscreenchange event.
-          instance.$.trigger('resize');
+        H5P.trigger(instance, 'resize');
       }
       else {
-        instance.$.trigger('resize');
+        H5P.trigger(instance, 'resize');
       }
     });
 
     // Resize content.
-    instance.$.trigger('resize');
+    H5P.trigger(instance, 'resize');
   });
 
   // Insert H5Ps that should be in iframes.
@@ -240,8 +207,8 @@ H5P.fullScreen = function ($element, instance, exitCallback, body) {
    */
   var entered = function () {
     // Do not rely on window resize events.
-    instance.$.trigger('resize');
-    instance.$.trigger('focus');
+    H5P.trigger(instance, 'resize');
+    H5P.trigger(instance, 'focus');
   };
 
   /**
@@ -255,8 +222,8 @@ H5P.fullScreen = function ($element, instance, exitCallback, body) {
     $classes.removeClass(classes);
 
     // Do not rely on window resize events.
-    instance.$.trigger('resize');
-    instance.$.trigger('focus');
+    H5P.trigger(instance, 'resize');
+    H5P.trigger(instance, 'focus');
 
     if (exitCallback !== undefined) {
       exitCallback();
@@ -385,6 +352,7 @@ H5P.classFromName = function (name) {
  * @param {Number} contentId
  * @param {jQuery} $attachTo An optional element to attach the instance to.
  * @param {Boolean} skipResize Optionally skip triggering of the resize event after attaching.
+ * @param {Object} The parent of this H5P
  * @return {Object} Instance.
  */
 H5P.newRunnable = function (library, contentId, $attachTo, skipResize) {
@@ -419,9 +387,13 @@ H5P.newRunnable = function (library, contentId, $attachTo, skipResize) {
   }
 
   var instance = new constructor(library.params, contentId);
-
+  
   if (instance.$ === undefined) {
     instance.$ = H5P.jQuery(instance);
+  }
+  
+  if (instance.contentId === undefined) {
+    instance.contentId = contentId;
   }
 
   if ($attachTo !== undefined) {
@@ -429,7 +401,7 @@ H5P.newRunnable = function (library, contentId, $attachTo, skipResize) {
 
     if (skipResize === undefined || !skipResize) {
       // Resize content.
-      instance.$.trigger('resize');
+      H5P.trigger(instance, 'resize');
     }
   }
   return instance;
@@ -1087,7 +1059,7 @@ H5P.setFinished = function (contentId, score, maxScore, time) {
     var toUnix = function (date) {
       return Math.round(date.getTime() / 1000);
     };
-
+    
     // Post the results
     // TODO: Should we use a variable with the complete path?
     H5P.jQuery.post(H5P.ajaxPath + 'setFinished', {
@@ -1131,3 +1103,48 @@ if (H5P.jQuery) {
     }
   });
 }
+
+/**
+ * Trigger an event on an instance
+ * 
+ * Helper function that triggers an event if the instance supports event handling
+ * 
+ * @param {function} instance
+ *  An H5P instance
+ * @param {string} eventType
+ *  The event type
+ */
+H5P.trigger = function(instance, eventType) {
+  // Try new event system first
+  if (instance.trigger !== undefined) {
+    instance.trigger(eventType);
+  }
+  // Try deprecated event system
+  else if (instance.$ !== undefined && instance.$.trigger !== undefined) {
+    instance.$.trigger(eventType)
+  }
+};
+
+/**
+ * Register an event handler
+ * 
+ * Helper function that registers an event handler for an event type if
+ * the instance supports event handling
+ * 
+ * @param {function} instance
+ *  An h5p instance
+ * @param {string} eventType
+ *  The event type
+ * @param {function} handler
+ *  Callback that gets triggered for events of the specified type
+ */
+H5P.on = function(instance, eventType, handler) {
+  // Try new event system first
+  if (instance.on !== undefined) {
+    instance.on(eventType, handler);
+  }
+  // Try deprecated event system
+  else if (instance.$ !== undefined && instance.$.on !== undefined) {
+    instance.$.on(eventType, handler)
+  }
+};
