@@ -1169,8 +1169,9 @@ function _h5p_fetch_library_updates($disable = FALSE) {
 function h5p_preprocess_page(&$variables) {
   $integration = h5p_add_files_and_settings(NULL, NULL);
   if ($integration) {
-    $variables['scripts'] .= '<script type="text/javascript">H5PIntegration = ' . json_encode($integration) . ';</script>';
-    //drupal_add_js('H5PIntegration = ' . json_encode($integration) . ';' , 'inline');
+    $js = 'H5PIntegration = ' . json_encode($integration) . ';';
+    $variables['scripts'] .= '<script type="text/javascript">' . $js . '</script>';
+    drupal_add_js($js , 'inline');
   }
 }
 
