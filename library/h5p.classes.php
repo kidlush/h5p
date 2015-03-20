@@ -15,6 +15,7 @@ interface H5PFrameworkInterface {
    */
   public function getPlatformInfo();
 
+
   /**
    * Fetches a file from a remote server using HTTP GET
    *
@@ -72,12 +73,6 @@ interface H5PFrameworkInterface {
    *   Path to the folder where the last uploaded h5p for this session is located.
    */
   public function getUploadedH5pFolderPath();
-
-  /**
-   * @return string
-   *   Path to the folder where all h5p files are stored
-   */
-  public function getH5pPath();
 
   /**
    * Get the path to the last uploaded h5p file
@@ -1269,7 +1264,7 @@ class H5PStorage {
       $contentId = $this->h5pC->saveContent($content, $contentMainId);
       $this->contentId = $contentId;
 
-      $contents_path = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'content';
+      $contents_path = $this->h5pC->path . DIRECTORY_SEPARATOR . 'content';
       if (!is_dir($contents_path)) {
         mkdir($contents_path, 0777, true);
       }
@@ -1297,7 +1292,7 @@ class H5PStorage {
     $oldOnes = 0;
 
     // Find libraries directory and make sure it exists
-    $libraries_path = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'libraries';
+    $libraries_path = $this->h5pC->path . DIRECTORY_SEPARATOR . 'libraries';
     if (!is_dir($libraries_path)) {
       mkdir($libraries_path, 0777, true);
     }
@@ -1395,8 +1390,9 @@ class H5PStorage {
    *  The content id
    */
   public function deletePackage($contentId) {
-    H5PCore::deleteFileTree($this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'content' . DIRECTORY_SEPARATOR . $contentId);
+    H5PCore::deleteFileTree($this->h5pC->path . DIRECTORY_SEPARATOR . 'content' . DIRECTORY_SEPARATOR . $contentId);
     $this->h5pF->deleteContentData($contentId);
+    // TODO: Delete export?
   }
 
   /**
@@ -1429,8 +1425,8 @@ class H5PStorage {
    *  The main id of the new content (used in frameworks that support revisioning)
    */
   public function copyPackage($contentId, $copyFromId, $contentMainId = NULL) {
-    $source_path = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'content' . DIRECTORY_SEPARATOR . $copyFromId;
-    $destination_path = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR . 'content' . DIRECTORY_SEPARATOR . $contentId;
+    $source_path = $this->h5pC->path . DIRECTORY_SEPARATOR . 'content' . DIRECTORY_SEPARATOR . $copyFromId;
+    $destination_path = $this->h5pC->path . DIRECTORY_SEPARATOR . 'content' . DIRECTORY_SEPARATOR . $contentId;
     $this->h5pC->copyFileTree($source_path, $destination_path);
 
     $this->h5pF->copyLibraryUsage($contentId, $copyFromId, $contentMainId);
@@ -1466,7 +1462,7 @@ Class H5PExport {
    * @return string
    */
   public function createExportFile($content) {
-    $h5pDir = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR;
+    $h5pDir = $this->h5pC->path . DIRECTORY_SEPARATOR;
     $tempPath = $h5pDir . 'temp' . DIRECTORY_SEPARATOR . $content['id'];
     $zipPath = $h5pDir . 'exports' . DIRECTORY_SEPARATOR . $content['id'] . '.h5p';
 
@@ -1547,7 +1543,7 @@ Class H5PExport {
    *  Identifier for the H5P
    */
   public function deleteExport($contentId) {
-    $h5pDir = $this->h5pF->getH5pPath() . DIRECTORY_SEPARATOR;
+    $h5pDir = $this->h5pC->path . DIRECTORY_SEPARATOR;
     $zipPath = $h5pDir . 'exports' . DIRECTORY_SEPARATOR . $contentId . '.h5p';
     if (file_exists($zipPath)) {
       unlink($zipPath);
@@ -1606,22 +1602,6 @@ class H5PCore {
 
   private $exportEnabled;
 
-  // Disable flags
-  const DISABLE_NONE = 0;
-  const DISABLE_FRAME = 1;
-  const DISABLE_DOWNLOAD = 2;
-  const DISABLE_EMBED = 4;
-  const DISABLE_COPYRIGHT = 8;
-  const DISABLE_ABOUT = 16;
-
-  // Map flags to string
-  public static $disable = array(
-    self::DISABLE_FRAME => 'frame',
-    self::DISABLE_DOWNLOAD => 'download',
-    self::DISABLE_EMBED => 'embed',
-    self::DISABLE_COPYRIGHT => 'copyright'
-  );
-
   /**
    * Constructor for the H5PCore
    *
@@ -1632,11 +1612,12 @@ class H5PCore {
    * @param boolean $export enabled?
    * @param int $development_mode mode.
    */
-  public function __construct($H5PFramework, $path, $language = 'en', $export = FALSE, $development_mode = H5PDevelopment::MODE_NONE) {
+  public function __construct($H5PFramework, $path, $url, $language = 'en', $export = FALSE, $development_mode = H5PDevelopment::MODE_NONE) {
     $this->h5pF = $H5PFramework;
 
     $this->h5pF = $H5PFramework;
     $this->path = $path;
+    $this->url = $url;
     $this->exportEnabled = $export;
     $this->development_mode = $development_mode;
 
@@ -1772,8 +1753,9 @@ class H5PCore {
    * @param array $dependency
    * @param string $type
    * @param array $assets
+   * @param string $prefix Optional. Make paths relative to another dir.
    */
-  private function getDependencyAssets($dependency, $type, &$assets) {
+  private function getDependencyAssets($dependency, $type, &$assets, $prefix = '') {
     // Check if dependency has any files of this type
     if (empty($dependency[$type]) || $dependency[$type][0] === '') {
       return;
@@ -1786,7 +1768,7 @@ class H5PCore {
 
     foreach ($dependency[$type] as $file) {
       $assets[] = (object) array(
-        'path' => $dependency['path'] . '/' . trim(is_array($file) ? $file['path'] : $file),
+        'path' => $prefix . $dependency['path'] . '/' . trim(is_array($file) ? $file['path'] : $file),
         'version' => $dependency['version']
       );
     }
@@ -1802,7 +1784,19 @@ class H5PCore {
     $urls = array();
 
     foreach ($assets as $asset) {
-      $urls[] = $asset->path . $asset->version;
+      $url = $asset->path;
+
+      // Add URL prefix if not external
+      if (strpos($asset->path, '://') === FALSE) {
+        $url = $this->url . $url;
+      }
+
+      // Add version/cache buster if set
+      if (isset($asset->version)) {
+        $url .= $asset->version;
+      }
+
+      $urls[] = $url;
     }
 
     return $urls;
@@ -1812,23 +1806,24 @@ class H5PCore {
    * Return file paths for all dependecies files.
    *
    * @param array $dependencies
+   * @param string $prefix Optional. Make paths relative to another dir.
    * @return array files.
    */
-  public function getDependenciesFiles($dependencies) {
+  public function getDependenciesFiles($dependencies, $prefix = '') {
     $files = array(
       'scripts' => array(),
       'styles' => array()
     );
     foreach ($dependencies as $dependency) {
       if (isset($dependency['path']) === FALSE) {
-        $dependency['path'] = $this->path . '/libraries/' . H5PCore::libraryToString($dependency, TRUE);
+        $dependency['path'] = '/libraries/' . H5PCore::libraryToString($dependency, TRUE);
         $dependency['preloadedJs'] = explode(',', $dependency['preloadedJs']);
         $dependency['preloadedCss'] = explode(',', $dependency['preloadedCss']);
       }
 
       $dependency['version'] = "?ver={$dependency['majorVersion']}.{$dependency['minorVersion']}.{$dependency['patchVersion']}";
-      $this->getDependencyAssets($dependency, 'preloadedJs', $files['scripts']);
-      $this->getDependencyAssets($dependency, 'preloadedCss', $files['styles']);
+      $this->getDependencyAssets($dependency, 'preloadedJs', $files['scripts'], $prefix);
+      $this->getDependencyAssets($dependency, 'preloadedCss', $files['styles'], $prefix);
     }
     return $files;
   }
@@ -2276,57 +2271,9 @@ class H5PCore {
         }
       }
       if($platformInfo['uuid'] === '' && isset($json->uuid)) {
-        $this->h5pF->setOption('site_uuid', $json->uuid);
+        $this->h5pF->setOption('h5p_site_uuid', $json->uuid);
       }
     }
-  }
-
-  public function getGlobalDisable() {
-    $disable = self::DISABLE_NONE;
-
-    // Allow global settings to override and disable options
-    if (!$this->h5pF->getOption('frame', TRUE)) {
-      $disable |= self::DISABLE_FRAME;
-    }
-    else {
-      if (!$this->h5pF->getOption('export', TRUE)) {
-        $disable |= self::DISABLE_DOWNLOAD;
-      }
-      if (!$this->h5pF->getOption('embed', TRUE)) {
-        $disable |= self::DISABLE_EMBED;
-      }
-      if (!$this->h5pF->getOption('copyright', TRUE)) {
-        $disable |= self::DISABLE_COPYRIGHT;
-      }
-      if (!$this->h5pF->getOption('icon', TRUE)) {
-        $disable |= self::DISABLE_ABOUT;
-      }
-    }
-
-    return $disable;
-  }
-
-  /**
-   * Determine disable state from sources.
-   *
-   * @param array $sources
-   * @return int
-   */
-  public static function getDisable(&$sources) {
-    $disable = H5PCore::DISABLE_NONE;
-    if (!$sources['frame']) {
-      $disable |= H5PCore::DISABLE_FRAME;
-    }
-    if (!$sources['download']) {
-      $disable |= H5PCore::DISABLE_DOWNLOAD;
-    }
-    if (!$sources['copyright']) {
-      $disable |= H5PCore::DISABLE_COPYRIGHT;
-    }
-    if (!$sources['embed']) {
-      $disable |= H5PCore::DISABLE_EMBED;
-    }
-    return $disable;
   }
 
   // Cache for getting library ids

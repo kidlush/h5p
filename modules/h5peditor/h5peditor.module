@@ -109,6 +109,7 @@ function h5peditor_h5p_content_node_form_after_build($form) {
 
   $node = h5peditor_get_source_node($form['#node']);
   $assets = h5p_add_core_assets();
+  h5p_add_files_and_settings(TRUE, TRUE); // Force integration
 
   $h5peditor_module_path = drupal_get_path('module', 'h5peditor');
   $cache_buster = '?' . variable_get('css_js_query_string', '');
@@ -116,14 +117,6 @@ function h5peditor_h5p_content_node_form_after_build($form) {
   // Add our own styles
   foreach (H5peditor::$styles as $style) {
     $assets['css'][] = $h5peditor_module_path . '/h5peditor/' . $style . $cache_buster;
-  }
-
-  // Remove integration from the equation.
-  for ($i = 0, $s = count($assets['js']); $i < $s; $i++) {
-    if (preg_match('/\/h5pintegration\.js/', $assets['js'][$i])) {
-      array_splice($assets['js'], $i, 1);
-      break;
-    }
   }
 
   // Add our own scripts
@@ -283,7 +276,7 @@ function h5peditor_library_callback($machine_name, $major_version, $minor_versio
 
   drupal_set_header("Cache-Control: no-cache");
   drupal_set_header('Content-type: application/json');
-  print $editor->getLibraryData($machine_name, $major_version, $minor_version, $lang);
+  print $editor->getLibraryData($machine_name, $major_version, $minor_version, $lang, _h5p_get_h5p_path());
 }
 
 /**
