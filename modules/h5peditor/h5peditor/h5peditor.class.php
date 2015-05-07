@@ -309,7 +309,6 @@ class H5peditor {
    *
    * @param string $library_name
    *  Name of the library we want to fetch data for
-   * @param string $path Optional.
    * @param string $prefix Optional. Files are relative to another dir.
    */
   public function getLibraryData($machineName, $majorVersion, $minorVersion, $languageCode, $path = '', $prefix = '') {
@@ -317,7 +316,7 @@ class H5peditor {
 
     $libraries = $this->findEditorLibraries($machineName, $majorVersion, $minorVersion);
     $libraryData->semantics = $this->h5p->loadLibrarySemantics($machineName, $majorVersion, $minorVersion);
-    $libraryData->language = $this->storage->getLanguage($machineName, $majorVersion, $minorVersion, $languageCode);
+    $libraryData->language = $this->getLibraryLanguage($machineName, $majorVersion, $minorVersion, $languageCode);
 
     $files = $this->h5p->getDependenciesFiles($libraries, $prefix);
     $this->storage->alterLibraryFiles($files, $libraries);

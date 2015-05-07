@@ -77,12 +77,12 @@ function h5p_admin_settings() {
     '#description' => t('Always update uploaded H5P libraries regardless of patch version. Read library data from file (semantics.json).')
   );
 
-  $form['h5p_content_dev_mode'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Enable H5P content development mode'),
-    '#default_value' => variable_get('h5p_content_dev_mode', '0'),
-    '#description' => t("With this feature enabled content.json will be read from file. Changes to the content made using the editor won't be visible when this mode is actice."),
-  );
+  // $form['h5p_content_dev_mode'] = array(
+  //   '#type' => 'checkbox',
+  //   '#title' => t('Enable H5P content development mode'),
+  //   '#default_value' => variable_get('h5p_content_dev_mode', '0'),
+  //   '#description' => t("With this feature enabled content.json will be read from file. Changes to the content made using the editor won't be visible when this mode is actice."),
+  // );
 
   /***
    * Devmode disabled because of bugs found before release.
@@ -515,34 +515,35 @@ function h5p_content_upgrade($library_id) {
   // Add JavaScript settings
   $return = filter_input(INPUT_GET, 'destination');
   $settings = array(
-    'h5p' => array(
+    'libraryInfo' => array(
+      'message' => t('You are about to upgrade %num. Please select upgrade version.', array('%num' => $contents_plural)),
+      'inProgress' => t('Upgrading to %ver...'),
+      'error' => t('An error occurred while processing parameters:'),
+      'errorData' => t('Could not load data for library %lib.'),
+      'errorScript' => t('Could not load upgrades script for %lib.'),
+      'errorContent' => t('Unable to upgrade content with id %id.'),
+      'errorParamsBroken' => t('Parameters are broken.'),
+      'done' => t('You have successfully upgraded %num.', array('%num' => $contents_plural)) . ($return ? ' ' . l(t('Return'), $return) : ''),
       'library' => array(
-        'message' => t('You are about to upgrade %num. Please select upgrade version.', array('%num' => $contents_plural)),
-        'inProgress' => t('Upgrading to %ver...'),
-        'error' => t('An error occurred while processing parameters:'),
-        'errorData' => t('Could not load data for library %lib.'),
-        'errorScript' => t('Could not load upgrades script for %lib.'),
-        'errorContent' => t('Unable to upgrade content with id %id.'),
-        'errorParamsBroken' => t('Parameters are broken.'),
-        'done' => t('You have successfully upgraded %num.', array('%num' => $contents_plural)) . ($return ? ' ' . l(t('Return'), $return) : ''),
-        'library' => array(
-          'name' => $library->name,
-          'version' => $library->major_version . '.' . $library->minor_version,
-        ),
-        'libraryBaseUrl' => url('admin/content/h5p/upgrade-library'),
-        'versions' => $upgrades,
-        'contents' => $contents,
-        'buttonLabel' => t('Upgrade'),
-        'infoUrl' => url('admin/content/h5p/libraries/' . $library_id . '/upgrade'),
-        'total' => $contents,
-        'token' => h5p_get_token('content_upgrade'), // Use token to avoid unauthorized updating
-      )
+        'name' => $library->name,
+        'version' => $library->major_version . '.' . $library->minor_version,
+      ),
+      'libraryBaseUrl' => url('admin/content/h5p/upgrade-library'),
+      'scriptBaseUrl' => base_path() . drupal_get_path('module', 'h5p') . '/library/js',
+      'buster' => '?' . variable_get('css_js_query_string', ''),
+      'versions' => $upgrades,
+      'contents' => $contents,
+      'buttonLabel' => t('Upgrade'),
+      'infoUrl' => url('admin/content/h5p/libraries/' . $library_id . '/upgrade'),
+      'total' => $contents,
+      'token' => h5p_get_token('content_upgrade'), // Use token to avoid unauthorized updating
     )
   );
 
   // Add JavaScripts
   $module_path = drupal_get_path('module', 'h5p');
   _h5p_admin_add_generic_css_and_js($module_path, $settings);
+  drupal_add_js($module_path . '/library/js/h5p-version.js');
   drupal_add_js($module_path . '/library/js/h5p-content-upgrade.js');
 
   return '<div id="h5p-admin-container">' . t('Please enable JavaScript.') . '</div>';

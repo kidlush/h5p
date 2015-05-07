@@ -311,6 +311,19 @@ class H5PDrupal implements H5PFrameworkInterface {
   }
 
   /**
+   * Implements resetContentUserData
+   */
+  public function resetContentUserData($contentId) {
+    // Reset user data for this content
+    db_query("UPDATE {h5p_content_user_data}
+              SET timestamp = %d,
+                  data = 'RESET'
+              WHERE content_main_id = %d
+              AND delete_on_content_change = 1",
+             time(), $contentId);
+  }
+
+  /**
    * Implement getWhitelist
    */
   public function getWhitelist($isLibrary, $defaultContentWhitelist, $defaultLibraryWhitelist) {
