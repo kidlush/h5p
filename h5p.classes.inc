@@ -552,14 +552,32 @@ class H5PDrupal implements H5PFrameworkInterface {
   }
 
   /**
-   * Implements setFilteredParameters().
+   * Convert variables to fit our DB.
    */
-  public function setFilteredParameters($content_id, $parameters = '') {
+  private static function camelToString($input) {
+    $input = preg_replace('/[a-z0-9]([A-Z])[a-z0-9]/', '_$1', $input);
+    return strtolower($input);
+  }
+
+  /**
+   * Implements updateContentFields().
+   */
+  public function updateContentFields($id, $fields) {
+    $set = '';
+    $values = array();
+    foreach ($fields as $name => $value) {
+      if ($set !== '') {
+        $set .= ', ';
+      }
+      $set .= self::camelToString($name) . ' = ' . (is_numeric($value) ? '%d' : "'%s'");
+      $values[] = $value;
+    }
+    
+    $values[] = $id;
     db_query("UPDATE {h5p_nodes}
-      SET filtered = '%s'
+      SET $set
       WHERE content_id = %d",
-      $parameters,
-      $content_id
+      $values
     );
   }
 
@@ -627,4 +645,11 @@ class H5PDrupal implements H5PFrameworkInterface {
   // Only use if you have a feather in your hat!
   public function lockDependencyStorage() {}
   public function unlockDependencyStorage() {}
+
+  /**
+   * Implements isContentSlugAvailable
+   */
+  public function isContentSlugAvailable($slug) {
+    return !db_result(db_query("SELECT slug FROM {h5p_nodes} WHERE slug = '%s'", $slug));
+  }
 }

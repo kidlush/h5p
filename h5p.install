@@ -288,6 +288,13 @@ function h5p_schema() {
         'size' => 'big',
         'default' => ''
       ),
+      'slug' => array(
+        'description' => 'Human readable content identifier that is unique',
+        'type' => 'varchar',
+        'length' => 127,
+        'not null' => TRUE,
+        'default' => ''
+      )
     ),
     'primary key' => array('content_id'),
   );
@@ -788,6 +795,29 @@ function h5p_update_6110() {
   $schema = h5p_schema();
   if (!db_table_exists('h5p_content_user_data')) {
     db_create_table($ret, 'h5p_content_user_data', $schema['h5p_content_user_data']);
+  }
+
+  return $ret;
+}
+
+
+/**
+ * Implementation of hook_update_N().
+ *
+ * Add unique human readable content identifier. Useful for creating human
+ * readable filenames, URLs and SEO.
+ */
+function h5p_update_6111() {
+  $ret = array();
+
+  if (!db_column_exists('h5p_nodes', 'slug')) {
+    db_add_field($ret, 'h5p_nodes', 'slug', array(
+      'description' => 'Human readable content identifier that is unique',
+      'type' => 'varchar',
+      'length' => 127,
+      'not null' => TRUE,
+      'default' => ''
+    ));
   }
 
   return $ret;
