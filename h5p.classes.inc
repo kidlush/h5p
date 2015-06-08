@@ -186,6 +186,11 @@ class H5PDrupal implements H5PFrameworkInterface {
       );
       $libraryId = db_last_insert_id('h5p_libraries', 'library_id');
       $libraryData['libraryId'] = $libraryId;
+      if ($libraryData['runnable']) {
+        if (!variable_get('h5p_first_runnable_saved', 0)) {
+          variable_set('h5p_first_runnable_saved', 1);
+        }
+      }
     }
     else {
       db_query("UPDATE {h5p_libraries}
@@ -572,7 +577,7 @@ class H5PDrupal implements H5PFrameworkInterface {
       $set .= self::camelToString($name) . ' = ' . (is_numeric($value) ? '%d' : "'%s'");
       $values[] = $value;
     }
-    
+
     $values[] = $id;
     db_query("UPDATE {h5p_nodes}
       SET $set

@@ -33,6 +33,7 @@ function h5p_uninstall() {
   variable_del('h5p_whitelist');
   variable_del('h5p_allow_communication_with_h5p_org');
   variable_del('h5p_fetched_library_metadata_on');
+  variable_del('h5p_first_runnable_saved');
 }
 
 /**
@@ -818,6 +819,11 @@ function h5p_update_6111() {
       'not null' => TRUE,
       'default' => ''
     ));
+  }
+
+  // Store if or not we have runnable libraries
+  if (db_result(db_query("SELECT 1 FROM {h5p_libraries} WHERE runnable = 1"))) {
+    variable_set('h5p_first_runnable_saved', 1);
   }
 
   return $ret;
