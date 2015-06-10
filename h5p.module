@@ -956,7 +956,7 @@ function h5p_add_iframe_assets(&$integration, $content_id, $files) {
       $styles['module'][$style->path] = TRUE;
     }
 
-    $integration['contents']['cid-' . $content_id]['styles'] = array(drupal_build_css_cache($styles, $filename));
+    $integration['contents']['cid-' . $content_id]['styles'] = array(base_path() . drupal_build_css_cache($styles, $filename));
   }
   else {
     $integration['contents']['cid-' . $content_id]['styles'] = $core->getAssetsUrls($files['styles']);
@@ -972,7 +972,7 @@ function h5p_add_iframe_assets(&$integration, $content_id, $files) {
         'preprocess' => TRUE,
       );
     }
-    $integration['contents']['cid-' . $content_id]['scripts'] = array(drupal_build_js_cache($scripts, $filename));
+    $integration['contents']['cid-' . $content_id]['scripts'] = array(base_path() . drupal_build_js_cache($scripts, $filename));
   }
   else {
     $integration['contents']['cid-' . $content_id]['scripts'] = $core->getAssetsUrls($files['scripts']);
