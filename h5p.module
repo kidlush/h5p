@@ -919,6 +919,10 @@ function h5p_add_files_and_settings($node, $embed_type) {
   }
 }
 
+function h5p_is_external_asset($path) {
+  return preg_match('/^[a-z0-9]+:\/\//i', $path) ? TRUE : FALSE;
+}
+
 /**
  * Add the necessary assets for content to run in an iframe.
  *
@@ -950,13 +954,22 @@ function h5p_add_iframe_assets(&$integration, $content_id, $files) {
 
   if ($is_writable && $preprocess_css) {
     $filename = $cache_file_prefix . '.css';
+
     // Refactor styles array to Drupal eatable format.
+    // Filters out external styles
     $styles = array('module' => array());
+    $external_styles = array();
     foreach ($files['styles'] as $style) {
-      $styles['module'][$style->path] = TRUE;
+      if (h5p_is_external_asset($style->path)) {
+        $external_styles[] = $style;
+      }
+      else {
+        $styles['module'][$style->path] = TRUE;
+      }
     }
 
-    $integration['contents']['cid-' . $content_id]['styles'] = array(base_path() . drupal_build_css_cache($styles, $filename));
+    $integration['contents']['cid-' . $content_id]['styles'] = $core->getAssetsUrls($external_styles);
+    $integration['contents']['cid-' . $content_id]['styles'][] = base_path() . drupal_build_css_cache($styles, $filename);
   }
   else {
     $integration['contents']['cid-' . $content_id]['styles'] = $core->getAssetsUrls($files['styles']);
@@ -966,13 +979,22 @@ function h5p_add_iframe_assets(&$integration, $content_id, $files) {
     $filename = $cache_file_prefix . '.js';
 
     // Refactor scripts array to Drupal eatable format.
+    // Filters out external scripts
     $scripts = array();
+    $external_scripts = array();
     foreach ($files['scripts'] as $script) {
-      $scripts[$script->path] = array(
-        'preprocess' => TRUE,
-      );
+      if (h5p_is_external_asset($script->path)) {
+        $external_scripts[] = $script;
+      }
+      else {
+        // Aggregate
+        $scripts[$script->path] = array(
+          'preprocess' => TRUE,
+        );
+      }
     }
-    $integration['contents']['cid-' . $content_id]['scripts'] = array(base_path() . drupal_build_js_cache($scripts, $filename));
+    $integration['contents']['cid-' . $content_id]['scripts'] = $core->getAssetsUrls($external_scripts);
+    $integration['contents']['cid-' . $content_id]['scripts'][] = base_path() . drupal_build_js_cache($scripts, $filename);
   }
   else {
     $integration['contents']['cid-' . $content_id]['scripts'] = $core->getAssetsUrls($files['scripts']);
