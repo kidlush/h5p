@@ -101,6 +101,14 @@ function h5p_menu() {
     'type' => MENU_CALLBACK,
     'file' => 'h5p.admin.inc',
   );
+  $items['admin/content/h5p/libraries/%/restrict'] = array(
+    'title' => 'H5P Library Restrict',
+    'page callback' => 'h5p_restrict_library_callback',
+    'page arguments' => array(4),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_CALLBACK,
+    'file' => 'h5p.admin.inc',
+  );
   $items['admin/content/h5p/libraries/upgrade-all'] = array(
     'title' => 'Upgrade All H5P Libraries',
     'page callback' => 'h5p_upgrade_all_libraries',
@@ -246,7 +254,7 @@ function h5p_node_info() {
  * Implements hook_perm().
  */
 function h5p_perm() {
-  return array('create h5p', 'edit own h5p', 'edit any h5p', 'delete own h5p', 'delete any h5p', 'update h5p libraries', 'access all h5p results', 'access own h5p results', 'access h5p results for own content');
+  return array('create h5p', 'edit own h5p', 'edit any h5p', 'delete own h5p', 'delete any h5p', 'update h5p libraries', 'access all h5p results', 'access own h5p results', 'access h5p results for own content', 'create restricted h5p content types');
 }
 
 /**
