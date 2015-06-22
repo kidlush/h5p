@@ -771,6 +771,9 @@ function h5p_get_core_settings() {
       'mail' => $user->mail
     );
   }
+  else {
+    $settings['siteUrl'] = url('<front>', array('absolute' => TRUE));
+  }
 
   return $settings;
 }
