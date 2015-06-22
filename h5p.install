@@ -293,8 +293,7 @@ function h5p_schema() {
         'description' => 'Keeps track of the filtered content parameters.',
         'type' => 'text',
         'not null' => TRUE,
-        'size' => 'big',
-        'default' => ''
+        'size' => 'big'
       ),
     ),
     'primary key' => array('content_id'),
@@ -730,8 +729,7 @@ function h5p_update_6107() {
     'description' => 'Keeps track of the filtered content parameters.',
     'type' => 'text',
     'not null' => TRUE,
-    'size' => 'big',
-    'default' => ''
+    'size' => 'big'
   ));
 
   return $ret;
