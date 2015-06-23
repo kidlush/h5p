@@ -826,7 +826,11 @@ function h5p_get_content_settings($content) {
                         AND preloaded = 1",
                       $user->uid, $content['mainId']);
 
-  $content_user_data = array();
+  $content_user_data = array(
+    0 => array(
+      'state' => '{}'
+    )
+  );
   while ($result = db_fetch_object($results)) {
     $content_user_data[$result->sub_content_id][$result->data_id] = $result->data;
   }
