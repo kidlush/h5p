@@ -153,20 +153,34 @@ function h5p_library_list() {
 
   // Add settings for each library
   $settings = array();
+  $i = 0;
   foreach ($libraries as $versions) {
     foreach ($versions as $library) {
       $usage = $core->h5pF->getLibraryUsage($library->id, $notCached ? TRUE : FALSE);
       if ($library->runnable) {
         $upgrades = $core->getUpgrades($library, $versions);
         $upgradeUrl = empty($upgrades) ? FALSE : url('admin/content/h5p/libraries/' . $library->id . '/upgrade', array('query' => drupal_get_destination()));
+
+        $restricted = ($library->restricted === '1' ? TRUE : FALSE);
+        $restricted_url = url('admin/content/h5p/libraries/' . $library->id . '/restrict', array(
+          'query' => array(
+            'token' => h5p_get_token('library_' . $i),
+            'token_id' => $i,
+            'restrict' => ($library->restricted === '1' ? 0 : 1)
+          )
+        ));
       }
       else {
         $upgradeUrl = NULL;
+        $restricted = NULL;
+        $restricted_url = NULL;
       }
 
       $num = $core->h5pF->getNumContent($library->id);
       $settings['libraryList']['listData'][] = array(
         'title' => $library->title . ' (' . H5PCore::libraryVersion($library) . ')',
+        'restricted' => $restricted,
+        'restrictedUrl' => $restricted_url,
         'numContent' => $num < 1 ? '' : $num,
         'numContentDependencies' => $usage['content'] < 1 ? '' : $usage['content'],
         'numLibraryDependencies' => $usage['libraries'] < 1 ? '' : $usage['libraries'],
@@ -174,6 +188,8 @@ function h5p_library_list() {
         'detailsUrl' => url('admin/content/h5p/libraries/' . $library->id),
         'deleteUrl' => url('admin/content/h5p/libraries/' . $library->id . '/delete', array('query' => drupal_get_destination()))
       );
+
+      $i++;
     }
   }
 
@@ -637,6 +653,28 @@ function h5p_content_upgrade_library($name, $major, $minor) {
   drupal_set_header('Cache-Control: no-cache');
   drupal_set_header('Content-type: application/json');
   print json_encode($library);
+}
+
+function h5p_restrict_library_callback($library_id) {
+  $restricted = filter_input(INPUT_GET, 'restrict');
+  $restrict = ($restricted === '1');
+
+  $token_id = filter_input(INPUT_GET, 'token_id');
+  if (!h5p_verify_token('library_' . $token_id, filter_input(INPUT_GET, 'token')) || (!$restrict && $restricted !== '0')) {
+    return MENU_ACCESS_DENIED;
+  }
+
+  db_query('UPDATE {h5p_libraries} set restricted = %d where library_id = %d', $restricted, $library_id);
+
+  print json_encode(array(
+    'url' => url('admin/content/h5p/libraries/' . $library_id . '/restrict', array(
+      'query' => array(
+        'token' => h5p_get_token('library_' . $token_id),
+        'token_id' => $token_id,
+        'restrict' => ($restrict ? 0 : 1),
+      )
+    )),
+  ));
 }
 
 /**

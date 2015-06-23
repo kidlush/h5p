@@ -52,7 +52,7 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements loadLibraries
    */
   public function loadLibraries() {
-    $res = db_query('SELECT library_id as id, machine_name as name, title, major_version, minor_version, patch_version, runnable FROM {h5p_libraries} ORDER BY title ASC, major_version ASC, minor_version ASC');
+    $res = db_query('SELECT library_id as id, machine_name as name, title, major_version, minor_version, patch_version, runnable, restricted FROM {h5p_libraries} ORDER BY title ASC, major_version ASC, minor_version ASC');
 
     $libraries = array();
     while ($library = db_fetch_object($res)) {
@@ -305,8 +305,8 @@ class H5PDrupal implements H5PFrameworkInterface {
   public function insertContent($content, $contentMainId = NULL) {
     db_query(
         "INSERT INTO {h5p_nodes}
-          (content_id, nid, json_content, embed_type, main_library_id, disable)
-          VALUES (%d, %d, '%s', '%s', %d, '%s')",
+          (content_id, nid, json_content, embed_type, main_library_id, disable, filtered)
+          VALUES (%d, %d, '%s', '%s', %d, '%s', '')",
         $content['id'], $contentMainId, $content['params'], 'div', $content['library']['libraryId'], $content['disable']
     );
     // TODO: Add support for allowing the user to select embed type. Should be validated against what's possible for the library.

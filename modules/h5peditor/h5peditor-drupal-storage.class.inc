@@ -54,12 +54,14 @@ class H5peditorDrupalStorage implements H5peditorStorage {
    * TODO
    */
   public function getLibraries($libraries = NULL) {
+    $super_user = user_access('create restricted h5p content types');
+
     if ($libraries !== NULL) {
       // Get details for the specified libraries only.
       $librariesWithDetails = array();
       foreach ($libraries as $library) {
         $details = db_fetch_object(db_query(
-          "SELECT title, runnable
+          "SELECT title, runnable, restricted
            FROM {h5p_libraries}
            WHERE machine_name = '%s'
            AND major_version = %d
@@ -71,6 +73,7 @@ class H5peditorDrupalStorage implements H5peditorStorage {
         if ($details !== FALSE) {
           $library->title = $details->title;
           $library->runnable = $details->runnable;
+          $library->restricted = $super_user ? FALSE : ($details->restricted === '1' ? TRUE : FALSE);
           $librariesWithDetails[] = $library;
         }
       }
@@ -84,7 +87,8 @@ class H5peditorDrupalStorage implements H5peditorStorage {
       "SELECT machine_name AS name,
               title,
               major_version,
-              minor_version
+              minor_version,
+              restricted
        FROM {h5p_libraries}
        WHERE runnable = 1
        AND semantics IS NOT NULL
@@ -108,6 +112,8 @@ class H5peditorDrupalStorage implements H5peditorStorage {
           }
         }
       }
+
+      $library->restricted = $super_user ? FALSE : ($library->restricted === '1' ? TRUE : FALSE);
 
       // Add new library
       $libraries[] = $library;

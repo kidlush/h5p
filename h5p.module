@@ -101,6 +101,14 @@ function h5p_menu() {
     'type' => MENU_CALLBACK,
     'file' => 'h5p.admin.inc',
   );
+  $items['admin/content/h5p/libraries/%/restrict'] = array(
+    'title' => 'H5P Library Restrict',
+    'page callback' => 'h5p_restrict_library_callback',
+    'page arguments' => array(4),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_CALLBACK,
+    'file' => 'h5p.admin.inc',
+  );
   $items['admin/content/h5p/libraries/upgrade-all'] = array(
     'title' => 'Upgrade All H5P Libraries',
     'page callback' => 'h5p_upgrade_all_libraries',
@@ -246,7 +254,7 @@ function h5p_node_info() {
  * Implements hook_perm().
  */
 function h5p_perm() {
-  return array('create h5p', 'edit own h5p', 'edit any h5p', 'delete own h5p', 'delete any h5p', 'update h5p libraries', 'access all h5p results', 'access own h5p results', 'access h5p results for own content');
+  return array('create h5p', 'edit own h5p', 'edit any h5p', 'delete own h5p', 'delete any h5p', 'update h5p libraries', 'access all h5p results', 'access own h5p results', 'access h5p results for own content', 'create restricted h5p content types');
 }
 
 /**
@@ -477,7 +485,7 @@ function h5p_update($node) {
     $h5p_storage = _h5p_get_instance('storage');
     if (isset($_SESSION['h5p_upload'])) {
       // Use newly uploaded package
-      $h5p_storage->savePackage($node->vid, $node->nid);
+      $h5p_storage->savePackage($node->vid, $node->nid, FALSE, array('disable' => $node->disable));
     }
     else {
       // Copy old package
@@ -490,7 +498,7 @@ function h5p_update($node) {
     if (isset($_SESSION['h5p_upload'])) {
       // Replace old package
       $h5p_storage = _h5p_get_instance('storage');
-      $h5p_storage->updatePackage(h5p_get_content_id($node), $node->nid);
+      $h5p_storage->updatePackage(h5p_get_content_id($node), $node->nid, array('disable' => $node->disable));
     }
     else {
       h5p_insert($node);
@@ -923,6 +931,10 @@ function h5p_add_files_and_settings($node, $embed_type) {
   }
 }
 
+function h5p_is_external_asset($path) {
+  return preg_match('/^[a-z0-9]+:\/\//i', $path) ? TRUE : FALSE;
+}
+
 /**
  * Add the necessary assets for content to run in an iframe.
  *
@@ -954,13 +966,22 @@ function h5p_add_iframe_assets(&$integration, $content_id, $files) {
 
   if ($is_writable && $preprocess_css) {
     $filename = $cache_file_prefix . '.css';
+
     // Refactor styles array to Drupal eatable format.
+    // Filters out external styles
     $styles = array('module' => array());
+    $external_styles = array();
     foreach ($files['styles'] as $style) {
-      $styles['module'][$style->path] = TRUE;
+      if (h5p_is_external_asset($style->path)) {
+        $external_styles[] = $style;
+      }
+      else {
+        $styles['module'][$style->path] = TRUE;
+      }
     }
 
-    $integration['contents']['cid-' . $content_id]['styles'] = array(drupal_build_css_cache($styles, $filename));
+    $integration['contents']['cid-' . $content_id]['styles'] = $core->getAssetsUrls($external_styles);
+    $integration['contents']['cid-' . $content_id]['styles'][] = base_path() . drupal_build_css_cache($styles, $filename);
   }
   else {
     $integration['contents']['cid-' . $content_id]['styles'] = $core->getAssetsUrls($files['styles']);
@@ -970,13 +991,22 @@ function h5p_add_iframe_assets(&$integration, $content_id, $files) {
     $filename = $cache_file_prefix . '.js';
 
     // Refactor scripts array to Drupal eatable format.
+    // Filters out external scripts
     $scripts = array();
+    $external_scripts = array();
     foreach ($files['scripts'] as $script) {
-      $scripts[$script->path] = array(
-        'preprocess' => TRUE,
-      );
+      if (h5p_is_external_asset($script->path)) {
+        $external_scripts[] = $script;
+      }
+      else {
+        // Aggregate
+        $scripts[$script->path] = array(
+          'preprocess' => TRUE,
+        );
+      }
     }
-    $integration['contents']['cid-' . $content_id]['scripts'] = array(drupal_build_js_cache($scripts, $filename));
+    $integration['contents']['cid-' . $content_id]['scripts'] = $core->getAssetsUrls($external_scripts);
+    $integration['contents']['cid-' . $content_id]['scripts'][] = base_path() . drupal_build_js_cache($scripts, $filename);
   }
   else {
     $integration['contents']['cid-' . $content_id]['scripts'] = $core->getAssetsUrls($files['scripts']);
