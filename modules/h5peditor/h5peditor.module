@@ -136,11 +136,11 @@ function h5peditor_h5p_content_node_form_after_build($form) {
   }
   drupal_add_js($language_file);
 
-  // TODO: If we're going to preprocess the assets one day, remember to skip ckeditor.
+  // Note: If we're going to preprocess the assets one day, remember to skip ckeditor.
 
   $settings = array(
     'h5peditor' => array(
-      'filesPath' => base_path() . file_directory_path(),
+      'filesPath' => base_path() . file_directory_path() . '/h5peditor',
       'fileIcon' => array(
         'path' => base_path() . $h5peditor_module_path . '/h5peditor/images/binary-file.png',
         'width' => 50,
