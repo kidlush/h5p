@@ -52,6 +52,7 @@ function h5p_uninstall() {
   variable_del('h5p_whitelist');
   variable_del('h5p_unsupported_libraries');
   variable_del('h5p_fetched_library_metadata_on');
+  variable_del('h5p_first_runnable_saved');
 }
 
 /**
@@ -334,6 +335,13 @@ function h5p_schema() {
         'not null' => TRUE,
         'size' => 'big'
       ),
+      'slug' => array(
+        'description' => 'Human readable content identifier that is unique',
+        'type' => 'varchar',
+        'length' => 127,
+        'not null' => TRUE,
+        'default' => ''
+      )
     ),
     'primary key' => array('content_id'),
   );
@@ -838,7 +846,10 @@ function h5p_update_6110() {
   return $ret;
 }
 
+
 /**
+ * Implementation of hook_update_N().
+ *
  * Adds an option that makes it possible to restrict the creation of selected H5P
  * content types to users with a specific role.
  */
@@ -857,4 +868,31 @@ function h5p_update_6111() {
   }
 
   return $result;
+}
+
+/**
+ * Implementation of hook_update_N().
+ *
+ * Add unique human readable content identifier. Useful for creating human
+ * readable filenames, URLs and SEO.
+ */
+function h5p_update_6112() {
+  $ret = array();
+
+  if (!db_column_exists('h5p_nodes', 'slug')) {
+    db_add_field($ret, 'h5p_nodes', 'slug', array(
+      'description' => 'Human readable content identifier that is unique',
+      'type' => 'varchar',
+      'length' => 127,
+      'not null' => TRUE,
+      'default' => ''
+    ));
+  }
+
+  // Store if or not we have runnable libraries
+  if (db_result(db_query("SELECT 1 FROM {h5p_libraries} WHERE runnable = 1"))) {
+    variable_set('h5p_first_runnable_saved', 1);
+  }
+
+  return $ret;
 }

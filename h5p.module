@@ -157,8 +157,8 @@ function h5p_menu() {
  * @param int $content_id
  * @return string
  */
-function h5p_get_export_path($content_id) {
-  return variable_get('h5p_export', 1) ? file_create_url(_h5p_get_h5p_path() . '/exports/' . $content_id . '.h5p') : '';
+function h5p_get_export_path($content) {
+  return variable_get('h5p_export', 1) ? file_create_url(_h5p_get_h5p_path() . '/exports/' . ($content['slug'] ? $content['slug'] . '-' : '') . $content['id'] . '.h5p') : '';
 }
 
 /**
@@ -834,7 +834,11 @@ function h5p_get_content_settings($content) {
                         AND preloaded = 1",
                       $user->uid, $content['mainId']);
 
-  $content_user_data = array();
+  $content_user_data = array(
+    0 => array(
+      'state' => '{}'
+    )
+  );
   while ($result = db_fetch_object($results)) {
     $content_user_data[$result->sub_content_id][$result->data_id] = $result->data;
   }
@@ -843,7 +847,7 @@ function h5p_get_content_settings($content) {
     'library' => H5PCore::libraryToString($content['library']),
     'jsonContent' => $filtered,
     'fullScreen' => $content['library']['fullscreen'],
-    'exportUrl' => h5p_get_export_path($content['id']),
+    'exportUrl' => h5p_get_export_path($content),
     'embedCode' => '<iframe src="' . url('h5p/embed/' . $content['mainId'], array('absolute' => TRUE)) . '" width=":w" height=":h" frameborder="0" allowfullscreen="allowfullscreen"></iframe>',
     'resizeCode' => '<script src="' . h5p_get_resize_url() . '"></script>',
     'mainId' => $content['mainId'],
