@@ -69,7 +69,7 @@ function h5peditor_form_h5p_content_node_form_alter(&$form, &$form_state) {
 
   $form['h5p_type'] = array(
     '#type' => 'radios',
-    '#title' => t('HTML5 Content'),
+    '#title' => t('H5P'),
     '#options' => array(
       'upload' => t('Upload'),
       'create' => isset($node->nid) ? t('Edit') : t('Create'),
