@@ -1029,9 +1029,9 @@ class H5PValidator {
             ($h5pData['coreApi']['minorVersion'] > H5PCore::$coreApi['minorVersion'])))
       {
         $this->h5pF->setErrorMessage(
-          $this->h5pF->t('The library "%library_name" requires H5P %requiredVersion, but only H5P %coreApi is installed.',
+          $this->h5pF->t('The library "%libraryName" requires H5P %requiredVersion, but only H5P %coreApi is installed.',
           array(
-            '%library_name' => $library_name,
+            '%libraryName' => $library_name,
             '%requiredVersion' => $h5pData['coreApi']['majorVersion'] . '.' . $h5pData['coreApi']['minorVersion'],
             '%coreApi' => H5PCore::$coreApi['majorVersion'] . '.' . H5PCore::$coreApi['minorVersion']
           )));
@@ -1632,7 +1632,7 @@ class H5PCore {
 
   public static $coreApi = array(
     'majorVersion' => 1,
-    'minorVersion' => 5
+    'minorVersion' => 6
   );
   public static $styles = array(
     'styles/h5p.css',
@@ -1643,6 +1643,7 @@ class H5PCore {
     'js/h5p-event-dispatcher.js',
     'js/h5p-x-api-event.js',
     'js/h5p-x-api.js',
+    'js/h5p-content-type.js',
   );
   public static $adminScripts = array(
     'js/jquery.js',
@@ -2376,7 +2377,7 @@ class H5PCore {
     $platformInfo['uuid'] = $this->h5pF->getOption('site_uuid', '');
     // Adding random string to GET to be sure nothing is cached
     $random = substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 5);
-    $json = $this->h5pF->fetchExternalData('http://h5p.org/libraries-metadata.json?api=1&platform=' . urlencode(json_encode($platformInfo)) . '&x=' . urlencode($random));
+    $json = $this->h5pF->fetchExternalData('https://h5p.org/libraries-metadata.json?api=1&platform=' . urlencode(json_encode($platformInfo)) . '&x=' . urlencode($random));
     if ($json !== NULL) {
       $json = json_decode($json);
       if (isset($json->libraries)) {
@@ -2486,7 +2487,7 @@ class H5PCore {
 
     // Prevent to long slug
     if (strlen($input) > 91) {
-      $inputsubstr($input, 0, 92);
+      $input = substr($input, 0, 92);
     }
 
     // Prevent empty slug
@@ -2535,6 +2536,7 @@ class H5PContentValidator {
   public $h5pF;
   public $h5pC;
   private $typeMap, $libraries, $dependencies, $nextWeight;
+  private static $allowed_stylable_tags = array('span', 'p', 'div');
 
   /**
    * Constructor for the H5PContentValidator
@@ -2623,6 +2625,9 @@ class H5PContentValidator {
           $stylePatterns[] = '/^background-color: *(#[a-f0-9]{3}[a-f0-9]{3}?|rgba?\([0-9, ]+\)) *;?$/i';
         }
       }
+
+      // Aligment is allowed for all wysiwyg texts
+      $stylePatterns[] = '/^text-align: *(center|left|right);?$/i';
 
       // Strip invalid HTML tags.
       $text = $this->filter_xss($text, $tags, $stylePatterns);
@@ -3158,7 +3163,8 @@ class H5PContentValidator {
     $xhtml_slash = $count ? ' /' : '';
 
     // Clean up attributes.
-    $attr2 = implode(' ', $this->_filter_xss_attributes($attrlist, ($elem === 'span' ? $this->allowedStyles : FALSE)));
+
+    $attr2 = implode(' ', $this->_filter_xss_attributes($attrlist, (in_array($elem, self::$allowed_stylable_tags) ? $this->allowedStyles : FALSE)));
     $attr2 = preg_replace('/[<>]/', '', $attr2);
     $attr2 = strlen($attr2) ? ' ' . $attr2 : '';
 
