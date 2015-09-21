@@ -305,8 +305,8 @@ class H5PDrupal implements H5PFrameworkInterface {
   public function insertContent($content, $contentMainId = NULL) {
     db_query(
         "INSERT INTO {h5p_nodes}
-          (content_id, nid, json_content, embed_type, main_library_id, disable, filtered)
-          VALUES (%d, %d, '%s', '%s', %d, '%s', '')",
+          (content_id, nid, json_content, embed_type, main_library_id, disable, filtered, slug)
+          VALUES (%d, %d, '%s', '%s', %d, '%s', '', '')",
         $content['id'], $contentMainId, $content['params'], 'div', $content['library']['libraryId'], $content['disable']
     );
     // TODO: Add support for allowing the user to select embed type. Should be validated against what's possible for the library.
