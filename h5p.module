@@ -928,7 +928,7 @@ function h5p_add_files_and_settings($node, $embed_type) {
 }
 
 function h5p_is_external_asset($path) {
-  return preg_match('/^[a-z0-9]+:\/\//i', $path) ? TRUE : FALSE;
+  return preg_match('/^([a-z0-9]+:\/\/|\/\/)/i', $path) ? TRUE : FALSE;
 }
 
 /**
