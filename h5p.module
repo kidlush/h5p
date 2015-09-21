@@ -367,10 +367,6 @@ function h5p_form(&$node, $form_state) {
       '#after_build' => array('_h5p_load_disable_js')
     );
 
-    if (!isset($node->disable)) {
-      $node->disable = H5PCore::DISABLE_NONE;
-    }
-
     $labels = _h5p_get_disable_labels();
     foreach (H5PCore::$disable as $bit => $name) {
       if (variable_get('h5p_' . ($bit & H5PCore::DISABLE_DOWNLOAD ? 'export' : $name), TRUE)) {
@@ -398,9 +394,7 @@ function _h5p_load_disable_js($form_element, &$form_state) {
  */
 function _h5p_form_submit($form, &$form_state) {
   $core = _h5p_get_instance('core');
-  if (variable_get('h5p_frame', TRUE)) {
-    $form_state['values']['disable'] = $core->getDisable($form_state['values'], $form_state['values']['disable']);
-  }
+  $form_state['values']['disable'] = $core->getDisable($form_state['values'], $form_state['values']['disable']);
 }
 
 /**
