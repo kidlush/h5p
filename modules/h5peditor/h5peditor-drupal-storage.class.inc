@@ -78,6 +78,11 @@ class H5peditorDrupalStorage implements H5peditorStorage {
         }
       }
 
+      // Hook in:
+      $customized_libraries = module_invoke_all('alter_h5p_library_list', $librariesWithDetails);
+      if (!empty($customized_libraries)) {
+        $librariesWithDetails = $customized_libraries;
+      }
       return $librariesWithDetails;
     }
 
