@@ -61,7 +61,7 @@ class H5peditorDrupalStorage implements H5peditorStorage {
       $librariesWithDetails = array();
       foreach ($libraries as $library) {
         $details = db_fetch_object(db_query(
-          "SELECT title, runnable, restricted
+          "SELECT title, runnable, restricted, tutorial_url
            FROM {h5p_libraries}
            WHERE machine_name = '%s'
            AND major_version = %d
@@ -93,7 +93,8 @@ class H5peditorDrupalStorage implements H5peditorStorage {
               title,
               major_version,
               minor_version,
-              restricted
+              restricted,
+              tutorial_url
        FROM {h5p_libraries}
        WHERE runnable = 1
        AND semantics IS NOT NULL
