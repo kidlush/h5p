@@ -456,7 +456,7 @@ function h5p_validate($node, &$form) {
 function h5p_insert($node) {
   if (isset($_SESSION['h5p_upload'])) {
     $h5p_core = _h5p_get_instance('storage');
-    $h5p_core->savePackage(h5p_get_content_id($node), $node->nid);
+    $h5p_core->savePackage(h5p_get_content_id($node), $node->nid, FALSE, array('disable' => $node->disable));
   }
   else {
     $core = _h5p_get_instance('core');
@@ -509,15 +509,16 @@ function h5p_delete($node) {
   $h5p_core = _h5p_get_instance('storage');
   $h5p_export = _h5p_get_instance('export');
 
-  $res = db_query("SELECT content_id FROM {h5p_nodes} WHERE nid = %d", $node->nid);
-  while ($content_id = db_result($res)) {
-    $h5p_core->deletePackage($content_id);
-    $h5p_export->deleteExport($content_id);
-  }
-  db_query("DELETE FROM {h5p_points} where content_id = %d", h5p_get_content_id($node));
+  $res = db_query("SELECT content_id AS id, slug FROM {h5p_nodes} WHERE nid = %d", $node->nid);
+  while ($content = db_fetch_array($res)) {
+    $h5p_core->deletePackage($content['id']);
+    $h5p_export->deleteExport($content);
 
-  // Remove content user data
-  db_query("DELETE FROM {h5p_content_user_data} where content_main_id = %d", $node->nid);
+    db_query("DELETE FROM {h5p_points} where content_id = %d", $content['id']);
+
+    // Remove content user data
+    db_query("DELETE FROM {h5p_content_user_data} where content_main_id = %d", $content['id']);
+  }
 }
 
 /**
@@ -533,7 +534,9 @@ function h5p_load($node) {
     $additions->main_library_id = $content['library']['id'];
     $additions->embed_type = $content['embedType'];
     $additions->main_library = $content['library'];
+    $additions->filtered = $content['filtered'];
     $additions->disable = $content['disable'];
+    $additions->h5p_slug = $content['slug'];
   }
   return $additions;
 }
@@ -790,6 +793,7 @@ function h5p_get_core_settings() {
  */
 function h5p_get_content($node) {
   $core = _h5p_get_instance('core');
+
   $node->disable |= $core->getGlobalDisable();
   if (!($node->disable & H5PCore::DISABLE_FRAME) && !variable_get('h5p_icon_in_action_bar', TRUE)) {
     $node->disable |= H5PCore::DISABLE_ABOUT;
@@ -805,6 +809,7 @@ function h5p_get_content($node) {
     'filtered' => $node->filtered,
     'url' => url('node/' . $node->nid, array('absolute' => TRUE)),
     'disable' => $node->disable,
+    'slug' => $node->h5p_slug,
   );
 }
 
@@ -814,6 +819,8 @@ function h5p_get_content($node) {
  * @return array assoc
  */
 function h5p_get_content_settings($content) {
+  global $user;
+
   $core = _h5p_get_instance('core');
   $filtered = $core->filterParameters($content);
 
@@ -835,7 +842,7 @@ function h5p_get_content_settings($content) {
                         WHERE user_id = %d
                         AND content_main_id = %d
                         AND preloaded = 1",
-                      $user->uid, $content['mainId']);
+                        $user->uid, $content['mainId']);
 
   $content_user_data = array(
     0 => array(
