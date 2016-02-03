@@ -1578,16 +1578,19 @@ Class H5PExport {
    */
   private static function populateFileList($dir, &$files, $relative = '') {
     $strip = strlen($dir) + 1;
-    foreach (glob($dir . DIRECTORY_SEPARATOR . '*') as $file) {
-      $rel = $relative . substr($file, $strip);
-      if (is_dir($file)) {
-        self::populateFileList($file, $files, $rel . '/');
-      }
-      else {
-        $files[] = (object) array(
-          'absolutePath' => $file,
-          'relativePath' => $rel
-        );
+    $contents = glob($dir . DIRECTORY_SEPARATOR . '*');
+    if (!empty($contents)) {
+      foreach ($contents as $file) {
+        $rel = $relative . substr($file, $strip);
+        if (is_dir($file)) {
+          self::populateFileList($file, $files, $rel . '/');
+        }
+        else {
+          $files[] = (object) array(
+            'absolutePath' => $file,
+            'relativePath' => $rel
+          );
+        }
       }
     }
   }
@@ -2388,6 +2391,10 @@ class H5PCore {
       if($platformInfo['uuid'] === '' && isset($json->uuid)) {
         $this->h5pF->setOption('site_uuid', $json->uuid);
       }
+      if (isset($json->latest) && !empty($json->latest)) {
+        $this->h5pF->setOption('update_available', $json->latest->releasedAt);
+        $this->h5pF->setOption('update_available_path', $json->latest->path);
+      }
     }
   }
 
@@ -2823,6 +2830,12 @@ class H5PContentValidator {
 
   // Validate a filelike object, such as video, image, audio and file.
   private function _validateFilelike(&$file, $semantics, $typevalidkeys = array()) {
+    // Do not allow to use files from other content folders.
+    $matches = array();
+    if (preg_match('/^(\.\.\/){1,2}(\d+|editor)\/(.+)$/', $file->path, $matches)) {
+      $file->path = $matches[3];
+    }
+
     // Make sure path and mime does not have any special chars
     $file->path = htmlspecialchars($file->path, ENT_QUOTES, 'UTF-8', FALSE);
     if (isset($file->mime)) {
@@ -2861,7 +2874,7 @@ class H5PContentValidator {
     }
 
     if (isset($file->copyright)) {
-      $this->validateGroup($file->copyright, H5PContentValidator::getCopyrightSemantics());
+      $this->validateGroup($file->copyright, $this->getCopyrightSemantics());
     }
   }
 
@@ -3364,40 +3377,40 @@ class H5PContentValidator {
     return $uri;
   }
 
-  public static function getCopyrightSemantics() {
+  public function getCopyrightSemantics() {
     static $semantics;
 
     if ($semantics === NULL) {
       $semantics = (object) array(
         'name' => 'copyright',
         'type' => 'group',
-        'label' => 'Copyright information',
+        'label' => $this->h5pF->t('Copyright information'),
         'fields' => array(
           (object) array(
             'name' => 'title',
             'type' => 'text',
-            'label' => 'Title',
+            'label' => $this->h5pF->t('Title'),
             'placeholder' => 'La Gioconda',
             'optional' => TRUE
           ),
           (object) array(
             'name' => 'author',
             'type' => 'text',
-            'label' => 'Author',
+            'label' => $this->h5pF->t('Author'),
             'placeholder' => 'Leonardo da Vinci',
             'optional' => TRUE
           ),
           (object) array(
             'name' => 'year',
             'type' => 'text',
-            'label' => 'Year(s)',
+            'label' => $this->h5pF->t('Year(s)'),
             'placeholder' => '1503 - 1517',
             'optional' => TRUE
           ),
           (object) array(
             'name' => 'source',
             'type' => 'text',
-            'label' => 'Source',
+            'label' => $this->h5pF->t('Source'),
             'placeholder' => 'http://en.wikipedia.org/wiki/Mona_Lisa',
             'optional' => true,
             'regexp' => (object) array(
@@ -3408,56 +3421,56 @@ class H5PContentValidator {
           (object) array(
             'name' => 'license',
             'type' => 'select',
-            'label' => 'License',
+            'label' => $this->h5pF->t('License'),
             'default' => 'U',
             'options' => array(
               (object) array(
                 'value' => 'U',
-                'label' => 'Undisclosed'
+                'label' => $this->h5pF->t('Undisclosed')
               ),
               (object) array(
                 'value' => 'CC BY',
-                'label' => 'Attribution'
+                'label' => $this->h5pF->t('Attribution')
               ),
               (object) array(
                 'value' => 'CC BY-SA',
-                'label' => 'Attribution-ShareAlike'
+                'label' => $this->h5pF->t('Attribution-ShareAlike')
               ),
               (object) array(
                 'value' => 'CC BY-ND',
-                'label' => 'Attribution-NoDerivs'
+                'label' => $this->h5pF->t('Attribution-NoDerivs')
               ),
               (object) array(
                 'value' => 'CC BY-NC',
-                'label' => 'Attribution-NonCommercial'
+                'label' => $this->h5pF->t('Attribution-NonCommercial')
               ),
               (object) array(
                 'value' => 'CC BY-NC-SA',
-                'label' => 'Attribution-NonCommercial-ShareAlike'
+                'label' => $this->h5pF->t('Attribution-NonCommercial-ShareAlike')
               ),
               (object) array(
                 'value' => 'CC BY-NC-ND',
-                'label' => 'Attribution-NonCommercial-NoDerivs'
+                'label' => $this->h5pF->t('Attribution-NonCommercial-NoDerivs')
               ),
               (object) array(
                 'value' => 'GNU GPL',
-                'label' => 'General Public License'
+                'label' => $this->h5pF->t('General Public License')
               ),
               (object) array(
                 'value' => 'PD',
-                'label' => 'Public Domain'
+                'label' => $this->h5pF->t('Public Domain')
               ),
               (object) array(
                 'value' => 'ODC PDDL',
-                'label' => 'Public Domain Dedication and Licence'
+                'label' => $this->h5pF->t('Public Domain Dedication and Licence')
               ),
               (object) array(
                 'value' => 'CC PDM',
-                'label' => 'Public Domain Mark'
+                'label' => $this->h5pF->t('Public Domain Mark')
               ),
               (object) array(
                 'value' => 'C',
-                'label' => 'Copyright'
+                'label' => $this->h5pF->t('Copyright')
               )
             )
           )

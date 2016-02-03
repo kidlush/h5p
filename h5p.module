@@ -69,7 +69,7 @@ function h5p_menu() {
     'title' => 'H5P Library Details',
     'title callback' => '_h5p_library_details_title',
     'title arguments' => array(4),
-    'description' => 'Get detailed info on a library',
+    'description' => 'Get detailed info on a library',
     'page callback' => 'h5p_library_details',
     'page arguments' => array(4),
     'access arguments' => array('administer site configuration'),
@@ -631,6 +631,10 @@ function h5p_access_set_finished() {
  * @return {boolean}
  */
 function h5p_content_access($id, $op = 'view') {
+  if ($id === '0') {
+    // No content. Check if access to H5P content type.
+    return node_access($op, 'h5p_content');
+  }
   if (variable_get('h5p_revisioning', 1)) {
     // We got vid, but we need nid. Let's ask DB
     $id = (int) db_result(db_query('SELECT nid FROM {node_revisions} WHERE vid = %d', $id));
@@ -846,7 +850,7 @@ function h5p_get_content_settings($content) {
 
   $content_user_data = array(
     0 => array(
-      'state' => '{}'
+      'state' => FALSE
     )
   );
   while ($result = db_fetch_object($results)) {

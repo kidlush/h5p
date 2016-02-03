@@ -92,9 +92,17 @@ ns.Library.prototype.librariesLoaded = function (libList) {
   }
 
   self.$select.html(options).change(function () {
-    if (self.params.library === undefined || confirm(H5PEditor.t('core', 'confirmChangeLibrary'))) {
-      self.loadLibrary(ns.$(this).val());
-    }
+    var lib = ns.$(this).val();
+    // Use timeout to avoid bug in Chrome >44, when confirm is used inside change event.
+    // Ref. https://code.google.com/p/chromium/issues/detail?id=525629
+    setTimeout(function () {
+      if (self.params.library === undefined || confirm(H5PEditor.t('core', 'confirmChangeLibrary'))) {
+        self.loadLibrary(lib);
+      } else {
+        // Reset selector
+        self.$select.val(self.currentLibrary);
+      }
+    }, 0);
   });
 
   if (self.libraries.length === 1) {
@@ -143,6 +151,8 @@ ns.Library.prototype.loadLibrary = function (libraryName, preserveParams) {
     if (preserveParams === undefined || !preserveParams) {
       // Reset params
       that.params.params = {};
+    }
+    if (that.params.subContentId === undefined) {
       that.params.subContentId = H5P.createUUID();
     }
 
@@ -193,7 +203,7 @@ ns.Library.prototype.change = function (callback) {
  */
 ns.Library.prototype.validate = function () {
   if (this.params.library === undefined) {
-    return false;
+    return (this.field.optional === true);
   }
 
   var valid = true;

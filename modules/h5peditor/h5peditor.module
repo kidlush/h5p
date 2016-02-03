@@ -142,6 +142,7 @@ function h5peditor_h5p_content_node_form_after_build($form) {
 
   // Note: If we're going to preprocess the assets one day, remember to skip ckeditor.
 
+  $content_validator = _h5p_get_instance('contentvalidator');
   $settings = array(
     'h5peditor' => array(
       'filesPath' => base_path() . file_directory_path() . '/h5peditor',
@@ -153,7 +154,7 @@ function h5peditor_h5p_content_node_form_after_build($form) {
       'ajaxPath' => url('h5peditor/'),
       'modulePath' => $h5peditor_module_path,
       'libraryPath' => _h5p_get_h5p_path() . '/libraries/',
-      'copyrightSemantics' => H5PContentValidator::getCopyrightSemantics(),
+      'copyrightSemantics' => $content_validator->getCopyrightSemantics(),
       'assets' => $assets,
     ),
   );
