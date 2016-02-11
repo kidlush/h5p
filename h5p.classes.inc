@@ -498,7 +498,8 @@ class H5PDrupal implements H5PFrameworkInterface {
                 hl.embed_types AS library_embed_types,
                 hl.fullscreen AS library_fullscreen,
                 hn.filtered,
-                hn.disable
+                hn.disable,
+                hn.slug
           FROM {h5p_nodes} hn
           JOIN {node} n ON n.nid = hn.nid
           JOIN {h5p_libraries} hl ON hl.library_id = hn.main_library_id
