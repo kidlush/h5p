@@ -53,7 +53,7 @@ function h5p_menu() {
     'description' => 'Configure the location of h5p files.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('h5p_admin_settings'),
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array('administer h5p'),
     'type' => MENU_NORMAL_ITEM,
     'file' => 'h5p.admin.inc',
   );
@@ -61,7 +61,7 @@ function h5p_menu() {
     'title' => 'H5P Libraries',
     'description' => 'List, delete and get detailed info on the installed H5P libraries',
     'page callback' => 'h5p_library_list',
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array('administer h5p'),
     'type' => MENU_NORMAL_ITEM,
     'file' => 'h5p.admin.inc',
   );
@@ -72,7 +72,7 @@ function h5p_menu() {
     'description' => 'Get detailed info on a library',
     'page callback' => 'h5p_library_details',
     'page arguments' => array(4),
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array('administer h5p'),
     'type' => MENU_NORMAL_ITEM,
     'file' => 'h5p.admin.inc',
   );
@@ -80,7 +80,7 @@ function h5p_menu() {
     'title' => 'Upgrade H5P Content',
     'page callback' => 'h5p_content_upgrade',
     'page arguments' => array(4),
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array('administer h5p'),
     'type' => MENU_NORMAL_ITEM,
     'file' => 'h5p.admin.inc',
   );
@@ -89,7 +89,7 @@ function h5p_menu() {
     'description' => 'Delete an unused H5P library',
     'page callback' => 'h5p_library_delete',
     'page arguments' => array(4),
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array('administer h5p'),
     'type' => MENU_NORMAL_ITEM,
     'file' => 'h5p.admin.inc',
   );
@@ -97,7 +97,7 @@ function h5p_menu() {
     'title' => 'H5P Content Upgrade Library',
     'page callback' => 'h5p_content_upgrade_library',
     'page arguments' => array(4, 5, 6),
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array('administer h5p'),
     'type' => MENU_CALLBACK,
     'file' => 'h5p.admin.inc',
   );
@@ -105,21 +105,21 @@ function h5p_menu() {
     'title' => 'H5P Library Restrict',
     'page callback' => 'h5p_restrict_library_callback',
     'page arguments' => array(4),
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array('administer h5p'),
     'type' => MENU_CALLBACK,
     'file' => 'h5p.admin.inc',
   );
   $items['admin/content/h5p/libraries/upgrade-all'] = array(
     'title' => 'Upgrade All H5P Libraries',
     'page callback' => 'h5p_upgrade_all_libraries',
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array('administer h5p'),
     'type' => MENU_NORMAL_ITEM,
     'file' => 'h5p.admin.inc',
   );
   $items['admin/content/h5p/rebuild-cache'] = array(
     'title' => 'H5P Rebuild Content Cache',
     'page callback' => 'h5p_rebuild_cache',
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array('administer h5p'),
     'type' => MENU_CALLBACK,
     'file' => 'h5p.admin.inc',
   );
@@ -252,7 +252,7 @@ function h5p_node_info() {
  * Implements hook_perm().
  */
 function h5p_perm() {
-  return array('create h5p', 'edit own h5p', 'edit any h5p', 'delete own h5p', 'delete any h5p', 'update h5p libraries', 'access all h5p results', 'access own h5p results', 'access h5p results for own content', 'create restricted h5p content types');
+  return array('create h5p', 'edit own h5p', 'edit any h5p', 'delete own h5p', 'delete any h5p', 'update h5p libraries', 'access all h5p results', 'access own h5p results', 'access h5p results for own content', 'create restricted h5p content types', 'administer h5p');
 }
 
 /**
