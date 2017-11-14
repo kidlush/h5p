@@ -1,5 +1,3 @@
-//H5PEditor = window.H5PEditor || {};
-//H5PEditor.language = H5PEditor.language || {};
 H5PEditor.language.core = {
   missingTranslation: '[Mangler oversettelse :key]',
   loading: 'Laster, vennligst vent...',
@@ -87,10 +85,7 @@ H5PEditor.language.core = {
   h5pFileUploadServerErrorTitle: 'H5P filen kunne ikke bli lastet opp.',
   h5pFileUploadServerErrorContent: 'En uventet feil har oppstått. Sjekk din server log for' +
   ' detaljer.',
-  contentTypeSectionAll: 'Alle',
-  contentTypeSectionMine: 'Mine innholdstyper',
-  contentTypeSectionPopular: 'Mest populær',
-  contentTypeSectionTitle: 'Bla i innholdstyper',
+  contentTypeSectionAll: 'Alle innholdstyper',
   contentTypeSearchFieldPlaceholder: 'Søk etter innholdstyper',
   contentTypeInstallButtonLabel: 'Installer',
   contentTypeInstallingButtonLabel: 'Installerer',
@@ -105,6 +100,14 @@ H5PEditor.language.core = {
   contentTypeInstallError: ':contentType kunne ikke bli installert. Kontakt din administrator.',
   contentTypeLicensePanelTitle: 'Lisens',
   contentTypeDemoButtonLabel: 'Innholdsdemonstrasjon',
+  numResults: ':num treff',
+  show: 'Vis',
+  recentlyUsedFirst: 'Nylig brukt først',
+  popularFirst: 'Populære først',
+  newestFirst: 'Nyeste først',
+  aToZ: 'A til Z',
+  noResultsFound: 'Ingen resultater',
+  noResultsFoundDesc: 'Det finnes ingen innholdstype som samsvarer med søkekriteriene dine.',
   readMore: 'Vis mer',
   readLess: 'Vis mindre',
   contentTypeOwner: 'Av :owner',
@@ -144,5 +147,10 @@ H5PEditor.language.core = {
   reloadButtonLabel: 'Last på nytt',
   videoQuality: 'Navn på videokvalitet',
   videoQualityDescription: 'Dette navnet hjelper brukeren med å identifisere den aktuelle videokvaliteten. F.eks. 1080p, 720p, HD or Mobile',
-  videoQualityDefaultLabel: 'Kvalitet :index'
+  videoQualityDefaultLabel: 'Kvalitet :index',
+  noContentTypesAvailable: 'Ingen innholdstyper er tilgjengelig',
+  noContentTypesAvailableDesc: 'Nettstedet ditt har problemer med å koble til H5P.org og liste tilgjengelige innholdstyper.',
+  contentTypeCacheOutdated: 'Innholdstype-listen er utdatert',
+  contentTypeCacheOutdatedDesc: 'Nettstedet ditt har problemer med å koble til H5P.org for å se etter innholdstype-oppdateringer. Det kan hende at du ikke får oppdatert eller installert nye innholdstyper.',
+  tryAgain: 'Prøv på nytt'
 };

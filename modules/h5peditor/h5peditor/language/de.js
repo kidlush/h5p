@@ -83,10 +83,7 @@ H5PEditor.language.core = {
   h5pFileUploadServerErrorTitle: 'Die H5P-Datei konnte nicht hochgeladen werden',
   h5pFileUploadServerErrorContent: 'Ein unerwarteter Fehler ist aufgetreten. Bitte pr\u00fcfe die Fehlerlogdatei des Servers f\u00fcr' +
   ' mehr Details.',
-  contentTypeSectionAll: 'Alle',
-  contentTypeSectionMine: 'Meine Inhaltstypen',
-  contentTypeSectionPopular: 'Am beliebtesten',
-  contentTypeSectionTitle: 'Inhaltstypen durchst\u00f6bern',
+  contentTypeSectionAll: 'Alle Content Types',
   contentTypeSearchFieldPlaceholder: 'Nach Inhaltstypen suchen',
   contentTypeInstallButtonLabel: 'Installieren',
   contentTypeInstallingButtonLabel: 'Installiere',
@@ -101,6 +98,14 @@ H5PEditor.language.core = {
   contentTypeInstallError: ':contentType konnte nicht installiert werden. Kontaktiere bitte deinen Administrator.',
   contentTypeLicensePanelTitle: 'Lizenz',
   contentTypeDemoButtonLabel: 'Inhalts-Demo',
+  numResults: ':num results',
+  show: 'Show',
+  recentlyUsedFirst: 'Recently Used First',
+  popularFirst: 'Popular First',
+  newestFirst: 'Newest First',
+  aToZ: 'A to Z',
+  noResultsFound: 'No results found',
+  noResultsFoundDesc: 'There is no content type that matches your search criteria.',
   readMore: 'Mehr lesen',
   readLess: 'Weniger lesen',
   contentTypeOwner: 'Von :owner',
@@ -136,5 +141,10 @@ H5PEditor.language.core = {
   reloadButtonLabel: 'Neu laden',
   videoQuality: 'Videoaufl\u00f6sung',
   videoQualityDescription: 'Dieses Label hilft dem Benutzer, die aktuelle Videoaufl\u00f6sung zu erkennen. Z.B.. 1080p, 720p, HD der Mobile',
-  videoQualityDefaultLabel: 'Aufl\u00f6sung :index'
+  videoQualityDefaultLabel: 'Aufl\u00f6sung :index',
+  noContentTypesAvailable: 'No content types are available',
+  noContentTypesAvailableDesc: 'Your site is having difficulties connecting to H5P.org and listing the available content types.',
+  contentTypeCacheOutdated: 'Content type list outdated',
+  contentTypeCacheOutdatedDesc: 'Your site is having difficulties connecting to H5P.org to check for content type updates. You may not be able to update or install new content types.',
+  tryAgain: 'Try again'
 };

@@ -86,10 +86,7 @@ H5PEditor.language.core = {
   h5pFileUploadServerErrorTitle: 'Het H5P bestand kon niet worden geüpload',
   h5pFileUploadServerErrorContent: 'Er is een onverwachte fout opgetreden. Controleer het server log voor' +
   ' meer informatie.',
-  contentTypeSectionAll: 'Alle',
-  contentTypeSectionMine: 'Mijn Content Types',
-  contentTypeSectionPopular: 'Meest populair',
-  contentTypeSectionTitle: 'Blader door content types',
+  contentTypeSectionAll: 'Alle Content Types',
   contentTypeSearchFieldPlaceholder: 'Zoeken naar Content Types',
   contentTypeInstallButtonLabel: 'Installeren',
   contentTypeInstallingButtonLabel: 'Bezig met installeren',
@@ -104,6 +101,14 @@ H5PEditor.language.core = {
   contentTypeInstallError: ':contentType kon niet worden geïnstalleerd. Neem contact op met je site beheerder.',
   contentTypeLicensePanelTitle: 'Licentie',
   contentTypeDemoButtonLabel: 'Content Demo',
+  numResults: ':num results',
+  show: 'Show',
+  recentlyUsedFirst: 'Recently Used First',
+  popularFirst: 'Popular First',
+  newestFirst: 'Newest First',
+  aToZ: 'A to Z',
+  noResultsFound: 'No results found',
+  noResultsFoundDesc: 'There is no content type that matches your search criteria.',
   readMore: 'Meer lezen',
   readLess: 'Minder lezen',
   contentTypeOwner: 'Door :owner',
@@ -143,5 +148,10 @@ H5PEditor.language.core = {
   reloadButtonLabel: 'Opnieuw laden',
   videoQuality: 'Video quality label',
   videoQualityDescription: 'This label helps the user identify the current quality of the video. E.g. 1080p, 720p, HD or Mobile',
-  videoQualityDefaultLabel: 'Quality :index'
+  videoQualityDefaultLabel: 'Quality :index',
+  noContentTypesAvailable: 'No content types are available',
+  noContentTypesAvailableDesc: 'Your site is having difficulties connecting to H5P.org and listing the available content types.',
+  contentTypeCacheOutdated: 'Content type list outdated',
+  contentTypeCacheOutdatedDesc: 'Your site is having difficulties connecting to H5P.org to check for content type updates. You may not be able to update or install new content types.',
+  tryAgain: 'Try again'
 };
