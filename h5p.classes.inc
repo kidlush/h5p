@@ -62,10 +62,17 @@ class H5PDrupal implements H5PFrameworkInterface {
   }
 
   /**
+   * Kesps track of messages for the user.
+   * @var array
+   */
+  protected $messages = array('error' => array(), 'info' => array());
+
+  /**
    * Implements setErrorMessage
    */
   public function setErrorMessage($message) {
     if (user_access('create h5p_content content')) {
+      $this->messages['error'][] = $message;
       drupal_set_message($message, 'error');
     }
   }
@@ -75,8 +82,22 @@ class H5PDrupal implements H5PFrameworkInterface {
    */
   public function setInfoMessage($message) {
     if (user_access('create h5p_content content')) {
+      $this->messages['info'][] = $message;
       drupal_set_message($message);
     }
+  }
+
+  /**
+   * Implements getMessages
+   */
+  public function getMessages($type) {
+    if (empty($this->messages[$type])) {
+      return NULL;
+    }
+    $messages = $this->messages[$type];
+    $this->messages[$type] = array();
+    drupal_get_messages($type === 'info' ? 'status' : $type, TRUE); // Prevent messages from displaying twice
+    return $messages;
   }
 
   /**
