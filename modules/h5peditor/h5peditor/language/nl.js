@@ -78,6 +78,9 @@ H5PEditor.language.core = {
   uploadFileButtonLabel: 'Upload een bestand',
   uploadFileButtonChangeLabel: 'Wijzig bestand',
   uploadingThrobber: 'Uploaden...',
+  uploadSuccess: ':title was successfully uploaded!',
+  unableToInterpretError: 'Unable to interpret response.',
+  unableToInterpretSolution: 'Please check your error log.',
   h5pFileWrongExtensionTitle: 'Het geselecteerde bestand kon niet worden geüpload',
   h5pFileWrongExtensionContent: 'Alleen bestanden met de .h5p extensie toegestaan.',
   h5pFileValidationFailedTitle: 'Kon het H5P bestand niet valideren.',
@@ -87,6 +90,7 @@ H5PEditor.language.core = {
   h5pFileUploadServerErrorContent: 'Er is een onverwachte fout opgetreden. Controleer het server log voor' +
   ' meer informatie.',
   contentTypeSectionAll: 'Alle Content Types',
+  searchResults: 'Search Results',
   contentTypeSearchFieldPlaceholder: 'Zoeken naar Content Types',
   contentTypeInstallButtonLabel: 'Installeren',
   contentTypeInstallingButtonLabel: 'Bezig met installeren',

@@ -78,6 +78,9 @@ H5PEditor.language.core = {
   uploadFileButtonLabel: 'Lataa tiedosto',
   uploadFileButtonChangeLabel: 'Vaihda tiedosto',
   uploadingThrobber: 'Lataa...',
+  uploadSuccess: ':title was successfully uploaded!',
+  unableToInterpretError: 'Unable to interpret response.',
+  unableToInterpretSolution: 'Please check your error log.',
   h5pFileWrongExtensionTitle: 'Valittua tiedostoa ei pystytty lataamaan',
   h5pFileWrongExtensionContent: 'Vain .h5p päätteiset tiedostot ovat sallittuja.',
   h5pFileValidationFailedTitle: 'H5P tiedostoa ei pystytty varmistamaan.',
@@ -87,6 +90,7 @@ H5PEditor.language.core = {
   h5pFileUploadServerErrorContent: 'Odottamaton virhe. Tarkista palvelinlogisi' +
   ' lisätietoja varten.',
   contentTypeSectionAll: 'All Content Types',
+  searchResults: 'Search Results',
   contentTypeSearchFieldPlaceholder: 'Etsi sisältötyyppejä',
   contentTypeInstallButtonLabel: 'Asenna',
   contentTypeInstallingButtonLabel: 'Asentaa',

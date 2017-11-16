@@ -79,6 +79,9 @@ H5PEditor.language.core = {
   uploadFileButtonLabel: 'Upload a file',
   uploadFileButtonChangeLabel: 'Change file',
   uploadingThrobber: 'Now uploading...',
+  uploadSuccess: ':title ble lastet opp!',
+  unableToInterpretError: 'Kan ikke tolke respons.',
+  unableToInterpretSolution: 'Vennligst sjekk feilloggen din.',
   h5pFileWrongExtensionTitle: 'The selected file could not be uploaded',
   h5pFileWrongExtensionContent: 'Only files with the .h5p extension are allowed.',
   h5pFileValidationFailedTitle: 'Could not validate H5P file.',
@@ -88,6 +91,7 @@ H5PEditor.language.core = {
   h5pFileUploadServerErrorContent: 'An unexpected error occured. Check your server error log for' +
   ' more details.',
   contentTypeSectionAll: 'Alle innhaldstypar',
+  searchResults: 'Søkeresultater',
   contentTypeSearchFieldPlaceholder: 'Search for Content Types',
   contentTypeInstallButtonLabel: 'Install',
   contentTypeInstallingButtonLabel: 'Installing',
