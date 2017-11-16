@@ -65,14 +65,17 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Kesps track of messages for the user.
    * @var array
    */
-  protected $messages = array('error' => array(), 'info' => array());
+  private $messages = array('error' => array(), 'info' => array());
 
   /**
    * Implements setErrorMessage
    */
-  public function setErrorMessage($message) {
+  public function setErrorMessage($message, $code = NULL) {
     if (user_access('create h5p_content content')) {
-      $this->messages['error'][] = $message;
+      $this->messages['error'][] = (object)array(
+        'code' => $code,
+        'message' => $message
+      );
       drupal_set_message($message, 'error');
     }
   }
