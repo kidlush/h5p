@@ -1634,3 +1634,77 @@ function h5p_update_7117() {
     variable_set('h5p_whitelist', $whitelist . $add);
   }
 }
+
+/**
+ * Implements hook_update_N().
+ * Change h5p_nodes for metadata.
+ */
+function h5p_update_7135() {
+  if (db_field_exists('h5p_nodes', 'author')) {
+    db_drop_field('h5p_nodes', 'author');
+  }
+  if (db_field_exists('h5p_nodes', 'license')) {
+    db_drop_field('h5p_nodes', 'license');
+  }
+  if (db_field_exists('h5p_nodes', 'meta_keywords')) {
+    db_drop_field('h5p_nodes', 'meta_keywords');
+  }
+  if (db_field_exists('h5p_nodes', 'meta_description')) {
+    db_drop_field('h5p_nodes', 'meta_description');
+  }
+  if (!db_field_exists('h5p_nodes', 'title')) {
+    db_add_field('h5p_nodes', 'title', array(
+        'description' => 'Title of the main content',
+        'type' => 'varchar',
+        'length' => 255,
+        'not_null' => TRUE
+    ));
+  }
+  if (!db_field_exists('h5p_nodes', 'authors')) {
+    db_add_field('h5p_nodes', 'authors', array(
+        'description' => 'List of authors in json format',
+        'type' => 'text'
+    ));
+  }
+  if (!db_field_exists('h5p_nodes', 'source')) {
+    db_add_field('h5p_nodes', 'source', array(
+        'description' => 'Link to the source, could also be citation',
+        'type' => 'varchar',
+        'length' => 255
+    ));
+  }
+  if (!db_field_exists('h5p_nodes', 'years_from')) {
+    db_add_field('h5p_nodes', 'years_from', array(
+        'description' => 'Start year for copyright',
+        'type' => 'int',
+        'unsigned' => TRUE
+    ));
+  }
+  if (!db_field_exists('h5p_nodes', 'years_to')) {
+    db_add_field('h5p_nodes', 'years_to', array(
+        'description' => 'End year for copyright',
+        'type' => 'int',
+        'unsigned' => TRUE
+    ));
+  }
+  if (!db_field_exists('h5p_nodes', 'license')) {
+    db_add_field('h5p_nodes', 'license', array(
+        'description' => 'License name of the content',
+        'type' => 'varchar',
+        'length' => 32
+    ));
+  }
+  if (!db_field_exists('h5p_nodes', 'license_version')) {
+    db_add_field('h5p_nodes', 'license_version', array(
+        'description' => 'Version of license used for the content',
+        'type' => 'varchar',
+        'length' => 10
+    ));
+  }
+  if (!db_field_exists('h5p_nodes', 'changes')) {
+    db_add_field('h5p_nodes', 'changes', array(
+        'description' => 'List of changes in json format',
+        'type' => 'text'
+    ));
+  }
+}

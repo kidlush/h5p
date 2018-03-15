@@ -504,6 +504,12 @@ class H5PDrupal implements H5PFrameworkInterface {
       return;
     }
 
+    // Extract metadata for main content
+    $contentJSON = json_decode($content['params'], true);
+    $metadata = $contentJSON['metadata'];
+    unset($contentJSON['metadata']);
+    $content['params'] = json_encode($contentJSON);
+
     // Update content
     db_update('h5p_nodes')
       ->fields(array(
@@ -511,7 +517,15 @@ class H5PDrupal implements H5PFrameworkInterface {
         'embed_type' => 'div', // TODO: Determine from library?
         'main_library_id' => $content['library']['libraryId'],
         'filtered' => '',
-        'disable' => $content['disable']
+        'disable' => $content['disable'],
+        'title' => isset($metadata['title']) ? $metadata['title'] : $content['title'],
+        'authors' => isset($metadata['authors']) ? json_encode($metadata['authors']) : NULL,
+        'source' => $metadata['source'],
+        'years_from' => $metadata['years']['from'],
+        'years_to' => $metadata['years']['to'],
+        'license' => $metadata['license'],
+        'license_version' => $metadata['licenseVersion'],
+        'changes' => isset($metadata['changes']) ? json_encode($metadata['changes']) : NULL
       ))
       ->condition('content_id', $content_id)
       ->execute();
@@ -545,6 +559,12 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements insertContent
    */
   public function insertContent($content, $contentMainId = NULL) {
+    // Extract metadata
+    $contentJSON = json_decode($content['params'], true);
+    $metadata = $contentJSON['metadata'];
+    unset($contentJSON['metadata']);
+    $content['params'] = json_encode($contentJSON);
+
     // Insert
     db_insert('h5p_nodes')
       ->fields(array(
@@ -555,7 +575,15 @@ class H5PDrupal implements H5PFrameworkInterface {
         'main_library_id' => $content['library']['libraryId'],
         'disable' => $content['disable'],
         'filtered' => '',
-        'slug' => ''
+        'slug' => '',
+        'title' => isset($metadata['title']) ? $metadata['title'] : $content['title'],
+        'authors' => isset($metadata['authors']) ? json_encode($metadata['authors']) : NULL,
+        'source' => $metadata['source'],
+        'years_from' => $metadata['years']['from'],
+        'years_to' => $metadata['years']['to'],
+        'license' => $metadata['license'],
+        'license_version' => $metadata['licenseVersion'],
+        'changes' => isset($metadata['changes']) ? json_encode($metadata['changes']) : NULL
       ))
       ->execute();
 
@@ -786,6 +814,7 @@ class H5PDrupal implements H5PFrameworkInterface {
           ':id' => $id
         ))
         ->fetchObject();
+
     return ($content === FALSE ? NULL : H5PCore::snakeToCamel($content));
   }
 
