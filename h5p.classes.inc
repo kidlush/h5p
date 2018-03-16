@@ -504,11 +504,13 @@ class H5PDrupal implements H5PFrameworkInterface {
       return;
     }
 
-    // Extract metadata for main content
-    $contentJSON = json_decode($content['params'], true);
-    $metadata = $contentJSON['metadata'];
-    unset($contentJSON['metadata']);
-    $content['params'] = json_encode($contentJSON);
+    /*
+     * The form content is passed in JSON format like
+     * {params: {...}, metadata: {...}} and needs to be decomposed.
+     */
+    $content_json = json_decode($content['params'], true);
+    $content['params'] = json_encode($content_json['params']);
+    $metadata = $content_json['metadata'];
 
     // Update content
     db_update('h5p_nodes')
@@ -521,8 +523,8 @@ class H5PDrupal implements H5PFrameworkInterface {
         'title' => isset($metadata['title']) ? $metadata['title'] : $content['title'],
         'authors' => isset($metadata['authors']) ? json_encode($metadata['authors']) : NULL,
         'source' => $metadata['source'],
-        'years_from' => $metadata['years']['from'],
-        'years_to' => $metadata['years']['to'],
+        'year_from' => $metadata['yearFrom'],
+        'year_to' => $metadata['yearTo'],
         'license' => $metadata['license'],
         'license_version' => $metadata['licenseVersion'],
         'changes' => isset($metadata['changes']) ? json_encode($metadata['changes']) : NULL
@@ -559,11 +561,13 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements insertContent
    */
   public function insertContent($content, $contentMainId = NULL) {
-    // Extract metadata
-    $contentJSON = json_decode($content['params'], true);
-    $metadata = $contentJSON['metadata'];
-    unset($contentJSON['metadata']);
-    $content['params'] = json_encode($contentJSON);
+    /*
+     * The form content is passed in JSON format like
+     * {params: {...}, metadata: {...}} and needs to be decomposed.
+     */
+    $content_json = json_decode($content['params'], true);
+    $content['params'] = json_encode($content_json['params']);
+    $metadata = $content_json['metadata'];
 
     // Insert
     db_insert('h5p_nodes')
@@ -579,8 +583,8 @@ class H5PDrupal implements H5PFrameworkInterface {
         'title' => isset($metadata['title']) ? $metadata['title'] : $content['title'],
         'authors' => isset($metadata['authors']) ? json_encode($metadata['authors']) : NULL,
         'source' => $metadata['source'],
-        'years_from' => $metadata['years']['from'],
-        'years_to' => $metadata['years']['to'],
+        'year_from' => $metadata['yearFrom'],
+        'year_to' => $metadata['yearTo'],
         'license' => $metadata['license'],
         'license_version' => $metadata['licenseVersion'],
         'changes' => isset($metadata['changes']) ? json_encode($metadata['changes']) : NULL
@@ -805,7 +809,14 @@ class H5PDrupal implements H5PFrameworkInterface {
                 hl.fullscreen AS library_fullscreen,
                 hn.filtered,
                 hn.disable,
-                hn.slug
+                hn.slug,
+                hn.title AS meta_title,
+                hn.authors AS meta_authors,
+                hn.source AS meta_source,
+                hn.license AS meta_license,
+                hn.license_version AS meta_license_version,
+                hn.year_from AS meta_year_from,
+                hn.year_to AS meta_year_to
           FROM {h5p_nodes} hn
           JOIN {node} n ON n.nid = hn.nid
           JOIN {h5p_libraries} hl ON hl.library_id = hn.main_library_id
@@ -814,6 +825,17 @@ class H5PDrupal implements H5PFrameworkInterface {
           ':id' => $id
         ))
         ->fetchObject();
+
+      // Build metadata object
+      $content->metadata = array();
+      foreach(array('title', 'authors', 'source', 'license', 'license_version', 'year_from', 'year_to') as $value) {
+        $lookup = 'meta_' . $value;
+        if (isset($content->$lookup)) {
+          $content->metadata[$value] = $content->$lookup;
+          unset($content->$lookup);
+        }
+      }
+      $content->metadata = H5PCore::snakeToCamel($content->metadata);
 
     return ($content === FALSE ? NULL : H5PCore::snakeToCamel($content));
   }

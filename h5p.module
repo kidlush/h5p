@@ -289,11 +289,19 @@ function h5p_form(&$node, $form_state) {
     $filtered_params = '{}';
   }
 
+  // Combine params and metadata in one JSON object
+  $main_content_data = json_encode(array(
+    'params' => json_decode($filtered_params),
+    'metadata' => $node->metadata
+  ), TRUE);
+
   $form['json_content'] = array(
     '#type' => 'hidden',
-    '#default_value' => $filtered_params,
+    '#default_value' => $main_content_data,
   );
 
+  // TODO HFP-1905: The hidden field for the library id can be included in
+  // the $main_data field. Needs to be saved differently then.
   $form['main_library_id'] = array(
     '#type' => 'value',
     '#default_value' => isset($node->main_library_id) ? $node->main_library_id : '',
@@ -587,6 +595,7 @@ function h5p_load($nodes) {
       $node->filtered = $content['filtered'];
       $node->disable = $content['disable'];
       $node->h5p_slug = $content['slug'];
+      $node->metadata = $content['metadata'];
     }
   }
 }
@@ -856,7 +865,8 @@ function h5p_get_content($node) {
     'filtered' => $node->filtered,
     'url' => url('node/' . $node->nid, array('absolute' => TRUE, 'alias' => TRUE)),
     'displayOptions' => $core->getDisplayOptionsForView($node->disable, $node->nid),
-    'slug' => $node->h5p_slug
+    'slug' => $node->h5p_slug,
+    'metadata' => $node->metadata
   );
 }
 
@@ -901,34 +911,6 @@ function h5p_get_content_settings($content) {
     $content_user_data[$result->sub_content_id][$result->data_id] = $result->data;
   }
 
-  // Add metadata
-  $results = db_query("SELECT title, authors, source, years_from, years_to, license, license_version, changes FROM {h5p_nodes} WHERE content_id = :content_id", array(':content_id' => $content['mainId']))->fetchObject();
-
-  $metadata = array();
-  foreach ($results as $key => $value) {
-    if (isset($value)) {
-      $metadata[$key] = $value;
-    }
-  }
-  $metadata = H5PCore::snakeToCamel($metadata);
-
-  $metadata['years'] = array();
-  if (isset($metadata['yearsFrom'])) {
-    $metadata['years']['from'] = $metadata['yearsFrom'];
-    unset($metadata['yearsFrom']);
-  }
-  if (isset($metadata['yearsTo'])) {
-    $metadata['years']['to'] = $metadata['yearsTo'];
-    unset($metadata['yearsTo']);
-  }
-  if (sizeof($metadata['years']) === 0) {
-    unset($metadata['years']);
-  }
-
-  $filtered = json_decode($filtered);
-  $filtered->metadata = $metadata;
-  $filtered = json_encode($filtered);
-
   return array(
     'library' => H5PCore::libraryToString($content['library']),
     'jsonContent' => $filtered,
@@ -941,6 +923,7 @@ function h5p_get_content_settings($content) {
     'title' => $content['title'],
     'contentUserData' => $content_user_data,
     'displayOptions' => $content['displayOptions'],
+    'metadata' => $content['metadata']
   );
 }
 
