@@ -527,7 +527,9 @@ class H5PDrupal implements H5PFrameworkInterface {
         'year_to' => $metadata['yearTo'],
         'license' => $metadata['license'],
         'license_version' => $metadata['licenseVersion'],
-        'changes' => isset($metadata['changes']) ? json_encode($metadata['changes']) : NULL
+        'license_extras' => $metadata['licenseExtras'],
+        'changes' => isset($metadata['changes']) ? json_encode($metadata['changes']) : NULL,
+        'author_comments' => $metadata['authorComments']
       ))
       ->condition('content_id', $content_id)
       ->execute();
@@ -587,7 +589,9 @@ class H5PDrupal implements H5PFrameworkInterface {
         'year_to' => $metadata['yearTo'],
         'license' => $metadata['license'],
         'license_version' => $metadata['licenseVersion'],
-        'changes' => isset($metadata['changes']) ? json_encode($metadata['changes']) : NULL
+        'license_extras' => $metadata['licenseExtras'],
+        'changes' => isset($metadata['changes']) ? json_encode($metadata['changes']) : NULL,
+        'author_comments' => $metadata['authorComments']
       ))
       ->execute();
 
@@ -815,8 +819,11 @@ class H5PDrupal implements H5PFrameworkInterface {
                 hn.source AS meta_source,
                 hn.license AS meta_license,
                 hn.license_version AS meta_license_version,
+                hn.license_extras AS meta_license_extras,
                 hn.year_from AS meta_year_from,
-                hn.year_to AS meta_year_to
+                hn.year_to AS meta_year_to,
+                hn.changes AS meta_changes,
+                hn.author_comments AS meta_author_comments
           FROM {h5p_nodes} hn
           JOIN {node} n ON n.nid = hn.nid
           JOIN {h5p_libraries} hl ON hl.library_id = hn.main_library_id
@@ -828,10 +835,14 @@ class H5PDrupal implements H5PFrameworkInterface {
 
       // Build metadata object
       $content->metadata = array();
-      foreach(array('title', 'authors', 'source', 'license', 'license_version', 'year_from', 'year_to') as $value) {
+      foreach(array('title', 'authors', 'source', 'license', 'license_version', 'license_extras' ,'year_from', 'year_to', 'changes', 'author_comments') as $value) {
         $lookup = 'meta_' . $value;
         if (isset($content->$lookup)) {
           $content->metadata[$value] = $content->$lookup;
+          // These fields are used to store complex data and need to be "extended"
+          if ($value === 'authors' || $value === 'changes' ) {
+            $content->metadata[$value] = json_decode($content->metadata[$value]);
+          }
           unset($content->$lookup);
         }
       }

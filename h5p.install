@@ -1707,4 +1707,16 @@ function h5p_update_7135() {
         'type' => 'text'
     ));
   }
+  if (!db_field_exists('h5p_nodes', 'license_extras')) {
+    db_add_field('h5p_nodes', 'license_extras', array(
+        'description' => 'Extra licensing terms',
+        'type' => 'text'
+    ));
+  }
+  if (!db_field_exists('h5p_nodes', 'author_comments')) {
+    db_add_field('h5p_nodes', 'author_comments', array(
+        'description' => 'Comments for the editor',
+        'type' => 'text'
+    ));
+  }
 }
