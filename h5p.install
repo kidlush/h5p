@@ -1674,14 +1674,14 @@ function h5p_update_7135() {
     ));
   }
   if (!db_field_exists('h5p_nodes', 'year_from')) {
-    db_add_field('h5p_nodes', 'years_from', array(
+    db_add_field('h5p_nodes', 'year_from', array(
         'description' => 'Start year for copyright',
         'type' => 'int',
         'unsigned' => TRUE
     ));
   }
   if (!db_field_exists('h5p_nodes', 'year_to')) {
-    db_add_field('h5p_nodes', 'years_to', array(
+    db_add_field('h5p_nodes', 'year_to', array(
         'description' => 'End year for copyright',
         'type' => 'int',
         'unsigned' => TRUE
