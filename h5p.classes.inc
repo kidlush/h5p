@@ -522,14 +522,14 @@ class H5PDrupal implements H5PFrameworkInterface {
         'disable' => $content['disable'],
         'title' => isset($metadata['title']) ? $metadata['title'] : $content['title'],
         'authors' => isset($metadata['authors']) ? json_encode($metadata['authors']) : NULL,
-        'source' => $metadata['source'],
-        'year_from' => $metadata['yearFrom'],
-        'year_to' => $metadata['yearTo'],
-        'license' => $metadata['license'],
-        'license_version' => $metadata['licenseVersion'],
-        'license_extras' => $metadata['licenseExtras'],
+        'source' => isset($metadata['source']) ? $metadata['source'] : NULL,
+        'year_from' => isset($metadata['year_from']) ? $metadata['yearFrom'] : NULL,
+        'year_to' => isset($metadata['year_to']) ? $metadata['yearTo'] : NULL,
+        'license' => isset($metadata['license']) ? $metadata['license'] : NULL,
+        'license_version' => isset($metadata['licenseVersion']) ? $metadata['licenseVersion'] : NULL,
+        'license_extras' => isset($metadata['licenseExtras']) ? $metadata['licenseExtras'] : NULL,
         'changes' => isset($metadata['changes']) ? json_encode($metadata['changes']) : NULL,
-        'author_comments' => $metadata['authorComments']
+        'author_comments' => isset($metadata['authorComments']) ? $metadata['authorComments'] : NULL
       ))
       ->condition('content_id', $content_id)
       ->execute();
@@ -584,14 +584,14 @@ class H5PDrupal implements H5PFrameworkInterface {
         'slug' => '',
         'title' => isset($metadata['title']) ? $metadata['title'] : $content['title'],
         'authors' => isset($metadata['authors']) ? json_encode($metadata['authors']) : NULL,
-        'source' => $metadata['source'],
-        'year_from' => $metadata['yearFrom'],
-        'year_to' => $metadata['yearTo'],
-        'license' => $metadata['license'],
-        'license_version' => $metadata['licenseVersion'],
-        'license_extras' => $metadata['licenseExtras'],
+        'source' => isset($metadata['source']) ? $metadata['source'] : NULL,
+        'year_from' => isset($metadata['year_from']) ? $metadata['yearFrom'] : NULL,
+        'year_to' => isset($metadata['year_to']) ? $metadata['yearTo'] : NULL,
+        'license' => isset($metadata['license']) ? $metadata['license'] : NULL,
+        'license_version' => isset($metadata['licenseVersion']) ? $metadata['licenseVersion'] : NULL,
+        'license_extras' => isset($metadata['licenseExtras']) ? $metadata['licenseExtras'] : NULL,
         'changes' => isset($metadata['changes']) ? json_encode($metadata['changes']) : NULL,
-        'author_comments' => $metadata['authorComments']
+        'author_comments' => isset($metadata['authorComments']) ? $metadata['authorComments'] : NULL
       ))
       ->execute();
 
