@@ -755,7 +755,7 @@ function h5p_content_upgrade_progress($library_id) {
           'source' => isset($metadata->source) ? $metadata->source : $metadata_old->source,
           'year_from' => isset($metadata->yearFrom) ? $metadata->yearFrom : $metadata_old->year_from,
           'year_to' => isset($metadata->yearTo) ? $metadata->yearTo : $metadata_old->year_to,
-           'license' => isset($metadata->license) ? $metadata->license : $metadata_old->license,
+          'license' => isset($metadata->license) ? $metadata->license : $metadata_old->license,
           'license_version' => isset($metadata->licenseVersion) ? $metadata->licenseVersion : $metadata_old->license_version,
           'license_extras' => isset($metadata->licenseExtras) ? $metadata->licenseExtras : $metadata_old->license_extras,
           'changes' => isset($metadata->changes) ? json_encode($metadata->changes) : $metadata_old->changes,

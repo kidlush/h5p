@@ -39,30 +39,6 @@ var ns = H5PEditor;
       else {
         $upload.hide();
         if (h5peditor === undefined) {
-          // Test data
-          var temp = {
-            "params": {
-              "greeting": "Hello world!",
-              "image": {
-                "path": "images/image-5aa90d22c835d.jpg",
-                "mime": "image/jpeg",
-                "copyright": {
-                  "license": "U",
-                  "title": "2343432",
-                  "author": "qwwq1",
-                  "year": "1"
-                },
-                "width": 1054,
-                "height": 481
-              }
-            },
-            "metadata": {
-              license: "U",
-              title: "hi"
-            }
-          };
-          //debugger;
-
           h5peditor = new ns.Editor(library, $params.val(), $editor[0]);
         }
         $create.show();
@@ -84,7 +60,6 @@ var ns = H5PEditor;
         if (params !== undefined) {
           $library.val(h5peditor.getLibrary());
           $params.val(JSON.stringify(params));
-          //debugger;
         }
       }
     });
