@@ -549,23 +549,52 @@ function h5p_schema() {
         'type' => 'varchar',
         'length' => 127,
       ),
-      'author' => array(
-        'description' => 'Author as defined in h5p.json',
+      'title' => array(
+        'description' => 'Title of the main content',
         'type' => 'varchar',
-        'length' => 127,
+        'length' => 255,
+        'not_null' => TRUE
+      ),
+      'authors' => array(
+        'description' => 'List of authors in json format',
+        'type' => 'text'
+      ),
+      'source' => array(
+        'description' => 'Link to the source, could also be citation',
+        'type' => 'varchar',
+        'length' => 255
+      ),
+      'year_from' => array(
+        'description' => 'Start year for copyright',
+        'type' => 'int',
+        'unsigned' => TRUE
+      ),
+      'year_to' => array(
+        'description' => 'End year for copyright',
+        'type' => 'int',
+        'unsigned' => TRUE
       ),
       'license' => array(
-        'description' => 'License as defined in h5p.json',
+        'description' => 'License name of the content',
         'type' => 'varchar',
-        'length' => 7,
+        'length' => 32
       ),
-      'meta_keywords' => array(
-        'description' => 'Keywords as defined in h5p.json',
-        'type' => 'text',
+      'license_version' => array(
+        'description' => 'Version of license used for the content',
+        'type' => 'varchar',
+        'length' => 10
       ),
-      'meta_description' => array(
-        'description' => 'Meta description as defined in h5p.json',
-        'type' => 'text',
+      'changes' => array(
+        'description' => 'List of changes in json format',
+        'type' => 'text'
+      ),
+      'license_extras' => array(
+        'description' => 'Extra licensing terms',
+        'type' => 'text'
+      ),
+      'author_comments' => array(
+        'description' => 'Comments for the editor',
+        'type' => 'text'
       ),
       'filtered' => array(
         'description' => 'Filtered version of json_content',
