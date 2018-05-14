@@ -58,8 +58,20 @@ var ns = H5PEditor;
         }
 
         if (params !== undefined) {
+          params.metadata = params.metadata || {};
+
+          // Set default metadata title if not set
+          var defaultName = h5peditor.getLibrary().split('.')[1].split(' ')[0].replace(/([a-z])([A-Z])/g, '$1 $2');
+          params.metadata.title = params.metadata.title || H5PEditor.language.core.untitled + ' ' + defaultName;
+
           $library.val(h5peditor.getLibrary());
           $params.val(JSON.stringify(params));
+
+          // Set Drupal's title field to the metadata title
+          document
+            .getElementsByClassName('form-item-title')[0]
+            .getElementsByTagName('input')[0]
+            .value = params.metadata.title;
         }
       }
     });
