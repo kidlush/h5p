@@ -68,10 +68,7 @@ var ns = H5PEditor;
           $params.val(JSON.stringify(params));
 
           // Set Drupal's title field to the metadata title
-          document
-            .getElementsByClassName('form-item-title')[0]
-            .getElementsByTagName('input')[0]
-            .value = params.metadata.title;
+          document.getElementById('h5p-plugin-form-title').value = params.metadata.title;
         }
       }
     });
