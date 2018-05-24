@@ -1668,7 +1668,7 @@ function h5p_update_7117() {
  * Implements hook_update_N().
  * Change h5p_nodes for metadata.
  */
-function h5p_update_7135() {
+function h5p_update_7136() {
   if (db_field_exists('h5p_nodes', 'author')) {
     db_drop_field('h5p_nodes', 'author');
   }
