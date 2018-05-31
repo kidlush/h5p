@@ -510,6 +510,12 @@ class H5PDrupal implements H5PFrameworkInterface {
      */
     $content_json = json_decode($content['params'], true);
     $content['params'] = json_encode($content_json['params']);
+    /*
+     * If params are really _completely_ empty, the encoding will screw them up.
+     * Other properties might use empty arrays though, so just replace the
+     * params in the string.
+     */
+    $content['params'] = str_replace('"params":[]', '"params":{}', $content['params']);
     $metadata = $content_json['metadata'];
 
     // Update content
@@ -569,6 +575,12 @@ class H5PDrupal implements H5PFrameworkInterface {
      */
     $content_json = json_decode($content['params'], true);
     $content['params'] = json_encode($content_json['params']);
+    /*
+     * If params are really _completely_ empty, the encoding will screw them up.
+     * Other properties might use empty arrays though, so just replace the
+     * params in the string.
+     */
+    $content['params'] = str_replace('"params":[]', '"params":{}', $content['params']);    
     $metadata = $content_json['metadata'];
 
     // Insert
