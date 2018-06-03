@@ -24,6 +24,7 @@ var ns = H5PEditor;
 
     // Semantics describing what copyright information can be stored for media.
     ns.copyrightSemantics = Drupal.settings.h5peditor.copyrightSemantics;
+    ns.metadataSemantics = Drupal.settings.h5peditor.metadataSemantics;
 
     // Required styles and scripts for the editor
     ns.assets = Drupal.settings.h5peditor.assets;
