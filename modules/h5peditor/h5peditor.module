@@ -137,6 +137,11 @@ function h5peditor_form_h5p_content_node_form_alter(&$form, &$form_state) {
     '#default_value' => $library,
   );
 
+  $form['h5p_max_score'] = array(
+    '#type' => 'hidden',
+    '#default_value' => null,
+  );
+
   $form['#submit'][] = 'h5peditor_h5p_content_node_form_submit';
   for ($i = 0, $s = count($form['#validate']); $i < $s; $i++) {
     if ($form['#validate'][$i] == 'h5p_form_validate') {

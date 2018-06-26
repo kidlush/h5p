@@ -9,6 +9,7 @@ var ns = H5PEditor;
     var $type = $('input[name="h5p_type"]');
     var $params = $('input[name="json_content"]');
     var $library = $('input[name="h5p_library"]');
+    var $maxScore = $('input[name="h5p_max_score"]');
     var library = $library.val();
 
     ns.$ = H5P.jQuery;
@@ -60,6 +61,14 @@ var ns = H5PEditor;
         if (params !== undefined) {
           $library.val(h5peditor.getLibrary());
           $params.val(JSON.stringify(params));
+          try{
+            debugger;
+            var presave = h5peditor.presave(params);
+            $maxScore.val(presave.maxScore);
+          } catch (err) {
+            // alert(err.message); //This halts processing. Swap with H5P.Dialog? And perhaps stop probagation?
+            $maxScore.val(0);
+          }
         }
       }
     });
