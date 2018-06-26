@@ -157,5 +157,20 @@ H5PEditor.language.core = {
   noContentTypesAvailableDesc: 'Nettstedet ditt har problemer med å koble til H5P.org og liste tilgjengelige innholdstyper.',
   contentTypeCacheOutdated: 'Innholdstype-listen er utdatert',
   contentTypeCacheOutdatedDesc: 'Nettstedet ditt har problemer med å koble til H5P.org for å se etter innholdstype-oppdateringer. Det kan hende at du ikke får oppdatert eller installert nye innholdstyper.',
-  tryAgain: 'Prøv på nytt'
+  tryAgain: 'Prøv på nytt',
+  getHelp: 'Get help',
+  untitled: 'Untitled',
+  title: 'Title',
+  metadata: 'Metadata',
+  addTitle: 'Add title',
+  usedForSearchingReportsAndCopyrightInformation: 'Used for searching, reports and copyright information',
+  metadataSharingAndLicensingInfo: 'Metadata (sharing and licensing info)',
+  fillInTheFieldsBelow : 'Fill in the fields below',
+  saveMetadata: 'Save metadata',
+  addAuthor: 'Add author',
+  addNewChange: 'Add new change',
+  logThisChange: 'Log this change',
+  newChangeHasBeenLogged: 'New change has been logged',
+  loggedChanges: 'Logged changes',
+  noChangesHaveBeenLogged: 'No changes have been logged'
 };

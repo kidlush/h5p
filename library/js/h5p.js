@@ -2,7 +2,7 @@
 // TODO: Should we split up the generic parts needed by the editor(and others), and the parts needed to "run" H5Ps?
 
 /** @namespace */
-var H5P = H5P || {};
+var H5P = window.H5P = window.H5P || {};
 
 /**
  * Tells us if we're inside of an iframe.
@@ -99,7 +99,8 @@ H5P.init = function (target) {
     }
     var library = {
       library: contentData.library,
-      params: JSON.parse(contentData.jsonContent)
+      params: JSON.parse(contentData.jsonContent),
+      metadata: contentData.metadata
     };
 
     H5P.getUserData(contentId, 'state', function (err, previousState) {
@@ -163,7 +164,7 @@ H5P.init = function (target) {
     if (displayOptions.frame) {
       // Special handling of copyrights
       if (displayOptions.copyright) {
-        var copyrights = H5P.getCopyrights(instance, library.params, contentId);
+        var copyrights = H5P.getCopyrights(instance, library.params, contentId, library.metadata);
         if (!copyrights) {
           displayOptions.copyright = false;
         }
@@ -795,6 +796,10 @@ H5P.newRunnable = function (library, contentId, $attachTo, skipResize, extras) {
     extras.previousState = library.userDatas.state;
   }
 
+  if (library.metadata) {
+    extras.metadata = library.metadata;
+  }
+
   // Makes all H5P libraries extend H5P.ContentType:
   var standalone = extras.standalone || false;
   // This order makes it possible for an H5P library to override H5P.ContentType functions!
@@ -971,11 +976,13 @@ H5P.Dialog = function (name, title, content, $element) {
  *   H5P instance to get copyright information for.
  * @param {Object} parameters
  *   Parameters of the content instance.
+ * @param {Object} metadata
+ *   Metadata of the content instance.
  * @param {number} contentId
  *   Identifies the H5P content
  * @returns {string} Copyright information.
  */
-H5P.getCopyrights = function (instance, parameters, contentId) {
+H5P.getCopyrights = function (instance, parameters, contentId, metadata) {
   var copyrights;
 
   if (instance.getCopyrights !== undefined) {
@@ -992,6 +999,11 @@ H5P.getCopyrights = function (instance, parameters, contentId) {
     // Create a generic flat copyright list
     copyrights = new H5P.ContentCopyrights();
     H5P.findCopyrights(copyrights, parameters, contentId);
+  }
+
+  var metadataCopyrights = H5P.buildMetadataCopyrights(metadata, instance.libraryInfo.machineName);
+  if (metadataCopyrights !== undefined) {
+    copyrights.addMediaInFront(metadataCopyrights);
   }
 
   if (copyrights !== undefined) {
@@ -1012,6 +1024,7 @@ H5P.getCopyrights = function (instance, parameters, contentId) {
  *   Used to insert thumbnails for images.
  */
 H5P.findCopyrights = function (info, parameters, contentId) {
+  var lastContentTypeName;
   // Cycle through parameters
   for (var field in parameters) {
     if (!parameters.hasOwnProperty(field)) {
@@ -1021,6 +1034,8 @@ H5P.findCopyrights = function (info, parameters, contentId) {
     /**
      * @deprecated This hack should be removed after 2017-11-01
      * The code that was using this was removed by HFP-574
+     * This note was seen on 2018-04-04, and consultation with
+     * higher authorities lead to keeping the code for now ;-)
      */
     if (field === 'overrideSettings') {
       console.warn("The semantics field 'overrideSettings' is DEPRECATED and should not be used.");
@@ -1030,12 +1045,32 @@ H5P.findCopyrights = function (info, parameters, contentId) {
 
     var value = parameters[field];
 
+    if (value && value.library && typeof value.library === 'string') {
+      lastContentTypeName = value.library.split(' ')[0];
+    }
+    else if (value && value.library && typeof value.library === 'object') {
+      lastContentTypeName = (value.library.library && typeof value.library.library === 'string') ? value.library.library.split(' ')[0] : lastContentTypeName;
+    }
+
     if (value instanceof Array) {
       // Cycle through array
       H5P.findCopyrights(info, value, contentId);
     }
     else if (value instanceof Object) {
-      // Check if object is a file with copyrights
+      if (value.metadata) {
+        var metadataCopyrights = H5P.buildMetadataCopyrights(value.metadata, lastContentTypeName);
+        if (metadataCopyrights !== undefined) {
+          if (value.params && value.params.contentName === 'Image' && value.params.file) {
+            var path = value.params.file.path;
+            var width = value.params.file.width;
+            var height = value.params.file.height;
+            metadataCopyrights.setThumbnail(new H5P.Thumbnail(H5P.getPath(path, contentId), width, height));
+          }
+          info.addMedia(metadataCopyrights);
+        }
+      }
+
+      // Check if object is a file with copyrights (old core)
       if (value.copyright === undefined ||
           value.copyright.license === undefined ||
           value.path === undefined ||
@@ -1053,6 +1088,36 @@ H5P.findCopyrights = function (info, parameters, contentId) {
         info.addMedia(copyrights);
       }
     }
+  }
+};
+
+H5P.buildMetadataCopyrights = function (metadata, contentTypeName) {
+  if (metadata && metadata.license !== undefined && metadata.license !== 'U') {
+    var dataset = {
+      title: metadata.title,
+      author: (metadata.authors && metadata.authors.length > 0) ? metadata.authors.map(function(author) {
+        return (author.role) ? author.name + ' (' + author.role + ')' : author.name;
+      }).join(', ') : undefined,
+      source: metadata.source,
+      year: (metadata.yearFrom) ? (metadata.yearFrom + ((metadata.yearTo) ? '-' + metadata.yearTo: '')) : undefined,
+      license: metadata.license,
+      version: metadata.licenseVersion,
+      licenseExtras: metadata.licenseExtras,
+      changes: (metadata.changes && metadata.changes.length > 0) ? metadata.changes.map(function(change) {
+        return change.log + (change.author ? ', ' + change.author : '') + (change.date ? ', ' + change.date : '');
+      }).join(' / ') : undefined
+    };
+
+    if (contentTypeName && contentTypeName.indexOf('H5P.') === 0) {
+      contentTypeName = contentTypeName.substr(4);
+    }
+
+    return new H5P.MediaCopyright(
+      dataset,
+      {type: 'Content type', licenseExtras: 'License extras', changes: 'Changelog'},
+      ['type', 'title', 'license', 'author', 'year', 'source', 'licenseExtras', 'changes'],
+      {type: contentTypeName}
+    );
   }
 };
 
@@ -1176,6 +1241,17 @@ H5P.ContentCopyrights = function () {
   };
 
   /**
+   * Add sub content in front.
+   *
+   * @param {H5P.MediaCopyright} newMedia
+   */
+  this.addMediaInFront = function (newMedia) {
+    if (newMedia !== undefined) {
+      media.unshift(newMedia);
+    }
+  };
+
+  /**
    * Add sub content.
    *
    * @param {H5P.ContentCopyrights} newContent
@@ -1294,7 +1370,7 @@ H5P.MediaCopyright = function (copyright, labels, order, extraFields) {
       link = copyrightLicense.link.replace(':version', copyrightLicense.linkVersions ? copyrightLicense.linkVersions[version] : version);
     }
     else if (versionInfo && copyrightLicense.hasOwnProperty('link')) {
-      link = versionInfo.link
+      link = versionInfo.link;
     }
     if (link) {
       value = '<a href="' + link + '" target="_blank">' + value + '</a>';
@@ -1340,6 +1416,9 @@ H5P.MediaCopyright = function (copyright, labels, order, extraFields) {
         var humanValue = copyright[fieldName];
         if (fieldName === 'license') {
           humanValue = humanizeLicense(copyright.license, copyright.version);
+        }
+        if (fieldName === 'source') {
+          humanValue = (humanValue) ? '<a href="' + humanValue + '" target="_blank">' + humanValue + '</a>' : undefined;
         }
         list.add(new H5P.Field(getLabel(fieldName), humanValue));
       }
@@ -1939,6 +2018,16 @@ H5P.createTitle = function (rawTitle, maxLength) {
   };
 
   /**
+   * Get crossorigin option that is set for site. Usefull for setting crossorigin policy for elements.
+   *
+   * @returns {string|null} Returns the string that should be set as crossorigin policy for elements or null if
+   * no policy is set.
+   */
+  H5P.getCrossOrigin = function () {
+    return H5PIntegration.crossorigin ? H5PIntegration.crossorigin : null;
+  };
+
+  /**
    * Async error handling.
    *
    * @callback H5P.ErrorCallback
@@ -2052,33 +2141,37 @@ H5P.createTitle = function (rawTitle, maxLength) {
       'U': H5P.t('licenseU'),
       'CC BY': {
         label: H5P.t('licenseCCBY'),
-        link: 'http://creativecommons.org/licenses/by/:version/legalcode',
+        link: 'http://creativecommons.org/licenses/by/:version',
         versions: ccVersions
       },
       'CC BY-SA': {
         label: H5P.t('licenseCCBYSA'),
-        link: 'http://creativecommons.org/licenses/by-sa/:version/legalcode',
+        link: 'http://creativecommons.org/licenses/by-sa/:version',
         versions: ccVersions
       },
       'CC BY-ND': {
         label: H5P.t('licenseCCBYND'),
-        link: 'http://creativecommons.org/licenses/by-nd/:version/legalcode',
+        link: 'http://creativecommons.org/licenses/by-nd/:version',
         versions: ccVersions
       },
       'CC BY-NC': {
         label: H5P.t('licenseCCBYNC'),
-        link: 'http://creativecommons.org/licenses/by-nc/:version/legalcode',
+        link: 'http://creativecommons.org/licenses/by-nc/:version',
         versions: ccVersions
       },
       'CC BY-NC-SA': {
         label: H5P.t('licenseCCBYNCSA'),
-        link: 'http://creativecommons.org/licenses/by-nc-sa/:version/legalcode',
+        link: 'http://creativecommons.org/licenses/by-nc-sa/:version',
         versions: ccVersions
       },
       'CC BY-NC-ND': {
         label: H5P.t('licenseCCBYNCND'),
-        link: 'http://creativecommons.org/licenses/by-nc-nd/:version/legalcode',
+        link: 'http://creativecommons.org/licenses/by-nc-nd/:version',
         versions: ccVersions
+      },
+      'CC0 1.0': {
+        label: H5P.t('licenseCC010'),
+        link: 'https://creativecommons.org/publicdomain/zero/1.0/'
       },
       'GNU GPL': {
         label: H5P.t('licenseGPL'),
@@ -2109,7 +2202,10 @@ H5P.createTitle = function (rawTitle, maxLength) {
         }
       },
       'ODC PDDL': '<a href="http://opendatacommons.org/licenses/pddl/1.0/" target="_blank">Public Domain Dedication and Licence</a>',
-      'CC PDM': H5P.t('licensePDM'),
+      'CC PDM': {
+        label: H5P.t('licensePDM'),
+        link: 'https://creativecommons.org/publicdomain/mark/1.0/'
+      },
       'C': H5P.t('licenseC'),
     };
 
