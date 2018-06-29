@@ -10,23 +10,24 @@ var ns = H5PEditor;
  * @param {object} metadata params for the metadata fields
  * @param {jQuery} $container Container.
  * @param {mixed} parent used in processSemanticsChunk().
- * @param {jQuery} [$syncField] Input field to sync with.
- * @returns {ns.Coordinates}
+ * @param {object} options Options.
+ * @param {boolean} [options.populateTitle] If true, will populate the title if empty.
  */
-H5PEditor.metadataForm = function (field, metadata, $container, parent, $syncField) {
+H5PEditor.metadataForm = function (field, metadata, $container, parent, options) {
+  // TODO: Is field really needed? Was it copy-pasted?
   const that = this;
+  options = options || {};
   /*
    * TODO: Is there a decent way to make this a "real class" that can be used?
    *       Changing all the fields by using a DOM selector here and in other
    *       source files feels very wrong.
    */
   var self = this;
-  self.field = field;
   self.metadata = metadata;
   self.parent = parent;
 
-  // Set default title, but not for main content
-  if (!self.metadata.title || self.metadata.title === '') {
+  // Set default title
+  if (options.populateTitle && (!self.metadata.title || self.metadata.title === '')) {
     self.metadata.title = H5PEditor.t('core', 'untitled') + ' ' + H5PEditor.parent.currentLibrary.split(' ')[0].split('.')[1];
   }
 
@@ -51,6 +52,7 @@ H5PEditor.metadataForm = function (field, metadata, $container, parent, $syncFie
   function setCopyright(field, value) {
     self.metadata = value;
   }
+
   var group = new H5PEditor.widgets.group(field, getPartialSemantics('copyright'), self.metadata, setCopyright);
   group.appendTo($wrapper);
   group.expand();
@@ -118,7 +120,7 @@ H5PEditor.metadataForm = function (field, metadata, $container, parent, $syncFie
 
   // Create and append the rest of the widgets and fields
   // Append the metadata author list widget
-  this.$addAuthorButton = H5PEditor.metadataAuthorWidget(getPartialSemantics('authorWidget').fields, self.metadata, group, this.parent);
+  H5PEditor.metadataAuthorWidget(getPartialSemantics('authorWidget').fields, self.metadata, group, this.parent);
 
   // Append the additional license field
   var widget = H5PEditor.$('<div class="h5p-metadata-license-extras"></div>');
@@ -134,22 +136,14 @@ H5PEditor.metadataForm = function (field, metadata, $container, parent, $syncFie
   $widget.appendTo(group.$group.find('.content.copyright-form'));
 
   $wrapper.find('.h5p-save').click(function () {
-    // Automatically store author if a license is set
-    if (that.licenseField.value !== 'U') {
-      that.$addAuthorButton.click();
+    // Try to automatically add an author if form is closed and a license selected
+    if ($wrapper.find('.field-name-license select').val() !== 'U') {
+      $wrapper.find('.h5p-metadata-button.h5p-add-author').first().click();
     }
 
     $wrapper.toggleClass('h5p-open');
     $container.closest('.tree').find('.overlay').toggle();
   });
-
-  // Sync title field with other field
-  if ($syncField) {
-    sync(
-      group.$group.find('.field.field-name-title.text').find('input.h5peditor-text'), // title field
-      $syncField
-    );
-  }
 
   // Set author of main content.
   // TODO: Add realName to H5PIntegration
@@ -174,59 +168,9 @@ H5PEditor.metadataForm = function (field, metadata, $container, parent, $syncFie
   function getPartialSemantics(selector) {
     return find(self.metadataSemantics, 'name', selector);
   }
+
+  return $wrapper;
 };
-
-/**
- * Sync two input fields. Empty fields will take value of the other or be set to ''.
- * master fields takes precedence if both are set already.
- *
- * @param {jQuery} $masterField - Master field that holds the value for initialization.
- * @param {jQuery} $slaveField - Slave field to be synced with.
- * @param {string} [defaultText] - Default text if fields are empty.
- */
- function sync ($masterField, $slaveField, defaultText) {
-  if (!$masterField || !$slaveField) {
-    return;
-  }
-
-  const listenerName = 'input.metadataSync';
-
-  // Remove old sync
-  $masterField.off(listenerName);
-  $slaveField.off(listenerName);
-
-  // Initialize fields
-  if ($masterField.val()) {
-    $slaveField
-      .val($masterField.val())
-      .trigger('change');
-  }
-  else if ($slaveField.val()) {
-    $masterField
-      .val($slaveField.val())
-      .trigger('change');
-  }
-  else {
-    $masterField
-      .val(defaultText || '')
-      .trigger('change');
-    $slaveField
-      .val(defaultText || '')
-      .trigger('change');
-  }
-
-  // Keep fields in sync
-  $masterField.on(listenerName, function() {
-    $slaveField
-      .val($masterField.val())
-      .trigger('change');
-  });
-  $slaveField.on(listenerName, function() {
-    $masterField
-      .val($slaveField.val())
-      .trigger('change');
-  });
-}
 
 /**
  * Help find object in list with the given property value.

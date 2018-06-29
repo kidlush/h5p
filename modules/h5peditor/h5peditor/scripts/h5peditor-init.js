@@ -1,5 +1,5 @@
 (function ($, ns) {
-  H5PEditor.init = function ($form, $type, $upload, $create, $editor, $library, $params) {
+  H5PEditor.init = function ($form, $type, $upload, $create, $editor, $library, $params, $maxScore, submitCallback) {
     H5PEditor.$ = H5P.jQuery;
     H5PEditor.basePath = H5PIntegration.editor.libraryUrl;
     H5PEditor.fileIcon = H5PIntegration.editor.fileIcon;
@@ -50,8 +50,25 @@
       if (h5peditor !== undefined) {
         var params = h5peditor.getParams();
         if (params !== undefined) {
+          params.metadata = params.metadata || {};
+
+          // Set default metadata title if not set
+          var defaultName = h5peditor.getLibrary().split('.')[1].split(' ')[0].replace(/([a-z])([A-Z])/g, '$1 $2');
+          params.metadata.title = params.metadata.title || H5PEditor.language.core.untitled + ' ' + defaultName;
+
           $library.val(h5peditor.getLibrary());
           $params.val(JSON.stringify(params));
+          try{
+            var presave = h5peditor.presave(params);
+            $maxScore.val(presave.maxScore);
+          } catch (err) {
+            alert(err.message); //This halts processing. Swap with H5P.Dialog? And perhaps stop probagation?
+            $maxScore.val(0);
+          }
+
+          if (submitCallback) {
+            submitCallback(params);
+          }
         }
       }
     });
