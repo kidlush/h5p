@@ -42,17 +42,14 @@ ns.Form = function () {
   this.$form.find('.h5peditor-text').attr('id', 'metadata-title-main');
 
   // Add the metadata button
-  const metadataButton = ns.$('' +
-    '<div class="h5p-metadata-button-wrapper">' +
-      '<div class="h5p-metadata-button-tip"></div>' +
-      '<div class="toggle-metadata">' + ns.t('core', 'metadata') + '</div>' +
-    '</div>');
+  // const metadataButton = ns.$('' +
+  //   '<div class="h5p-metadata-button-wrapper">' +
+  //     '<div class="h5p-metadata-button-tip"></div>' +
+  //     '<div class="toggle-metadata">' + ns.t('core', 'metadata') + '</div>' +
+  //   '</div>');
 
-  this.$form.find('.h5p-editor-flex-wrapper').append(metadataButton);
-  this.$form.find('.toggle-metadata').click(function () {
-    self.$form.find('.h5p-metadata-wrapper').first().toggleClass('h5p-open');
-    self.$form.find('.overlay').toggle();
-  });
+  //this.$form.find('.h5p-editor-flex-wrapper').append(metadataButton);
+
 
   // Add title expand/collapse button
   ns.$('<div/>', {
@@ -114,6 +111,7 @@ ns.Form.prototype.remove = function () {
  * @returns {undefined}
  */
 ns.Form.prototype.processSemantics = function (semantics, defaultParams, metadata) {
+  const that = this;
   this.metadata = (metadata ? metadata : defaultParams.metadata || {});
 
   const $metadataForm = ns.metadataForm(semantics, this.metadata, this.$form.children('.tree'), this);
@@ -127,6 +125,17 @@ ns.Form.prototype.processSemantics = function (semantics, defaultParams, metadat
   // Set the title
   const title = (this.metadata && this.metadata.title) ? this.metadata.title : '';
   this.$form.find('input#metadata-title-main').val(title);
+
+  const $metadataButton = ns.$('<button class="h5peditor-new-meta">' + ns.t('core', 'metadata') + '</button>');
+  const copyPasteWrapper = this.$form.siblings('label.h5peditor-copypaste-wrap');
+  //const copyPasteWrapper = this.$form.parent().find('.h5peditor-copypaste-wrap').first();
+  if (copyPasteWrapper.length > 0) {
+    copyPasteWrapper.prepend($metadataButton);
+  }
+  $metadataButton.click(function () {
+    that.$form.find('.h5p-metadata-wrapper').first().toggleClass('h5p-open');
+    that.$form.find('.overlay').toggle();
+  });
 
   // Overriding this.params with {} will lead to old content not being editable for now
   this.params = (defaultParams.params ? defaultParams.params : defaultParams);

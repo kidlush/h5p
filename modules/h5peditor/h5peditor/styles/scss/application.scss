@@ -1605,9 +1605,12 @@ a {
 }
 
 .h5peditor-copypaste-wrap {
+  display: flex;
+  flex-direction: row;
   float: right;
 }
 
+.h5peditor-new-meta,
 .h5peditor-copy-button,
 .h5peditor-paste-button {
   border: 1px solid #cdcdcd;

@@ -355,28 +355,42 @@ ns.Library.prototype.addMetadataForm = function (semantics) {
     that.$libraryWrapper.before(that.$metadataWrapper);
   }
 
+  // TODO: Changing the metadata button position is a suggestion that would
+  //       IMHO make the interface cleaner and simplify the code.
+  //       If accepted, we can remove the label wrapper styles again, too.
+
   //Prevent multiple buttons when changing libraries
   if (that.$libraryWrapper.closest('.content').find('.h5p-metadata-button-wrapper').length === 0) {
-    that.$metadataButton = H5PEditor.$('' +
-      '<div class="h5p-metadata-button-wrapper">' +
-        '<div class="h5p-metadata-button-tip"></div>' +
-        '<div class="toggle-metadata">' + ns.t('core', 'metadata') + '</div>' +
-      '</div>');
+    // that.$metadataButton = H5PEditor.$('' +
+    //   '<div class="h5p-metadata-button-wrapper">' +
+    //     '<div class="h5p-metadata-button-tip"></div>' +
+    //     '<div class="toggle-metadata">' + ns.t('core', 'metadata') + '</div>' +
+    //   '</div>');
+    that.$metadataButton = H5PEditor.$('<button class="h5peditor-new-meta">' + ns.t('core', 'metadata') + '</button>');
 
-    // Put the metadataButton after the first visible label if it has a label
-    var $labelWrapper = that.$libraryWrapper.siblings('.h5p-editor-flex-wrapper').children('.h5peditor-label-wrapper');
-    if ($labelWrapper.length && !$labelWrapper.is(':empty')) {
-      var label = that.$libraryWrapper.closest('.content').find('.h5p-editor-flex-wrapper').first();
-      if (label.css('display') === 'none') {
-        label = that.$libraryWrapper.find('.h5p-editor-flex-wrapper').first();
-      }
-      label.append(that.$metadataButton);
+    const copyPasteWrapper = that.$libraryWrapper.siblings().closest('.h5peditor-copypaste-wrap');
+    if (copyPasteWrapper.length > 0 && copyPasteWrapper.css('display') !== 'none') {
+      copyPasteWrapper.prepend(that.$metadataButton);
     }
     else {
-      var $librarySelector = that.$libraryWrapper.siblings('select');
-      that.$metadataButton.addClass('inline-with-selector');
-      $librarySelector.after(that.$metadataButton);
+      // TODO: This should not be hardcoded (!)
+      //       Put metadataButton in prepared field in custom editor
     }
+   // Put the metadataButton after the first visible label if it has a label
+   //  var $labelWrapper = that.$libraryWrapper.parent().find('.h5peditor-label-wrapper');
+   // // var $labelWrapper = that.$libraryWrapper.siblings('.h5p-editor-flex-wrapper').children('.h5peditor-label-wrapper');
+   //  if ($labelWrapper.length && !$labelWrapper.is(':empty')) {
+   //    var label = that.$libraryWrapper.closest('.content').find('.h5p-editor-flex-wrapper').first();
+   //    if (label.css('display') === 'none') {
+   //      label = that.$libraryWrapper.find('.h5p-editor-flex-wrapper').first();
+   //    }
+   //    label.append(that.$metadataButton);
+   //  }
+   //  else {
+   //    var $librarySelector = that.$libraryWrapper.siblings('select');
+   //    that.$metadataButton.addClass('inline-with-selector');
+   //    $librarySelector.after(that.$metadataButton);
+   //  }
 
 
     // Add click listener
