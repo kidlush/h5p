@@ -515,8 +515,6 @@ class H5PDrupal implements H5PFrameworkInterface {
     $content_json = json_decode($content['params'], true);
     $content['params'] = json_encode($content_json['params']);
     $content['params'] = str_replace('{"REPLACEME":"REPLACEME"}', '{}', $content['params']);
-
-    $content['params'] = str_replace('"params":[]', '"params":{}', $content['params']);
     $metadata = $content_json['metadata'];
 
     // Update content
@@ -581,8 +579,6 @@ class H5PDrupal implements H5PFrameworkInterface {
     $content_json = json_decode($content['params'], true);
     $content['params'] = json_encode($content_json['params']);
     $content['params'] = str_replace('{"REPLACEME":"REPLACEME"}', '{}', $content['params']);
-
-    $content['params'] = str_replace('"params":[]', '"params":{}', $content['params']);
     $metadata = $content_json['metadata'];
 
     // Insert
