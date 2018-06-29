@@ -1,6 +1,3 @@
-var H5PEditor = H5PEditor || {};
-var ns = H5PEditor;
-
 /**
  * Construct a form from library semantics.
  */
@@ -10,9 +7,12 @@ ns.Form = function () {
   this.params = {};
   this.passReadies = false;
   this.commonFields = {};
+
   this.$form = ns.$('' +
     '<div class="h5peditor-form">' +
-      '<div class="tree"></div>' +
+      '<div class="tree">' +
+        '<div class="overlay"></div>' +
+      '</div>' +
       '<div class="common collapsed hidden">' +
         '<div class="fields">' +
           '<p class="desc">' +
@@ -24,6 +24,35 @@ ns.Form = function () {
   );
   this.$common = this.$form.find('.common > .fields');
   this.library = '';
+
+  // Inject a custom text field for the metadata title
+  var metaDataTitleSemantics = [{
+    'name' : 'title',
+    'type' : 'text',
+    'label' : ns.t('core', 'title'),
+    'description': ns.t('core', 'usedForSearchingReportsAndCopyrightInformation'),
+    'optional': false
+  }];
+
+  // Ensure it has validation functions
+  ns.processSemanticsChunk(metaDataTitleSemantics, {}, this.$form.children('.tree'), this)
+
+  // Give it an ID
+  this.$form.find('.field-name-title').attr('id', 'metadata-title-main-label');
+  this.$form.find('.h5peditor-text').attr('id', 'metadata-title-main');
+
+  // Add the metadata button
+  const metadataButton = ns.$('' +
+    '<div class="h5p-metadata-button-wrapper">' +
+      '<div class="h5p-metadata-button-tip"></div>' +
+      '<div class="toggle-metadata">' + ns.t('core', 'metadata') + '</div>' +
+    '</div>');
+
+  this.$form.find('.h5p-editor-flex-wrapper').append(metadataButton);
+  this.$form.find('.toggle-metadata').click(function () {
+    self.$form.find('.h5p-metadata-wrapper').first().toggleClass('h5p-open');
+    self.$form.find('.overlay').toggle();
+  });
 
   // Add title expand/collapse button
   ns.$('<div/>', {
@@ -84,8 +113,12 @@ ns.Form.prototype.remove = function () {
  * @param {Object} defaultParams
  * @returns {undefined}
  */
-ns.Form.prototype.processSemantics = function (semantics, defaultParams) {
-  this.params = defaultParams;
+ns.Form.prototype.processSemantics = function (semantics, defaultParams, metadata) {
+  this.metadata = (metadata ? metadata : defaultParams.metadata || {});
+  H5PEditor.metadataForm(semantics, this.metadata, this.$form.children('.tree'), this, this.$form.find('input#metadata-title-main'));
+
+  // Overriding this.params with {} will lead to old content not being editable for now
+  this.params = (defaultParams.params ? defaultParams.params : defaultParams);
   ns.processSemanticsChunk(semantics, this.params, this.$form.children('.tree'), this);
 };
 

@@ -1,5 +1,6 @@
 var H5PEditor = (H5PEditor || {});
 var ns = H5PEditor;
+var H5PIntegration = H5PIntegration || false;
 
 /**
  * Callback for setting new parameters.
@@ -21,6 +22,7 @@ var ns = H5PEditor;
  */
 ns.Library = function (parent, field, params, setValue) {
   var self = this;
+
   H5P.EventDispatcher.call(this);
   if (params === undefined) {
     this.params = {
@@ -72,15 +74,19 @@ ns.Library.prototype.constructor = ns.Library;
 ns.Library.prototype.appendTo = function ($wrapper) {
   var that = this;
   var html = '';
-  if (this.field.label !== 0) {
-    html = '<label class="h5peditor-label' + (this.field.optional ? '' : ' h5peditor-required') + '">' + (this.field.label === undefined ? this.field.name : this.field.label) + '</label>';
+  if (this.field.label !== 0 && this.field.label !== undefined) {
+    html = '' +
+      '<div class="h5p-editor-flex-wrapper">' +
+        '<label class="h5peditor-label-wrapper"><span class="h5peditor-label' + (this.field.optional ? '' : ' h5peditor-required') + '">' + (this.field.label === undefined ? this.field.name : this.field.label) + '</span></label>' +
+      '</div>';
   }
 
   html += ns.createDescription(this.field.description);
   html = '<div class="field ' + this.field.type + '">' + html + '<select>' + ns.createOption('-', 'Loading...') + '</select>';
 
   // TODO: Remove errors, it is deprecated
-  html += '<div class="errors h5p-errors"></div><div class="libwrap"></div></div>';
+  html += '<div class="errors h5p-errors"></div><div class="libwrap"> ' +
+  '</div></div>';
 
   this.$myField = ns.$(html).appendTo($wrapper);
   this.$select = this.$myField.children('select');
@@ -126,7 +132,7 @@ ns.Library.prototype.librariesLoaded = function (libList) {
 
   if (self.libraries.length === 1) {
     self.$select.hide();
-    self.$myField.children('.h5peditor-label').hide();
+    self.$myField.children('.h5p-editor-flex-wrapper').hide();
     self.loadLibrary(self.$select.children(':last').val(), true);
   }
 
@@ -157,6 +163,8 @@ ns.Library.prototype.loadLibrary = function (libraryName, preserveParams) {
     delete this.params.library;
     delete this.params.params;
     delete this.params.subContentId;
+    delete this.params.metadata;
+
     this.$libraryWrapper.attr('class', 'libwrap');
     return;
   }
@@ -169,10 +177,15 @@ ns.Library.prototype.loadLibrary = function (libraryName, preserveParams) {
 
     if (preserveParams === undefined || !preserveParams) {
       // Reset params
+      delete that.params.subContentId;
       that.params.params = {};
+      that.params.metadata = {};
     }
     if (that.params.subContentId === undefined) {
       that.params.subContentId = H5P.createUUID();
+    }
+    if (that.params.metadata === undefined) {
+      that.params.metadata = {};
     }
 
     ns.processSemanticsChunk(semantics, that.params.params, that.$libraryWrapper.html(''), that);
@@ -183,7 +196,86 @@ ns.Library.prototype.loadLibrary = function (libraryName, preserveParams) {
     else {
       that.runChangeCallback = true;
     }
+
+    that.addMetadataForm(semantics);
   });
+};
+
+/**
+ * Add metadata form.
+ *
+ * @param {object} semantics - Semantics.
+ */
+ns.Library.prototype.addMetadataForm = function (semantics) {
+  var that = this;
+
+  // Don't add button if told so by semantics
+  if (typeof this.field.options[0] === 'object') {
+    const itemPosition = this.field.options
+      .map(function (item) {
+        return item.name;
+      })
+      .indexOf(this.currentLibrary);
+
+    // By default, the metadata button should be displayed
+    if (this.field.options[itemPosition].hasmetadata === false) {
+      return;
+    }
+  }
+
+  if (that.$metadataWrapper === undefined) {
+    that.$metadataWrapper = H5PEditor.$('<div class="push-top"></div>');
+
+    /*
+     * Some content types may bring their own editor, and the title
+     * fields of subcontent forms should have the ID metadata-title-sub.
+     * This is far from ideal, but there's no easy connection to the dialog form.
+     * Alternatively, store the current dialog title field in the custom
+     * editor and implement a getter function for it.
+     */
+    var $syncField = H5PEditor.$(document).find('input#metadata-title-sub');
+    if ($syncField.lenght === 0) {
+      $syncField = undefined;
+    }
+
+    H5PEditor.metadataForm(semantics, that.params.metadata, that.$metadataWrapper, that, $syncField);
+    that.$libraryWrapper.before(that.$metadataWrapper);
+  }
+
+  //Prevent multiple buttons when changing libraries
+  if (that.$libraryWrapper.closest('.content').find('.h5p-metadata-button-wrapper').length === 0) {
+    that.$metadataButton = H5PEditor.$('' +
+      '<div class="h5p-metadata-button-wrapper">' +
+        '<div class="h5p-metadata-button-tip"></div>' +
+        '<div class="toggle-metadata">' + ns.t('core', 'metadata') + '</div>' +
+      '</div>');
+
+    // Put the metadataButton after the first visible label if it has a label
+    var $labelWrapper = that.$libraryWrapper.siblings('.h5p-editor-flex-wrapper').children('.h5peditor-label-wrapper');
+    if ($labelWrapper.length && !$labelWrapper.is(':empty')) {
+      var label = that.$libraryWrapper.closest('.content').find('.h5p-editor-flex-wrapper').first();
+      if (label.css('display') === 'none') {
+        label = that.$libraryWrapper.find('.h5p-editor-flex-wrapper').first();
+      }
+      label.append(that.$metadataButton);
+    }
+    else {
+      var $librarySelector = that.$libraryWrapper.siblings('select');
+      that.$metadataButton.addClass('inline-with-selector');
+      $librarySelector.after(that.$metadataButton);
+    }
+
+
+    // Add click listener
+    that.$metadataButton.click(function () {
+      that.$metadataWrapper.find('.h5p-metadata-wrapper').toggleClass('h5p-open');
+      that.$metadataWrapper.closest('.tree').find('.overlay').toggle();
+      that.$metadataWrapper.find('.h5p-metadata-wrapper').find('.field-name-title').find('input.h5peditor-text').focus();
+      if (H5PIntegration && H5PIntegration.user && H5PIntegration.user.name) {
+        that.$metadataWrapper.find('.field-name-authorName').find('input.h5peditor-text').val(H5PIntegration.user.name);
+      }
+    });
+  }
 };
 
 /**
@@ -262,6 +354,14 @@ ns.Library.prototype.removeChildren = function () {
     return;
   }
 
+  // Remove old metadata form and button
+  if (this.$metadataWrapper) {
+    this.$metadataWrapper.remove();
+    delete this.$metadataWrapper;
+    this.$metadataButton.remove();
+    delete this.$metadataButton;
+  }
+
   var ancestor = ns.findAncestor(this.parent);
 
   for (var libraryPath in ancestor.commonFields) {
@@ -290,6 +390,7 @@ ns.Library.prototype.removeChildren = function () {
       }
     }
   }
+
   ns.removeChildren(this.children);
 };
 
