@@ -507,14 +507,15 @@ class H5PDrupal implements H5PFrameworkInterface {
     /*
      * The form content is passed in JSON format like
      * {params: {...}, metadata: {...}} and needs to be decomposed.
+     * The decode-encode chain would convert empty objects {} to empty arrays [].
+     * Replacing {} with a placeholder and reverting this afterwards fixes the problem.
+     * We can't use JSON_FORCE_OBJECT for json_encode because we'd then use real [].
      */
+    $content['params'] = str_replace('{}', '{"REPLACEME":"REPLACEME"}', $content['params']);
     $content_json = json_decode($content['params'], true);
     $content['params'] = json_encode($content_json['params']);
-    /*
-     * If params are really _completely_ empty, the encoding will screw them up.
-     * Other properties might use empty arrays though, so just replace the
-     * params in the string.
-     */
+    $content['params'] = str_replace('{"REPLACEME":"REPLACEME"}', '{}', $content['params']);
+
     $content['params'] = str_replace('"params":[]', '"params":{}', $content['params']);
     $metadata = $content_json['metadata'];
 
@@ -572,15 +573,16 @@ class H5PDrupal implements H5PFrameworkInterface {
     /*
      * The form content is passed in JSON format like
      * {params: {...}, metadata: {...}} and needs to be decomposed.
+     * The decode-encode chain would convert empty objects {} to empty arrays [].
+     * Replacing {} with a placeholder and reverting this afterwards fixes the problem.
+     * We can't use JSON_FORCE_OBJECT for json_encode because we'd then use real [].
      */
+    $content['params'] = str_replace('{}', '{"REPLACEME":"REPLACEME"}', $content['params']);
     $content_json = json_decode($content['params'], true);
     $content['params'] = json_encode($content_json['params']);
-    /*
-     * If params are really _completely_ empty, the encoding will screw them up.
-     * Other properties might use empty arrays though, so just replace the
-     * params in the string.
-     */
-    $content['params'] = str_replace('"params":[]', '"params":{}', $content['params']);    
+    $content['params'] = str_replace('{"REPLACEME":"REPLACEME"}', '{}', $content['params']);
+
+    $content['params'] = str_replace('"params":[]', '"params":{}', $content['params']);
     $metadata = $content_json['metadata'];
 
     // Insert
