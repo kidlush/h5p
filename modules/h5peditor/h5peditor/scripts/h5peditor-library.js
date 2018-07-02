@@ -346,9 +346,8 @@ ns.Library.prototype.addMetadataForm = function (semantics) {
      * Alternatively, store the current dialog title field in the custom
      * editor and implement a getter function for it.
      */
-
     ns.sync(
-      ns.$(document).find('input#metadata-title-sub'),
+      that.$libraryWrapper.parent().siblings('.h5p-metadata-title-wrapper').find('input#metadata-title-sub'),
       that.$metadataForm.find('.field-name-title').find('input')
     );
 
@@ -408,11 +407,11 @@ ns.Library.prototype.addMetadataForm = function (semantics) {
         that.$metadataWrapper.find('.field-name-authorName').find('input.h5peditor-text').val(H5PIntegration.user.name);
       }
       /*
-       * Try (again) to sync with a title field. Individual editors may need
+       * Try (again) to sync with a title field. Custom editors may need
        * this here because the master may not yet exist before.
        */
       ns.sync(
-        ns.$(document).find('input#metadata-title-sub'),
+        that.$libraryWrapper.parent().siblings('.h5p-metadata-title-wrapper').find('input#metadata-title-sub'),
         that.$metadataForm.find('.field-name-title').find('input')
       );
     });
