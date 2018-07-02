@@ -363,9 +363,9 @@ ns.Library.prototype.addMetadataForm = function (semantics) {
         '<div class="toggle-metadata">' + ns.t('core', 'metadata') + '</div>' +
       '</div>');
 
-    // Put the metadataButton after the first visible label if it has a label
+    // Put the metadataButton after the first visible label if it has text
     var $labelWrapper = that.$libraryWrapper.siblings('.h5p-editor-flex-wrapper').children('.h5peditor-label-wrapper');
-    if ($labelWrapper.length && !$labelWrapper.is(':empty')) {
+    if ($labelWrapper.length > 0 && !$labelWrapper.is(':empty')) {
       var label = that.$libraryWrapper.closest('.content').find('.h5p-editor-flex-wrapper').first();
       if (label.css('display') === 'none') {
         label = that.$libraryWrapper.find('.h5p-editor-flex-wrapper').first();
@@ -373,9 +373,16 @@ ns.Library.prototype.addMetadataForm = function (semantics) {
       label.append(that.$metadataButton);
     }
     else {
-      var $librarySelector = that.$libraryWrapper.siblings('select');
-      that.$metadataButton.addClass('inline-with-selector');
-      $librarySelector.after(that.$metadataButton);
+      // We might be in a compound content type like CP or IV where the layout is different
+      const $compoundLabelWrapper = that.$libraryWrapper.parent().parent().find('.h5p-editor-flex-wrapper').first();
+      if ($compoundLabelWrapper.length > 0) {
+        $compoundLabelWrapper.append(that.$metadataButton);
+      }
+      else {
+        var $librarySelector = that.$libraryWrapper.siblings('select');
+        that.$metadataButton.addClass('inline-with-selector');
+        $librarySelector.after(that.$metadataButton);
+      }
     }
 
 
