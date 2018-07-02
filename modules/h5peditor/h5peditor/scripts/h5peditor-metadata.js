@@ -114,7 +114,7 @@ H5PEditor.metadataForm = function (field, metadata, $container, parent, options)
       sourceInput.val().indexOf('https://') !== 0 &&
       sourceInput.val().indexOf('http://') !== 0
     ) {
-      sourceInput.val('https://' + sourceInput.val()).trigger('change');
+      sourceInput.val('http://' + sourceInput.val()).trigger('change');
     }
   });
 
