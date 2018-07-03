@@ -24,6 +24,7 @@ var ns = H5PEditor;
 
     // Semantics describing what copyright information can be stored for media.
     ns.copyrightSemantics = Drupal.settings.h5peditor.copyrightSemantics;
+    ns.metadataSemantics = Drupal.settings.h5peditor.metadataSemantics;
 
     // Required styles and scripts for the editor
     ns.assets = Drupal.settings.h5peditor.assets;
@@ -58,8 +59,17 @@ var ns = H5PEditor;
         }
 
         if (params !== undefined) {
+          params.metadata = params.metadata || {};
+
+          // Set default metadata title if not set
+          var defaultName = h5peditor.getLibrary().split('.')[1].split(' ')[0].replace(/([a-z])([A-Z])/g, '$1 $2');
+          params.metadata.title = params.metadata.title || H5PEditor.language.core.untitled + ' ' + defaultName;
+
           $library.val(h5peditor.getLibrary());
           $params.val(JSON.stringify(params));
+
+          // Set Drupal's title field to the metadata title
+          document.getElementById('h5p-plugin-form-title').value = params.metadata.title;
         }
       }
     });

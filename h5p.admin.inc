@@ -703,12 +703,14 @@ function h5p_content_upgrade_progress($library_id) {
   $out = new stdClass();
   $out->params = array();
   $out->token = H5PCore::createToken('contentupgrade');
+  $out->metadata = array();
 
   // Prepare our interface
   $interface = _h5p_get_instance('interface');
 
   // Get updated params
   $params = filter_input(INPUT_POST, 'params');
+
   if ($params !== NULL) {
     // Update params.
     $params = json_decode($params);
@@ -737,14 +739,53 @@ function h5p_content_upgrade_progress($library_id) {
     }
   }
 
+  // Get updated extras
+  $extras = filter_input(INPUT_POST, 'extras');
+  if ($extras !== NULL) {
+    // Update extras.
+    $extras = json_decode($extras);
+    if (isset($extras->metadata)) {
+      $metadata = $extras->metadata;
+      $metadata_old = db_query('SELECT title, authors, source, year_from, year_to, license, license_version, license_extras, changes, author_comments FROM {h5p_nodes} where nid = :id', array(':id' => $id))->fetchObject();
+
+      db_update('h5p_nodes')
+        ->fields(array(
+          'title' => isset($metadata->title) ? $metadata->title : $metadata_old->title,
+          'authors' => isset($metadata->authors) ? json_encode($metadata->authors) : $metadata_old->authors,
+          'source' => isset($metadata->source) ? $metadata->source : $metadata_old->source,
+          'year_from' => isset($metadata->yearFrom) ? $metadata->yearFrom : $metadata_old->year_from,
+          'year_to' => isset($metadata->yearTo) ? $metadata->yearTo : $metadata_old->year_to,
+          'license' => isset($metadata->license) ? $metadata->license : $metadata_old->license,
+          'license_version' => isset($metadata->licenseVersion) ? $metadata->licenseVersion : $metadata_old->license_version,
+          'license_extras' => isset($metadata->licenseExtras) ? $metadata->licenseExtras : $metadata_old->license_extras,
+          'changes' => isset($metadata->changes) ? json_encode($metadata->changes) : $metadata_old->changes,
+          'author_comments' => isset($metadata->authorComments) ? $metadata->authorComments : $metadata_old->authorComments
+        ))
+        ->condition('content_id', $id)
+        ->execute();
+    }
+  }
+
   // Get number of contents for this library
   $out->left = $interface->getNumContent($library_id);
 
   if ($out->left) {
     // Find the 10 first contents using library and add to params
-    $contents = db_query('SELECT content_id AS id, json_content AS params FROM {h5p_nodes} WHERE main_library_id = :id LIMIT 40', array(':id' => $library_id));
+    $contents = db_query('SELECT content_id AS id, json_content AS params, title, authors, source, year_from, year_to, license, license_version, changes, license_extras, author_comments FROM {h5p_nodes} WHERE main_library_id = :id LIMIT 40', array(':id' => $library_id));
     foreach ($contents as $content) {
       $out->params[$content->id] = $content->params;
+      $out->metadata[$content->id] = json_encode(array(
+        'title' => $content->title,
+        'authors' => json_decode($content->authors, TRUE),
+        'source' => $content->source,
+        'yearFrom' => $content->year_from,
+        'yearTo' => $content->year_to,
+        'license' => $content->license,
+        'license_version' => $content->license_version,
+        'changes' => json_decode($content->changes, TRUE),
+        'license_extras' => $content->license_extras,
+        'author_comments' => $content->author_comments
+      ));
     }
   }
 

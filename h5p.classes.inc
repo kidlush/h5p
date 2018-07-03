@@ -504,6 +504,19 @@ class H5PDrupal implements H5PFrameworkInterface {
       return;
     }
 
+    /*
+     * The form content is passed in JSON format like
+     * {params: {...}, metadata: {...}} and needs to be decomposed.
+     * The decode-encode chain would convert empty objects {} to empty arrays [].
+     * Replacing {} with a placeholder and reverting this afterwards fixes the problem.
+     * We can't use JSON_FORCE_OBJECT for json_encode because we'd then use real [].
+     */
+    $content['params'] = str_replace('{}', '{"REPLACEME":"REPLACEME"}', $content['params']);
+    $content_json = json_decode($content['params'], true);
+    $content['params'] = json_encode($content_json['params']);
+    $content['params'] = str_replace('{"REPLACEME":"REPLACEME"}', '{}', $content['params']);
+    $metadata = $content_json['metadata'];
+
     // Update content
     db_update('h5p_nodes')
       ->fields(array(
@@ -511,7 +524,17 @@ class H5PDrupal implements H5PFrameworkInterface {
         'embed_type' => 'div', // TODO: Determine from library?
         'main_library_id' => $content['library']['libraryId'],
         'filtered' => '',
-        'disable' => $content['disable']
+        'disable' => $content['disable'],
+        'title' => isset($metadata['title']) ? $metadata['title'] : $content['title'],
+        'authors' => isset($metadata['authors']) ? json_encode($metadata['authors']) : NULL,
+        'source' => isset($metadata['source']) ? $metadata['source'] : NULL,
+        'year_from' => isset($metadata['yearFrom']) ? $metadata['yearFrom'] : NULL,
+        'year_to' => isset($metadata['yearTo']) ? $metadata['yearTo'] : NULL,
+        'license' => isset($metadata['license']) ? $metadata['license'] : NULL,
+        'license_version' => isset($metadata['licenseVersion']) ? $metadata['licenseVersion'] : NULL,
+        'license_extras' => isset($metadata['licenseExtras']) ? $metadata['licenseExtras'] : NULL,
+        'changes' => isset($metadata['changes']) ? json_encode($metadata['changes']) : NULL,
+        'author_comments' => isset($metadata['authorComments']) ? $metadata['authorComments'] : NULL
       ))
       ->condition('content_id', $content_id)
       ->execute();
@@ -545,6 +568,19 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements insertContent
    */
   public function insertContent($content, $contentMainId = NULL) {
+    /*
+     * The form content is passed in JSON format like
+     * {params: {...}, metadata: {...}} and needs to be decomposed.
+     * The decode-encode chain would convert empty objects {} to empty arrays [].
+     * Replacing {} with a placeholder and reverting this afterwards fixes the problem.
+     * We can't use JSON_FORCE_OBJECT for json_encode because we'd then use real [].
+     */
+    $content['params'] = str_replace('{}', '{"REPLACEME":"REPLACEME"}', $content['params']);
+    $content_json = json_decode($content['params'], true);
+    $content['params'] = json_encode($content_json['params']);
+    $content['params'] = str_replace('{"REPLACEME":"REPLACEME"}', '{}', $content['params']);
+    $metadata = $content_json['metadata'];
+
     // Insert
     db_insert('h5p_nodes')
       ->fields(array(
@@ -555,7 +591,17 @@ class H5PDrupal implements H5PFrameworkInterface {
         'main_library_id' => $content['library']['libraryId'],
         'disable' => $content['disable'],
         'filtered' => '',
-        'slug' => ''
+        'slug' => '',
+        'title' => isset($metadata['title']) ? $metadata['title'] : $content['title'],
+        'authors' => isset($metadata['authors']) ? json_encode($metadata['authors']) : NULL,
+        'source' => isset($metadata['source']) ? $metadata['source'] : NULL,
+        'year_from' => isset($metadata['yearFrom']) ? $metadata['yearFrom'] : NULL,
+        'year_to' => isset($metadata['yearTo']) ? $metadata['yearTo'] : NULL,
+        'license' => isset($metadata['license']) ? $metadata['license'] : NULL,
+        'license_version' => isset($metadata['licenseVersion']) ? $metadata['licenseVersion'] : NULL,
+        'license_extras' => isset($metadata['licenseExtras']) ? $metadata['licenseExtras'] : NULL,
+        'changes' => isset($metadata['changes']) ? json_encode($metadata['changes']) : NULL,
+        'author_comments' => isset($metadata['authorComments']) ? $metadata['authorComments'] : NULL
       ))
       ->execute();
 
@@ -777,7 +823,17 @@ class H5PDrupal implements H5PFrameworkInterface {
                 hl.fullscreen AS library_fullscreen,
                 hn.filtered,
                 hn.disable,
-                hn.slug
+                hn.slug,
+                hn.title AS meta_title,
+                hn.authors AS meta_authors,
+                hn.source AS meta_source,
+                hn.license AS meta_license,
+                hn.license_version AS meta_license_version,
+                hn.license_extras AS meta_license_extras,
+                hn.year_from AS meta_year_from,
+                hn.year_to AS meta_year_to,
+                hn.changes AS meta_changes,
+                hn.author_comments AS meta_author_comments
           FROM {h5p_nodes} hn
           JOIN {node} n ON n.nid = hn.nid
           JOIN {h5p_libraries} hl ON hl.library_id = hn.main_library_id
@@ -786,6 +842,22 @@ class H5PDrupal implements H5PFrameworkInterface {
           ':id' => $id
         ))
         ->fetchObject();
+
+      // Build metadata object
+      $content->metadata = array();
+      foreach(array('title', 'authors', 'source', 'license', 'license_version', 'license_extras' ,'year_from', 'year_to', 'changes', 'author_comments') as $value) {
+        $lookup = 'meta_' . $value;
+        if (isset($content->$lookup)) {
+          $content->metadata[$value] = $content->$lookup;
+          // These fields are used to store complex data and need to be "extended"
+          if ($value === 'authors' || $value === 'changes' ) {
+            $content->metadata[$value] = json_decode($content->metadata[$value]);
+          }
+          unset($content->$lookup);
+        }
+      }
+      $content->metadata = H5PCore::snakeToCamel($content->metadata);
+
     return ($content === FALSE ? NULL : H5PCore::snakeToCamel($content));
   }
 
