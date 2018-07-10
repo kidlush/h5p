@@ -68,8 +68,11 @@ var ns = H5PEditor;
           $library.val(h5peditor.getLibrary());
           $params.val(JSON.stringify(params));
 
-          // Set Drupal's title field to the metadata title
-          document.getElementById('h5p-plugin-form-title').value = params.metadata.title;
+          // Set Drupal 7's title field to the metadata title if the field is not displayed
+          const title = document.getElementById('h5p-plugin-form-title');
+          if (title !== null && title.offsetParent === null) {
+            document.getElementById('h5p-plugin-form-title').value = params.metadata.title;
+          }
         }
       }
     });

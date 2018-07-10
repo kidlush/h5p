@@ -266,10 +266,11 @@ function h5p_form(&$node, $form_state) {
   $form['#validate'][] = 'h5p_form_validate';
 
   $form['title'] = array(
-    '#type' => 'hidden',
+    '#type' => 'textfield',
+    '#title' => check_plain($type->title_label),
     '#required' => TRUE,
     '#default_value' => $node->title,
-    '#attributes' => array('id' => 'h5p-plugin-form-title', 'style' => 'display: none;')
+    '#attributes' => array('id' => 'h5p-plugin-form-title')
   );
 
   $form['#attributes'] = array('enctype' => "multipart/form-data");
