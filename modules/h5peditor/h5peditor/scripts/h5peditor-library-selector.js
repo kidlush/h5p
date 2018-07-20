@@ -190,7 +190,12 @@ ns.LibrarySelector.prototype.appendTo = function ($element) {
       ns.attachToastTo(
         self.$copyButton.get(0),
         H5PEditor.t('core', 'copiedToClipboard'),
-        {position: {horizontal: 'right', vertical: 'above'}}
+        {position: {
+          horizontal: 'center',
+          vertical: 'above',
+          noOverflowX: true,
+          overflowReference: window.frameElement}
+        }
       );
     });
     this.$pasteButton = $buttons.find('.h5peditor-paste-button').click(function () {
@@ -202,7 +207,16 @@ ns.LibrarySelector.prototype.appendTo = function ($element) {
             self.confirmPasteError(pasteCheck.description, self.$parent.offset().top, function() {});
           }
           else {
-            ns.attachToastTo(self.$pasteButton.get(0), pasteCheck.description, {position: {horizontal: 'right', vertical: 'above'}});
+            ns.attachToastTo(
+              self.$pasteButton.get(0),
+              pasteCheck.description,
+              {position: {
+                horizontal: 'center',
+                vertical: 'above',
+                noOverflowX: true,
+                overflowReference: window.frameElement}
+              }
+            );
           }
           return;
         }
@@ -229,8 +243,25 @@ ns.LibrarySelector.prototype.appendTo = function ($element) {
 ns.LibrarySelector.prototype.pasteContent = function () {
   var self = this;
   var clipboard = H5P.getClipboard();
-  if (!self.canPaste(clipboard)) {
-    console.error('Tried to paste unsupported content');
+
+  // Tell user why paste is not possible
+  const pasteCheck = ns.canPastePlus(H5P.getClipboard(), self.libraries);
+  if (pasteCheck.canPaste !== true) {
+    if (pasteCheck.reason === 'pasteTooOld' || pasteCheck.reason === 'pasteTooNew') {
+      self.confirmPasteError(pasteCheck.description, self.$parent.offset().top, function() {});
+    }
+    else {
+      ns.attachToastTo(
+        document.getElementById('h5peditor-hub-paste-button'),
+        pasteCheck.description,
+        {position: {
+          horizontal: 'center',
+          vertical: 'above',
+          noOverflowX: true,
+          overflowReference: document.body}
+        }
+      );
+    }
     return;
   }
 
