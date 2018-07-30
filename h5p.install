@@ -1634,3 +1634,15 @@ function h5p_update_7117() {
     variable_set('h5p_whitelist', $whitelist . $add);
   }
 }
+
+/**
+ * Add field for plugin Configuration
+ */
+function h5p_update_7136() {
+  if (!db_field_exists('h5p_libraries', 'add_to')) {
+    db_add_field('h5p_libraries', 'add_to', array(
+        'description' => 'plugin configuration data',
+        'type' => 'text'
+    ));
+  }
+}

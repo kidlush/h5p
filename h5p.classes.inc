@@ -335,6 +335,9 @@ class H5PDrupal implements H5PFrameworkInterface {
     if (!isset($libraryData['hasIcon'])) {
       $libraryData['hasIcon'] = 0;
     }
+    if (!isset($libraryData['addTo'])) {
+      $libraryData['addTo'] = NULL;
+    }
     if ($new) {
       $libraryId = db_insert('h5p_libraries')
       ->fields(array(
@@ -351,6 +354,7 @@ class H5PDrupal implements H5PFrameworkInterface {
         'drop_library_css' => $dropLibraryCss,
         'semantics' => $libraryData['semantics'],
         'has_icon' => $libraryData['hasIcon'] ? 1 : 0,
+        'add_to' => json_encode($libraryData['addTo']),
       ))
       ->execute();
       $libraryData['libraryId'] = $libraryId;
@@ -373,6 +377,7 @@ class H5PDrupal implements H5PFrameworkInterface {
         'drop_library_css' => $dropLibraryCss,
         'semantics' => $libraryData['semantics'],
         'has_icon' => $libraryData['hasIcon'] ? 1 : 0,
+        'add_to' => json_encode($libraryData['addTo']),
       ))
       ->condition('library_id', $libraryData['libraryId'])
       ->execute();
@@ -674,7 +679,8 @@ class H5PDrupal implements H5PFrameworkInterface {
                 runnable,
                 semantics,
                 tutorial_url,
-                has_icon
+                has_icon,
+                add_to
           FROM {h5p_libraries}
           WHERE machine_name = :machine_name
           AND major_version = :major_version
@@ -690,6 +696,11 @@ class H5PDrupal implements H5PFrameworkInterface {
       return FALSE;
     }
     $library = H5PCore::snakeToCamel($library);
+
+    // get plugin configuration
+    if (isset($library['addTo'])) {
+      $library['addTo'] = json_decode($library['addTo'], true);
+    }
 
     $result = db_query(
       "SELECT hl.machine_name AS name,
