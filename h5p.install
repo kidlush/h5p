@@ -1638,7 +1638,7 @@ function h5p_update_7117() {
 /**
  * Add field for plugin Configuration
  */
-function h5p_update_7136() {
+function h5p_update_7118() {
   if (!db_field_exists('h5p_libraries', 'add_to')) {
     db_add_field('h5p_libraries', 'add_to', array(
         'description' => 'plugin configuration data',
