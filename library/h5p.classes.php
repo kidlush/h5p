@@ -1806,7 +1806,7 @@ class H5PCore {
 
   public static $coreApi = array(
     'majorVersion' => 1,
-    'minorVersion' => 16
+    'minorVersion' => 19
   );
   public static $styles = array(
     'styles/h5p.css',
@@ -2881,7 +2881,7 @@ class H5PCore {
    */
   private static function printJson($data, $status_code = NULL) {
     header('Cache-Control: no-cache');
-    header('Content-type: application/json; charset=utf-8');
+    header('Content-Type: application/json; charset=utf-8');
     print json_encode($data);
   }
 
