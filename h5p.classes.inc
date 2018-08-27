@@ -351,6 +351,7 @@ class H5PDrupal implements H5PFrameworkInterface {
         'drop_library_css' => $dropLibraryCss,
         'semantics' => $libraryData['semantics'],
         'has_icon' => $libraryData['hasIcon'] ? 1 : 0,
+        'add_to' => isset($libraryData['addTo']) ? json_encode($libraryData['addTo']) : NULL,
       ))
       ->execute();
       $libraryData['libraryId'] = $libraryId;
@@ -373,6 +374,7 @@ class H5PDrupal implements H5PFrameworkInterface {
         'drop_library_css' => $dropLibraryCss,
         'semantics' => $libraryData['semantics'],
         'has_icon' => $libraryData['hasIcon'] ? 1 : 0,
+        'add_to' => isset($libraryData['addTo']) ? json_encode($libraryData['addTo']) : NULL,
       ))
       ->condition('library_id', $libraryData['libraryId'])
       ->execute();
@@ -699,6 +701,31 @@ class H5PDrupal implements H5PFrameworkInterface {
         ))
         ->execute();
     }
+  }
+
+  /**
+   * Load addon libraries
+   *
+   * @return array
+   */
+  public function loadAddons() {
+    // Load addons
+    $db_stmt = db_query(
+      "SELECT l1.* FROM {h5p_libraries} AS l1
+      LEFT JOIN {h5p_libraries} AS l2
+        ON l1.machine_name = l2.machine_name AND
+          (l1.major_version > l2.major_version OR
+            (l1.major_version = l2.major_version AND
+             l1.minor_version > l2.minor_version))
+      WHERE l1.add_to IS NOT NULL AND l2.machine_name IS NOT NULL");
+
+    $addons = array();
+
+    foreach ($db_stmt as $library) {
+      $addons[] = H5PCore::snakeToCamel($library);
+    }
+
+    return $addons;
   }
 
   /**

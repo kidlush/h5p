@@ -823,7 +823,6 @@ function h5p_get_core_settings() {
   global $user, $base_url;
 
   $core = _h5p_get_instance('core');
-
   // Enable reporting features if Drupal Quiz module is active or and LRS
   $enableReportingFeatures = (module_exists('quiz') && module_exists('quiz_h5p')) ||
                              $core->h5pF->getOption('enable_lrs_content_types');
@@ -842,6 +841,7 @@ function h5p_get_core_settings() {
     'hubIsEnabled' => variable_get('h5p_hub_is_enabled', TRUE) ? TRUE : FALSE,
     'reportingIsEnabled' => $enableReportingFeatures,
     'crossorigin' => variable_get('h5p_crossorigin', NULL),
+    'mathDisplayConfig' => variable_get('h5p_mathdisplay_config', NULL)
   );
 
   if ($user->uid) {

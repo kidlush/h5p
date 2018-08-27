@@ -1668,7 +1668,7 @@ function h5p_update_7117() {
  * Implements hook_update_N().
  * Change h5p_nodes for metadata.
  */
-function h5p_update_7136() {
+function h5p_update_7118() {
   if (db_field_exists('h5p_nodes', 'author')) {
     db_drop_field('h5p_nodes', 'author');
   }
@@ -1746,6 +1746,18 @@ function h5p_update_7136() {
     db_add_field('h5p_nodes', 'author_comments', array(
         'description' => 'Comments for the editor',
         'type' => 'text'
+    ));
+  }
+}
+
+/**
+* Add field for plugin Configuration
+*/
+function h5p_update_7119() {
+  if (!db_field_exists('h5p_libraries', 'add_to')) {
+    db_add_field('h5p_libraries', 'add_to', array(
+      'description' => 'plugin configuration data',
+      'type' => 'text'
     ));
   }
 }
