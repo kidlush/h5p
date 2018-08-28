@@ -841,7 +841,7 @@ function h5p_get_core_settings() {
     'hubIsEnabled' => variable_get('h5p_hub_is_enabled', TRUE) ? TRUE : FALSE,
     'reportingIsEnabled' => $enableReportingFeatures,
     'crossorigin' => variable_get('h5p_crossorigin', NULL),
-    'mathDisplayConfig' => variable_get('h5p_mathdisplay_config', NULL)
+    'libraryConfig' => $core->h5pF->getLibraryConfig(),
   );
 
   if ($user->uid) {

@@ -712,12 +712,12 @@ class H5PDrupal implements H5PFrameworkInterface {
     // Load addons
     $db_stmt = db_query(
       "SELECT l1.* FROM {h5p_libraries} AS l1
-      LEFT JOIN {h5p_libraries} AS l2
-        ON l1.machine_name = l2.machine_name AND
-          (l1.major_version > l2.major_version OR
-            (l1.major_version = l2.major_version AND
-             l1.minor_version > l2.minor_version))
-      WHERE l1.add_to IS NOT NULL AND l2.machine_name IS NOT NULL");
+       LEFT JOIN {h5p_libraries} AS l2
+       ON l1.machine_name = l2.machine_name AND
+        (l1.major_version < l2.major_version OR
+          (l1.major_version = l2.major_version AND
+           l1.minor_version < l2.minor_version))
+       WHERE l1.add_to IS NOT NULL AND l2.machine_name IS NULL");
 
     $addons = array();
 
@@ -726,6 +726,16 @@ class H5PDrupal implements H5PFrameworkInterface {
     }
 
     return $addons;
+  }
+
+  /**
+   * Implements getLibraryConfig
+   *
+   * @param array $libraries
+   * @return array
+   */
+  public function getLibraryConfig($libraries = NULL) {
+     return variable_get('h5p_library_config', NULL);
   }
 
   /**
