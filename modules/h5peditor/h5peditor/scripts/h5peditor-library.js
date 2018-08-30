@@ -1,7 +1,3 @@
-var H5PEditor = (H5PEditor || {});
-var ns = H5PEditor;
-var H5PIntegration = H5PIntegration || false;
-
 /**
  * Callback for setting new parameters.
  *
@@ -86,32 +82,36 @@ ns.Library.prototype.constructor = ns.Library;
  */
 ns.Library.prototype.appendTo = function ($wrapper) {
   var that = this;
-  var html = '';
+  var $html = ns.$('<div class="field ' + this.field.type + '">');
+
   if (this.field.label !== 0 && this.field.label !== undefined) {
-    html = '' +
-      '<div class="h5p-editor-flex-wrapper">' +
-        '<label class="h5peditor-label-wrapper"><span class="h5peditor-label' + (this.field.optional ? '' : ' h5peditor-required') + '">' + (this.field.label === undefined ? this.field.name : this.field.label) + '</span></label>' +
-      '</div>';
+    var $labelWrapper = ns.$('<div class="h5p-editor-flex-wrapper">' +
+        '<label class="h5peditor-label-wrapper">' +
+          '<span class="h5peditor-label' +
+            (this.field.optional ? '' : ' h5peditor-required') + '">' +
+              (this.field.label === undefined ? this.field.name : this.field.label) +
+          '</span>' +
+        '</label>' +
+      '</div>');
+    $labelWrapper.appendTo($html);
   }
 
-  html += ns.createDescription(this.field.description);
-  html = '<div class="field ' + this.field.type + '">' + html + '<select>' + ns.createOption('-', 'Loading...') + '</select>';
-
-  // Get hascopypaste property from semantics library options
-  // options can either be string or object!
-  const hascopypaste = this.field.options.some(function(option) {
-    return ((option === that.params.library || option.name === that.params.library) && option.hascopypaste !== false);
-  });
-
-  if (window.localStorage && hascopypaste) {
-    html += ns.createCopyPasteButtons();
+  if (this.field.description) {
+    ns.$(ns.createDescription(this.field.description)).appendTo($html);
   }
 
-  // TODO: Remove errors, it is deprecated
-  html += '<div class="errors h5p-errors"></div><div class="libwrap"> ' +
-  '</div></div>';
+  // Add librarySelector, can be removed using removeLibrarySelector()
+  this.$librarySelector = ns.$('<select>' + ns.createOption('-', 'Loading...') + '</select>');
+  this.$librarySelector.appendTo($html);
 
-  this.$myField = ns.$(html).appendTo($wrapper);
+  // Add copy-/paste buttons, can be removed using removeCopyPaste()
+  if (window.localStorage) {
+    this.$copyPasteButtons = ns.$(ns.createCopyPasteButtons());
+    this.$copyPasteButtons.appendTo($html);
+  }
+  ns.$('<div class="libwrap"></div>').appendTo($html);
+
+  this.$myField = $html.appendTo($wrapper);
   this.$select = this.$myField.children('select');
   this.$libraryWrapper = this.$myField.children('.libwrap');
   if (window.localStorage) {
@@ -170,6 +170,20 @@ ns.Library.prototype.canPaste = function (clipboard) {
   }
 
   return false;
+};
+
+/**
+ * Remove library selector
+ */
+ns.Library.prototype.removeLibrarySelector = function () {
+  this.$librarySelector.remove();
+};
+
+/**
+ * Hide copy button and paste button
+ */
+ns.Library.prototype.removeCopyPaste = function () {
+  this.$copyPasteButtons.remove();
 };
 
 /**
@@ -394,7 +408,7 @@ ns.Library.prototype.addMetadataForm = function (semantics) {
     that.$libraryWrapper.before(that.$metadataWrapper);
   }
 
-  //Prevent multiple buttons when changing libraries
+  // Prevent multiple buttons when changing libraries
   if (that.$libraryWrapper.closest('.content').find('.h5p-metadata-button-wrapper').length === 0) {
     that.$metadataButton = H5PEditor.$('' +
       '<div class="h5p-metadata-button-wrapper">' +

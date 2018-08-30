@@ -1,8 +1,3 @@
-/*global H5P*/
-var H5PEditor = H5PEditor || {};
-var H5PIntegration = H5PIntegration || false;
-var ns = H5PEditor;
-
 /**
  * Creates a metadata form
  *
@@ -184,7 +179,7 @@ H5PEditor.metadataForm = function (field, metadata, $container, parent, options)
  * @param {string} property to look for
  * @param {string} value to match property value against
  */
-function find (list, property, value) {
+function find(list, property, value) {
   var properties = property.split('.');
 
   for (var i = 0; i < list.length; i++) {
