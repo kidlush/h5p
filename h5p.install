@@ -308,6 +308,10 @@ function h5p_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
+      'add_to' => array(
+        'description' => 'Plugin configuration data',
+        'type' => 'text',
+      ),
     ),
     'primary key' => array('library_id'),
     'indexes' => array(

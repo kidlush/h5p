@@ -9,10 +9,11 @@ var ns = H5PEditor;
     var $type = $('input[name="h5p_type"]');
     var $params = $('input[name="json_content"]');
     var $library = $('input[name="h5p_library"]');
+    var $maxscore = $('input[name="max_score"]');
     var library = $library.val();
-
+    
     ns.$ = H5P.jQuery;
-    ns.basePath = Drupal.settings.basePath +  Drupal.settings.h5peditor.modulePath + '/h5peditor/';
+    ns.basePath = Drupal.settings.basePath + Drupal.settings.h5peditor.modulePath + '/h5peditor/';
     ns.contentId = Drupal.settings.h5peditor.nodeVersionId;
     ns.fileIcon = Drupal.settings.h5peditor.fileIcon;
     ns.ajaxPath = Drupal.settings.h5peditor.ajaxPath;
@@ -67,6 +68,15 @@ var ns = H5PEditor;
 
           $library.val(h5peditor.getLibrary());
           $params.val(JSON.stringify(params));
+
+          try {
+            var presave = h5peditor.presave(params.params);
+            $maxscore.val(presave.maxScore);
+          }
+          catch (err) {
+            // TODO: how to communicate this to the user?
+            $maxscore.val(0);
+          }
 
           // Set Drupal 7's title field to the metadata title if the field is not displayed
           const title = document.getElementById('h5p-plugin-form-title');
