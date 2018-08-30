@@ -553,12 +553,6 @@ function h5p_schema() {
         'type' => 'varchar',
         'length' => 127,
       ),
-      'title' => array(
-        'description' => 'Title of the main content',
-        'type' => 'varchar',
-        'length' => 255,
-        'not_null' => TRUE
-      ),
       'authors' => array(
         'description' => 'List of authors in json format',
         'type' => 'text'
@@ -1684,14 +1678,6 @@ function h5p_update_7118() {
   }
   if (db_field_exists('h5p_nodes', 'meta_description')) {
     db_drop_field('h5p_nodes', 'meta_description');
-  }
-  if (!db_field_exists('h5p_nodes', 'title')) {
-    db_add_field('h5p_nodes', 'title', array(
-        'description' => 'Title of the main content',
-        'type' => 'varchar',
-        'length' => 255,
-        'not_null' => TRUE
-    ));
   }
   if (!db_field_exists('h5p_nodes', 'authors')) {
     db_add_field('h5p_nodes', 'authors', array(
