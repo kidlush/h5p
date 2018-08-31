@@ -527,7 +527,6 @@ class H5PDrupal implements H5PFrameworkInterface {
         'main_library_id' => $content['library']['libraryId'],
         'filtered' => '',
         'disable' => $content['disable'],
-        'title' => isset($metadata['title']) ? $metadata['title'] : $content['title'],
         'authors' => isset($metadata['authors']) ? json_encode($metadata['authors']) : NULL,
         'source' => isset($metadata['source']) ? $metadata['source'] : NULL,
         'year_from' => isset($metadata['yearFrom']) ? $metadata['yearFrom'] : NULL,
@@ -594,7 +593,6 @@ class H5PDrupal implements H5PFrameworkInterface {
         'disable' => $content['disable'],
         'filtered' => '',
         'slug' => '',
-        'title' => isset($metadata['title']) ? $metadata['title'] : $content['title'],
         'authors' => isset($metadata['authors']) ? json_encode($metadata['authors']) : NULL,
         'source' => isset($metadata['source']) ? $metadata['source'] : NULL,
         'year_from' => isset($metadata['yearFrom']) ? $metadata['yearFrom'] : NULL,
@@ -861,7 +859,6 @@ class H5PDrupal implements H5PFrameworkInterface {
                 hn.filtered,
                 hn.disable,
                 hn.slug,
-                hn.title AS meta_title,
                 hn.authors AS meta_authors,
                 hn.source AS meta_source,
                 hn.license AS meta_license,
@@ -882,7 +879,7 @@ class H5PDrupal implements H5PFrameworkInterface {
 
       // Build metadata object
       $content->metadata = array();
-      foreach(array('title', 'authors', 'source', 'license', 'license_version', 'license_extras' ,'year_from', 'year_to', 'changes', 'author_comments') as $value) {
+      foreach(array('authors', 'source', 'license', 'license_version', 'license_extras' ,'year_from', 'year_to', 'changes', 'author_comments') as $value) {
         $lookup = 'meta_' . $value;
         if (isset($content->$lookup)) {
           $content->metadata[$value] = $content->$lookup;
@@ -893,6 +890,7 @@ class H5PDrupal implements H5PFrameworkInterface {
           unset($content->$lookup);
         }
       }
+      $content->metadata['title'] = $content->title;
       $content->metadata = H5PCore::snakeToCamel($content->metadata);
 
     return ($content === FALSE ? NULL : H5PCore::snakeToCamel($content));
