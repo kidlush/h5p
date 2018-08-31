@@ -714,11 +714,21 @@ function h5p_content_upgrade_progress($library_id) {
     // Update params.
     $params = json_decode($params);
     foreach ($params as $id => $param) {
+      $upgraded = json_decode($param);
       db_update('h5p_nodes')
         ->fields(array(
           'main_library_id' => $to_library->id,
-          'json_content' => $param,
-          'filtered' => ''
+          'json_content' => json_encode($upgraded->params),
+          'filtered' => '',
+          'authors' => json_encode($upgraded->metadata->authors),
+          'source' => $upgraded->metadata->source,
+          'license' => $upgraded->metadata->license,
+          'license_version' => $upgraded->metadata->licenseVersion,
+          'license_extras' => $upgraded->metadata->licenseExtras,
+          'year_from' => $upgraded->metadata->yearFrom !== NULL ? intval ($upgraded->metadata->yearFrom) : NULL,
+          'year_to' => $upgraded->metadata->yearTo !== NULL ? intval($upgraded->metadata->yearTo) : NULL,
+          'changes' => json_encode($upgraded->metadata->changes),
+          'author_comments' => $upgraded->metadata->authorComments,
         ))
         ->condition('content_id', $id)
         ->execute();
@@ -743,9 +753,31 @@ function h5p_content_upgrade_progress($library_id) {
 
   if ($out->left) {
     // Find the 10 first contents using library and add to params
-    $contents = db_query('SELECT content_id AS id, json_content AS params FROM {h5p_nodes} WHERE main_library_id = :id LIMIT 40', array(':id' => $library_id));
+    $contents = db_query(
+        "SELECT h.content_id AS id,
+                h.json_content AS params,
+                n.title,
+                h.authors, h.source, h.license, h.license_version, h.license_extras,
+                h.year_from, h.year_to, h.changes, h.author_comments
+           FROM {h5p_nodes} h
+           JOIN {node} n ON n.nid = h.nid
+          WHERE h.main_library_id = :id
+          LIMIT 40",
+        array(':id' => $library_id));
+
     foreach ($contents as $content) {
-      $out->params[$content->id] = $content->params;
+      $out->params[$content->id] =
+        '{"params":' . $content->params .
+        ',"metadata":{"title":' . (isset($content->title) ? '"' . $content->title . '"' : 'null') .
+          ',"authors":' . (isset($content->authors) ? $content->authors : 'null') .
+          ',"source":' . (isset($content->source) ? '"' . $content->source . '"' : 'null') .
+          ',"license":' . (isset($content->license) ? '"' . $content->license . '"' : 'null') .
+          ',"licenseVersion":' . (isset($content->license_version) ? '"' . $content->license_version . '"' : 'null') .
+          ',"licenseExtras":' . (isset($content->license_extras) ? '"' . $content->license_extras . '"' : 'null') .
+          ',"yearFrom":' . (isset($content->year_from) ? $content->year_from : 'null') .
+          ',"yearTo":' .  (isset($content->year_to) ? $content->year_to : 'null') .
+          ',"changes":' . (isset($content->changes) ? $content->changes : 'null') .
+          ',"authorComments":' . (isset($content->author_comments) ? '"' . $content->author_comments . '"' : 'null') . '}}';
     }
   }
 
