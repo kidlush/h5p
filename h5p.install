@@ -1761,3 +1761,19 @@ function h5p_update_7119() {
     ));
   }
 }
+
+/**
+* Add field for metadata
+*/
+function h5p_update_7120() {
+  if (!db_field_exists('h5p_libraries', 'metadata')) {
+    db_add_field('h5p_libraries', 'metadata', array(
+      'description' => 'Whether or not as sublibrary gets metadata button',
+      'type' => 'int',
+      'size' => 'tiny',
+      'unsigned' => TRUE,
+      'not null' => TRUE,
+      'default' => 1,
+    ));
+  }
+}
