@@ -1,8 +1,3 @@
-/*global H5P*/
-var H5PEditor = H5PEditor || {};
-var H5PIntegration = H5PIntegration || false;
-var ns = H5PEditor;
-
 /**
  * Creates a metadata form
  *
@@ -149,14 +144,12 @@ H5PEditor.metadataForm = function (field, metadata, $container, parent, options)
   });
 
   // Set author of main content.
-  if (
-    H5PIntegration && H5PIntegration.user && H5PIntegration.user.name
-  ) {
+  if (H5PIntegration && H5PIntegration.user && H5PIntegration.user.name) {
     $wrapper
       .find('.h5p-author-data')
-      .find('.field-name-name')
-      .find('input.h5peditor-text')
-      .val(H5PIntegration.user.name);
+        .find('.field-name-name')
+          .find('input.h5peditor-text')
+            .val(H5PIntegration.user.name);
   }
 
   // Select title field text on click
@@ -184,7 +177,7 @@ H5PEditor.metadataForm = function (field, metadata, $container, parent, options)
  * @param {string} property to look for
  * @param {string} value to match property value against
  */
-function find (list, property, value) {
+function find(list, property, value) {
   var properties = property.split('.');
 
   for (var i = 0; i < list.length; i++) {

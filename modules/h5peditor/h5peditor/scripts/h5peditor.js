@@ -999,7 +999,7 @@ ns.createButton = function (id, title, handler, displayTitle) {
  * @param {string} library - Current library.
  * @return {boolean} True, if form should have the metadata button.
  */
-ns.entitledForMetadata = function (library) {
+ns.enableMetadataCopyPaste = function (library) {
   this.previousLibraryEntitledForMetadata = true;
 
   if (!library || typeof library !== 'string') {
@@ -1027,19 +1027,24 @@ ns.entitledForMetadata = function (library) {
     'H5P.ExportableTextArea 1.2', // Title moved to/retrieved from metadata
     'H5P.GoalsAssessmentPage 1.3', // Title moved to/retrieved from metadata
     'H5P.GoalsPage 1.4', // Title moved to/retrieved from metadata
+    'H5P.GoToQuestion 1.3', // Should not have metadata by UX
     'H5P.Image 1.0', // Copyright information was moved to metadata
     'H5P.ImageHotspotQuestion 1.7', // Title moved to/retrieved from metadata
-    // TODO: FindMultipleHotspots (external) - Title Fields
+    'H5P.ImageMultipleHotspotQuestion 1.0', // FindMultipleHotspots (external) - Title Fields
     'H5P.ImageHotspots 1.6', // Not all sub-libraries are supposed to have metadata
     'H5P.ImageJuxtaposition 1.1', // Title moved to/retrieved from metadata
     'H5P.InteractiveVideo 1.19', // Custom Editor was changed
+    'H5P.IVHotspot 1.2', // Should not have metadata by UX
+    'H5P.Link 1.3', // Should not have metadata by UX
     'H5P.MarkTheWords 1.8', // Title moved to/retrieved from metadata
     'H5P.MultiChoice 1.12', // Title moved to/retrieved from metadata
-    // TODO: PersonalityQuiz (external) - Title Fields
+    'H5P.Nil 1.0', // Should not have metadata by UX
+    'H5P.PersonalityQuiz 1.0', // PersonalityQuiz (external) - Title Fields
     'H5P.SingleChoiceSet 1.10', // Title moved to/retrieved from metadata
     'H5P.StandardPage 1.3', // Title moved to/retrieved from metadata
     'H5P.Summary 1.9', // Title moved to/retrieved from metadata
     'H5P.TrueFalse 1.4', // Title moved to/retrieved from metadata
+    'H5P.TwitterUserFeed 1.0', // Should not have metadata by UX
     'H5P.Video 1.4' // Copyright information was moved to metadata
   ];
 
@@ -1254,12 +1259,20 @@ ns.canPaste = function (clipboard, libs) {
 ns.canPastePlus = function (clipboard, libs) {
   // Clipboard is empty
   if (!clipboard || !clipboard.generic) {
-    return {canPaste: false, reason: 'pasteNoContent', description: ns.t('core', 'pasteNoContent')};
+    return {
+      canPaste: false,
+      reason: 'pasteNoContent',
+      description: ns.t('core', 'pasteNoContent')
+    };
   }
 
   // No libraries to compare to
   if (libs === undefined) {
-    return {canPaste: false, reason: 'pasteError', description:ns.t('core', 'pasteError')};
+    return {
+      canPaste: false,
+      reason: 'pasteError',
+      description: ns.t('core', 'pasteError')
+    };
   }
 
   // Translate Hub format to common library format
@@ -1278,7 +1291,11 @@ ns.canPastePlus = function (clipboard, libs) {
     return library.name === machineNameClip;
   });
   if (candidates.length === 0) {
-    return {canPaste: false, reason: 'pasteContentNotSupported', description: ns.t('core', 'pasteContentNotSupported')};
+    return {
+      canPaste: false,
+      reason: 'pasteContentNotSupported',
+      description: ns.t('core', 'pasteContentNotSupported')
+    };
   }
 
   // Check if clipboard library version is available
@@ -1305,17 +1322,39 @@ ns.canPastePlus = function (clipboard, libs) {
 
   // Clipboard library is newer than latest available local library
   const candidateMax = candidates.slice(-1)[0];
-  if (+candidateMax.split('.')[0] < +versionClip.split('.')[0] || (+candidateMax.split('.')[0] === +versionClip.split('.')[0] && +candidateMax.split('.')[1] < +versionClip.split('.')[1])) {
-    return {canPaste: false, reason: 'pasteTooNew', description: ns.t('core', 'pasteTooNew', {':clip': versionClip, ':local': candidateMax})};
+  if (+candidateMax.split('.')[0] < +versionClip.split('.')[0] ||
+      (+candidateMax.split('.')[0] === +versionClip.split('.')[0] &&
+      +candidateMax.split('.')[1] < +versionClip.split('.')[1])) {
+    return {
+      canPaste: false,
+      reason: 'pasteTooNew',
+      description: ns.t('core', 'pasteTooNew', {
+        ':clip': versionClip,
+        ':local': candidateMax
+      })
+    };
   }
 
   // Clipboard library is older than latest available local library
   const candidateMin = candidates.slice(0, 1)[0];
-  if (+candidateMin.split('.')[0] > +versionClip.split('.')[0] || (+candidateMin.split('.')[0] === +versionClip.split('.')[0] && +candidateMin.split('.')[1] > +versionClip.split('.')[1])) {
-    return {canPaste: false, reason: 'pasteTooOld', description: ns.t('core', 'pasteTooOld', {':clip': versionClip, ':local': candidateMin})};
+  if (+candidateMin.split('.')[0] > +versionClip.split('.')[0] ||
+      (+candidateMin.split('.')[0] === +versionClip.split('.')[0] &&
+       +candidateMin.split('.')[1] > +versionClip.split('.')[1])) {
+    return {
+      canPaste: false,
+      reason: 'pasteTooOld',
+      description: ns.t('core', 'pasteTooOld', {
+        ':clip': versionClip,
+        ':local': candidateMin
+      })
+    };
   }
 
-  return {canPaste: false, reason: 'pasteError', description: ns.t('core', 'pasteError')};
+  return {
+    canPaste: false,
+    reason: 'pasteError',
+    description: ns.t('core', 'pasteError')
+  };
 };
 
 // Factory for creating storage instance

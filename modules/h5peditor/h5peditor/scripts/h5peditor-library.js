@@ -1,7 +1,3 @@
-var H5PEditor = (H5PEditor || {});
-var ns = H5PEditor;
-var H5PIntegration = H5PIntegration || false;
-
 /**
  * Callback for setting new parameters.
  *
@@ -86,30 +82,32 @@ ns.Library.prototype.constructor = ns.Library;
  */
 ns.Library.prototype.appendTo = function ($wrapper) {
   var that = this;
-  var html = '';
+  var html = '<div class="field ' + this.field.type + '">';
+
   if (this.field.label !== 0 && this.field.label !== undefined) {
-    html = '' +
-      '<div class="h5p-editor-flex-wrapper">' +
-        '<label class="h5peditor-label-wrapper"><span class="h5peditor-label' + (this.field.optional ? '' : ' h5peditor-required') + '">' + (this.field.label === undefined ? this.field.name : this.field.label) + '</span></label>' +
+    html += '<div class="h5p-editor-flex-wrapper">' +
+        '<label class="h5peditor-label-wrapper">' +
+          '<span class="h5peditor-label' +
+            (this.field.optional ? '' : ' h5peditor-required') + '">' +
+              (this.field.label === undefined ? this.field.name : this.field.label) +
+          '</span>' +
+        '</label>' +
       '</div>';
   }
 
-  html += ns.createDescription(this.field.description);
-  html = '<div class="field ' + this.field.type + '">' + html + '<select>' + ns.createOption('-', 'Loading...') + '</select>';
+  if (this.field.description) {
+    html += ns.createDescription(this.field.description);
+  }
 
-  // Get hascopypaste property from semantics library options
-  // options can either be string or object!
-  const hascopypaste = this.field.options.some(function(option) {
-    return ((option === that.params.library || option.name === that.params.library) && option.hascopypaste !== false);
-  });
+  html += '<select>' + ns.createOption('-', 'Loading...') + '</select>';
 
-  if (window.localStorage && hascopypaste) {
+  if (window.localStorage && ns.enableMetadataCopyPaste()) {
     html += ns.createCopyPasteButtons();
   }
 
-  // TODO: Remove errors, it is deprecated
-  html += '<div class="errors h5p-errors"></div><div class="libwrap"> ' +
-  '</div></div>';
+  html += '<div class="libwrap"></div>';
+
+  html += '</div>';
 
   this.$myField = ns.$(html).appendTo($wrapper);
   this.$select = this.$myField.children('select');
@@ -170,6 +168,28 @@ ns.Library.prototype.canPaste = function (clipboard) {
   }
 
   return false;
+};
+
+/**
+ * Hide fields that are not required.
+ */
+ns.Library.prototype.hide = function () {
+  this.hideLibrarySelector();
+  this.hideCopyPaste();
+}
+
+/**
+ * Hide library selector.
+ */
+ns.Library.prototype.hideLibrarySelector = function () {
+  this.$myField.children('select').hide();
+};
+
+/**
+ * Hide copy button and paste button.
+ */
+ns.Library.prototype.hideCopyPaste = function () {
+  this.$myField.children('.h5peditor-copypaste-wrap').hide();
 };
 
 /**
@@ -355,23 +375,14 @@ ns.Library.prototype.loadLibrary = function (libraryName, preserveParams) {
 ns.Library.prototype.addMetadataForm = function (semantics) {
   var that = this;
 
-  // Don't add metadata objects if library version is not entitled to have it them
-  if (!ns.entitledForMetadata(this.currentLibrary)) {
+  // Don't add metadata if deactivated in library.json
+  if (!this.enableMetadata()) {
     return;
   }
 
-  // Don't add button if told so by semantics
-  if (typeof this.field.options[0] === 'object') {
-    const itemPosition = this.field.options
-      .map(function (item) {
-        return item.name;
-      })
-      .indexOf(this.currentLibrary);
-
-    // By default, the metadata button should be displayed
-    if (this.field.options[itemPosition].hasMetadata === false) {
-      return;
-    }
+  // Don't add metadata / copy&paste if library version is not entitled to it
+  if (!ns.enableMetadataCopyPaste(this.currentLibrary)) {
+    return;
   }
 
   if (that.$metadataWrapper === undefined) {
@@ -380,11 +391,8 @@ ns.Library.prototype.addMetadataForm = function (semantics) {
     that.$metadataForm = ns.metadataForm(semantics, that.params.metadata, that.$metadataWrapper, that, {populateTitle: true});
 
     /*
-     * Some content types may bring their own editor, and the title
-     * fields of subcontent forms should have the ID metadata-title-sub.
-     * This is far from ideal, but there's no easy connection to the dialog form.
-     * Alternatively, store the current dialog title field in the custom
-     * editor and implement a getter function for it.
+     * Note: Use the id metadata-title-sub in custom editors to invoke syncing
+     * the title field with the metadata title
      */
     ns.sync(
       that.$libraryWrapper.parent().siblings('.h5p-metadata-title-wrapper').find('input#metadata-title-sub'),
@@ -394,7 +402,7 @@ ns.Library.prototype.addMetadataForm = function (semantics) {
     that.$libraryWrapper.before(that.$metadataWrapper);
   }
 
-  //Prevent multiple buttons when changing libraries
+  // Prevent multiple buttons when changing libraries
   if (that.$libraryWrapper.closest('.content').find('.h5p-metadata-button-wrapper').length === 0) {
     that.$metadataButton = H5PEditor.$('' +
       '<div class="h5p-metadata-button-wrapper">' +
@@ -448,6 +456,21 @@ ns.Library.prototype.addMetadataForm = function (semantics) {
       );
     });
   }
+};
+
+/**
+ * Check if metadata button should be shown.
+ *
+ * @return {boolean} True, id button should be shown. False otherwise.
+ */
+ns.Library.prototype.enableMetadata = function () {
+  var that = this;
+
+  var library = this.libraries.filter(function (library) {
+    return library.uberName === that.currentLibrary;
+  });
+
+  return (library.length === 0 || library[0].metadata !== 0);
 };
 
 /**
