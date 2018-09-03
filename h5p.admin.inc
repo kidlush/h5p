@@ -715,21 +715,44 @@ function h5p_content_upgrade_progress($library_id) {
     $params = json_decode($params);
     foreach ($params as $id => $param) {
       $upgraded = json_decode($param);
+      $metadata = $upgraded->metadata;
+
+      $fields = array(
+        'main_library_id' => $to_library->id,
+        'json_content' => json_encode($upgraded->params),
+        'filtered' => '',
+      );
+
+      if (isset($metadata->authors)) {
+        $fields['authors'] = json_encode($metadata->authors);
+      }
+      if (isset($metadata->source)) {
+        $fields['source'] = $metadata->source;
+      }
+      if (isset($metadata->license)) {
+        $fields['license'] = $metadata->license;
+      }
+      if (isset($metadata->licenseVersion)) {
+        $fields['license_version'] = $metadata->licenseVersion;
+      }
+      if (isset($metadata->licenseExtras)) {
+        $fields['license_extras'] = $metadata->licenseExtras;
+      }
+      if (isset($metadata->yearFrom)) {
+        $fields['year_from'] = $metadata->yearFrom !== NULL ? intval($metadata->yearFrom) : NULL;
+      }
+      if (isset($metadata->yearTo)) {
+        $fields['year_to'] = $metadata->yearTo !== NULL ? intval($metadata->yearTo) : NULL;
+      }
+      if (isset($metadata->changes)) {
+        $fields['changes'] = json_encode($metadata->changes);
+      }
+      if (isset($metadata->authorComments)) {
+        $fields['author_comments'] = $metadata->authorComments;
+      }
+
       db_update('h5p_nodes')
-        ->fields(array(
-          'main_library_id' => $to_library->id,
-          'json_content' => json_encode($upgraded->params),
-          'filtered' => '',
-          'authors' => json_encode($upgraded->metadata->authors),
-          'source' => $upgraded->metadata->source,
-          'license' => $upgraded->metadata->license,
-          'license_version' => $upgraded->metadata->licenseVersion,
-          'license_extras' => $upgraded->metadata->licenseExtras,
-          'year_from' => $upgraded->metadata->yearFrom !== NULL ? intval ($upgraded->metadata->yearFrom) : NULL,
-          'year_to' => $upgraded->metadata->yearTo !== NULL ? intval($upgraded->metadata->yearTo) : NULL,
-          'changes' => json_encode($upgraded->metadata->changes),
-          'author_comments' => $upgraded->metadata->authorComments,
-        ))
+        ->fields($fields)
         ->condition('content_id', $id)
         ->execute();
 
