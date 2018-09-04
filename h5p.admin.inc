@@ -791,16 +791,16 @@ function h5p_content_upgrade_progress($library_id) {
     foreach ($contents as $content) {
       $out->params[$content->id] =
         '{"params":' . $content->params .
-        ',"metadata":{"title":' . (isset($content->title) ? '"' . $content->title . '"' : 'null') .
+        ',"metadata":{"title":' . (isset($content->title) ? json_encode($content->title) : 'null') .
           ',"authors":' . (isset($content->authors) ? $content->authors : 'null') .
           ',"source":' . (isset($content->source) ? '"' . $content->source . '"' : 'null') .
           ',"license":' . (isset($content->license) ? '"' . $content->license . '"' : 'null') .
           ',"licenseVersion":' . (isset($content->license_version) ? '"' . $content->license_version . '"' : 'null') .
-          ',"licenseExtras":' . (isset($content->license_extras) ? '"' . $content->license_extras . '"' : 'null') .
+          ',"licenseExtras":' . (isset($content->license_extras) ? json_encode($content->license_extras) : 'null') .
           ',"yearFrom":' . (isset($content->year_from) ? $content->year_from : 'null') .
           ',"yearTo":' .  (isset($content->year_to) ? $content->year_to : 'null') .
           ',"changes":' . (isset($content->changes) ? $content->changes : 'null') .
-          ',"authorComments":' . (isset($content->author_comments) ? '"' . $content->author_comments . '"' : 'null') . '}}';
+          ',"authorComments":' . (isset($content->author_comments) ? json_encode($content->author_comments) : 'null') . '}}';
     }
   }
 
