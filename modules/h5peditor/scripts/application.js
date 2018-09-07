@@ -10,8 +10,9 @@ var ns = H5PEditor;
     var $params = $('input[name="json_content"]');
     var $library = $('input[name="h5p_library"]');
     var $maxscore = $('input[name="max_score"]');
+    var titleFormElement = document.getElementById('h5p-plugin-form-title');
     var library = $library.val();
-    
+
     ns.$ = H5P.jQuery;
     ns.basePath = Drupal.settings.basePath + Drupal.settings.h5peditor.modulePath + '/h5peditor/';
     ns.contentId = Drupal.settings.h5peditor.nodeVersionId;
@@ -62,9 +63,8 @@ var ns = H5PEditor;
         if (params !== undefined) {
           params.metadata = params.metadata || {};
 
-          // Set default metadata title if not set
-          var defaultName = h5peditor.getLibrary().split('.')[1].split(' ')[0].replace(/([a-z])([A-Z])/g, '$1 $2');
-          params.metadata.title = params.metadata.title || H5PEditor.language.core.untitled + ' ' + defaultName;
+          // If title is not set, create a default one:
+          params.metadata.title = params.metadata.title || h5peditor.getDefaultTitle();
 
           $library.val(h5peditor.getLibrary());
           $params.val(JSON.stringify(params));
@@ -79,9 +79,8 @@ var ns = H5PEditor;
           }
 
           // Set Drupal 7's title field to the metadata title if the field is not displayed
-          const title = document.getElementById('h5p-plugin-form-title');
-          if (title !== null) {
-            title.value = params.metadata.title;
+          if (titleFormElement !== null) {
+            titleFormElement.value = params.metadata.title;
           }
         }
       }
