@@ -69,14 +69,8 @@ var ns = H5PEditor;
           // Set params
           $params.val(JSON.stringify(params));
 
-          try {
-            var presave = h5peditor.presave(params.params);
-            $maxscore.val(presave.maxScore);
-          }
-          catch (err) {
-            // TODO: how to communicate this to the user?
-            $maxscore.val(0);
-          }
+          // Calculate & set max score
+          $maxscore.val(h5peditor.getMaxScore(params.params));
 
           // Set Drupal 7's title field to the metadata title if the field is not displayed
           titleFormElement.value = params.metadata.title || '';
