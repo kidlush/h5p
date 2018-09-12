@@ -1,6 +1,8 @@
+/* global Drupal */
+
 var H5PEditor = H5PEditor || {};
 var ns = H5PEditor;
-(function($) {
+(function ($) {
   ns.init = function () {
     var h5peditor;
     var $upload = $('input[name="files[h5p]"]').parents('.form-item');
