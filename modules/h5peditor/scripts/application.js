@@ -50,25 +50,23 @@ var ns = H5PEditor;
       }
     }).change();
 
-    $('#h5p-content-node-form').submit(function () {
+    $('#h5p-content-node-form').submit(function (event) {
       if (h5peditor !== undefined) {
+
         var params = h5peditor.getParams();
 
-        if (params === false) {
-          // return false;
-          /*
-           * TODO: Give good feedback when validation fails. Currently it seems save and delete buttons
-           * aren't working, but the user doesn't get any indication of why they aren't working.
-           */
+        // Validate mandatory main title. Prevent submitting if that's not set.
+        // Deliberatly doing it after getParams(), so that any other validation
+        // problems are also revealed
+        if (!h5peditor.isMainTitleSet()) {
+          return event.preventDefault();
         }
 
         if (params !== undefined) {
-          params.metadata = params.metadata || {};
-
-          // If title is not set, create a default one:
-          params.metadata.title = params.metadata.title || h5peditor.getDefaultTitle();
-
+          // Set main library
           $library.val(h5peditor.getLibrary());
+
+          // Set params
           $params.val(JSON.stringify(params));
 
           try {
@@ -81,9 +79,7 @@ var ns = H5PEditor;
           }
 
           // Set Drupal 7's title field to the metadata title if the field is not displayed
-          if (titleFormElement !== null) {
-            titleFormElement.value = params.metadata.title;
-          }
+          titleFormElement.value = params.metadata.title || '';
         }
       }
     });
