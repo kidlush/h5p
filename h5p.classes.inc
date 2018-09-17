@@ -521,7 +521,7 @@ class H5PDrupal implements H5PFrameworkInterface {
     $content['params'] = str_replace('{"REPLACEME":"REPLACEME"}', '{}', $content['params']);
     $metadata = json_decode($content_json['metadata']);
 
-    $fields = array_merge(H5PMetadata::toDBArray($metadata), array(
+    $fields = array_merge(H5PMetadata::toDBArray($metadata, false), array(
       'json_content' => $content['params'],
       'embed_type' => 'div', // TODO: Determine from library?
       'main_library_id' => $content['library']['libraryId'],
@@ -576,7 +576,7 @@ class H5PDrupal implements H5PFrameworkInterface {
     $content['params'] = json_encode($content_json['params']);
     $content['params'] = str_replace('{"REPLACEME":"REPLACEME"}', '{}', $content['params']);
 
-    $fields = array_merge(H5PMetadata::toDBArray($content_json['metadata']), array(
+    $fields = array_merge(H5PMetadata::toDBArray($content_json['metadata'], false), array(
       'content_id' => $content['id'],
       'nid' => $contentMainId,
       'json_content' => $content['params'],
