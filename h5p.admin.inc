@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Menu callback - Form builder function for settings.
  */
@@ -715,41 +716,12 @@ function h5p_content_upgrade_progress($library_id) {
     $params = json_decode($params);
     foreach ($params as $id => $param) {
       $upgraded = json_decode($param);
-      $metadata = $upgraded->metadata;
 
-      $fields = array(
+      $fields = array_merge(H5PMetadata::toDBArray($upgraded->metadata), array(
         'main_library_id' => $to_library->id,
         'json_content' => json_encode($upgraded->params),
         'filtered' => '',
-      );
-
-      if (isset($metadata->authors)) {
-        $fields['authors'] = json_encode($metadata->authors);
-      }
-      if (isset($metadata->source)) {
-        $fields['source'] = $metadata->source;
-      }
-      if (isset($metadata->license)) {
-        $fields['license'] = $metadata->license;
-      }
-      if (isset($metadata->licenseVersion)) {
-        $fields['license_version'] = $metadata->licenseVersion;
-      }
-      if (isset($metadata->licenseExtras)) {
-        $fields['license_extras'] = $metadata->licenseExtras;
-      }
-      if (isset($metadata->yearFrom)) {
-        $fields['year_from'] = $metadata->yearFrom !== NULL ? intval($metadata->yearFrom) : NULL;
-      }
-      if (isset($metadata->yearTo)) {
-        $fields['year_to'] = $metadata->yearTo !== NULL ? intval($metadata->yearTo) : NULL;
-      }
-      if (isset($metadata->changes)) {
-        $fields['changes'] = json_encode($metadata->changes);
-      }
-      if (isset($metadata->authorComments)) {
-        $fields['author_comments'] = $metadata->authorComments;
-      }
+      ));
 
       db_update('h5p_nodes')
         ->fields($fields)

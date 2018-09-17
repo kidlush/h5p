@@ -351,6 +351,7 @@ class H5PDrupal implements H5PFrameworkInterface {
         'drop_library_css' => $dropLibraryCss,
         'semantics' => $libraryData['semantics'],
         'has_icon' => $libraryData['hasIcon'] ? 1 : 0,
+        'metadata' => $libraryData['metadata'] ? 1 : 0,
         'add_to' => isset($libraryData['addTo']) ? json_encode($libraryData['addTo']) : NULL,
       ))
       ->execute();
@@ -374,6 +375,7 @@ class H5PDrupal implements H5PFrameworkInterface {
         'drop_library_css' => $dropLibraryCss,
         'semantics' => $libraryData['semantics'],
         'has_icon' => $libraryData['hasIcon'] ? 1 : 0,
+        'metadata' => $libraryData['metadata'] ? 1 : 0,
         'add_to' => isset($libraryData['addTo']) ? json_encode($libraryData['addTo']) : NULL,
       ))
       ->condition('library_id', $libraryData['libraryId'])
@@ -517,26 +519,19 @@ class H5PDrupal implements H5PFrameworkInterface {
     $content_json = json_decode($content['params'], true);
     $content['params'] = json_encode($content_json['params']);
     $content['params'] = str_replace('{"REPLACEME":"REPLACEME"}', '{}', $content['params']);
-    $metadata = $content_json['metadata'];
+    $metadata = json_decode($content_json['metadata']);
+
+    $fields = array_merge(H5PMetadata::toDBArray($metadata), array(
+      'json_content' => $content['params'],
+      'embed_type' => 'div', // TODO: Determine from library?
+      'main_library_id' => $content['library']['libraryId'],
+      'filtered' => '',
+      'disable' => $content['disable']
+    ));
 
     // Update content
     db_update('h5p_nodes')
-      ->fields(array(
-        'json_content' => $content['params'],
-        'embed_type' => 'div', // TODO: Determine from library?
-        'main_library_id' => $content['library']['libraryId'],
-        'filtered' => '',
-        'disable' => $content['disable'],
-        'authors' => isset($metadata['authors']) ? json_encode($metadata['authors']) : NULL,
-        'source' => isset($metadata['source']) ? $metadata['source'] : NULL,
-        'year_from' => isset($metadata['yearFrom']) ? $metadata['yearFrom'] : NULL,
-        'year_to' => isset($metadata['yearTo']) ? $metadata['yearTo'] : NULL,
-        'license' => isset($metadata['license']) ? $metadata['license'] : NULL,
-        'license_version' => isset($metadata['licenseVersion']) ? $metadata['licenseVersion'] : NULL,
-        'license_extras' => isset($metadata['licenseExtras']) ? $metadata['licenseExtras'] : NULL,
-        'changes' => isset($metadata['changes']) ? json_encode($metadata['changes']) : NULL,
-        'author_comments' => isset($metadata['authorComments']) ? $metadata['authorComments'] : NULL
-      ))
+      ->fields($fields)
       ->condition('content_id', $content_id)
       ->execute();
 
@@ -580,29 +575,21 @@ class H5PDrupal implements H5PFrameworkInterface {
     $content_json = json_decode($content['params'], true);
     $content['params'] = json_encode($content_json['params']);
     $content['params'] = str_replace('{"REPLACEME":"REPLACEME"}', '{}', $content['params']);
-    $metadata = $content_json['metadata'];
+
+    $fields = array_merge(H5PMetadata::toDBArray($content_json['metadata']), array(
+      'content_id' => $content['id'],
+      'nid' => $contentMainId,
+      'json_content' => $content['params'],
+      'embed_type' => 'div', // TODO: Determine from library?
+      'main_library_id' => $content['library']['libraryId'],
+      'disable' => $content['disable'],
+      'filtered' => '',
+      'slug' => ''
+    ));
 
     // Insert
     db_insert('h5p_nodes')
-      ->fields(array(
-        'content_id' => $content['id'],
-        'nid' => $contentMainId,
-        'json_content' => $content['params'],
-        'embed_type' => 'div', // TODO: Determine from library?
-        'main_library_id' => $content['library']['libraryId'],
-        'disable' => $content['disable'],
-        'filtered' => '',
-        'slug' => '',
-        'authors' => isset($metadata['authors']) ? json_encode($metadata['authors']) : NULL,
-        'source' => isset($metadata['source']) ? $metadata['source'] : NULL,
-        'year_from' => isset($metadata['yearFrom']) ? $metadata['yearFrom'] : NULL,
-        'year_to' => isset($metadata['yearTo']) ? $metadata['yearTo'] : NULL,
-        'license' => isset($metadata['license']) ? $metadata['license'] : NULL,
-        'license_version' => isset($metadata['licenseVersion']) ? $metadata['licenseVersion'] : NULL,
-        'license_extras' => isset($metadata['licenseExtras']) ? $metadata['licenseExtras'] : NULL,
-        'changes' => isset($metadata['changes']) ? json_encode($metadata['changes']) : NULL,
-        'author_comments' => isset($metadata['authorComments']) ? $metadata['authorComments'] : NULL
-      ))
+      ->fields($fields)
       ->execute();
 
     // Log update event
