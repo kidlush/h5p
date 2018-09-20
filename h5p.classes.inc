@@ -519,7 +519,7 @@ class H5PDrupal implements H5PFrameworkInterface {
     $content_json = json_decode($content['params'], true);
     $content['params'] = json_encode($content_json['params']);
     $content['params'] = str_replace('{"REPLACEME":"REPLACEME"}', '{}', $content['params']);
-    $metadata = json_decode($content_json['metadata']);
+    $metadata = $content_json['metadata'];
 
     $fields = array_merge(H5PMetadata::toDBArray($metadata, false), array(
       'json_content' => $content['params'],
