@@ -403,7 +403,7 @@ ns.Library.prototype.loadLibrary = function (libraryName, preserveParams) {
       that.$copyButton.toggleClass('disabled', false);
     }
 
-    that.addMetadataForm(semantics);
+    that.addMetadataForm();
 
     if (that.libraries !== undefined) {
       that.change();
@@ -416,8 +416,6 @@ ns.Library.prototype.loadLibrary = function (libraryName, preserveParams) {
 
 /**
  * Add metadata form.
- *
- * @param {object} semantics - Semantics.
  */
 ns.Library.prototype.addMetadataForm = function () {
   var that = this;
@@ -426,6 +424,10 @@ ns.Library.prototype.addMetadataForm = function () {
   if (!this.currentLibrary || !this.enableMetadata() || !ns.enableMetadata(this.currentLibrary)) {
     return;
   }
+
+  // Restore children after adding metadata fields
+  const children = this.children;
+  this.children = [];
 
   if (that.$metadataFormWrapper === undefined) {
     // Put metadata form wrapper before library wrapper
@@ -546,6 +548,10 @@ ns.Library.prototype.addMetadataForm = function () {
       );
     });
   }
+
+  // Restore children
+  this.metadataChildren = this.children;
+  this.children = children;
 };
 
 /**
@@ -605,6 +611,14 @@ ns.Library.prototype.change = function (callback) {
 ns.Library.prototype.validate = function () {
   var valid = true;
 
+  if (this.metadataChildren) {
+    for (var i = 0; i < this.metadataChildren.length; i++) {
+      if (this.metadataChildren[i].validate() === false) {
+        valid = false;
+      }
+    }
+  }
+
   if (this.children) {
     for (var i = 0; i < this.children.length; i++) {
       if (this.children[i].validate() === false) {
@@ -640,6 +654,10 @@ ns.Library.prototype.ready = function (ready) {
  * * @alias H5PEditor.Library#removeChildren
  */
 ns.Library.prototype.removeChildren = function () {
+  if (this.metadataChildren !== undefined) {
+    ns.removeChildren(this.metadataChildren);
+  }
+
   if (this.currentLibrary === '-' || this.children === undefined) {
     return;
   }
