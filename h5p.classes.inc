@@ -351,7 +351,7 @@ class H5PDrupal implements H5PFrameworkInterface {
         'drop_library_css' => $dropLibraryCss,
         'semantics' => $libraryData['semantics'],
         'has_icon' => $libraryData['hasIcon'] ? 1 : 0,
-        'metadata' => $libraryData['metadata'] ? 1 : 0,
+        'metadata_settings' => $libraryData['metadataSettings'] ? 1 : 0,
         'add_to' => isset($libraryData['addTo']) ? json_encode($libraryData['addTo']) : NULL,
       ))
       ->execute();
@@ -375,7 +375,7 @@ class H5PDrupal implements H5PFrameworkInterface {
         'drop_library_css' => $dropLibraryCss,
         'semantics' => $libraryData['semantics'],
         'has_icon' => $libraryData['hasIcon'] ? 1 : 0,
-        'metadata' => $libraryData['metadata'] ? 1 : 0,
+        'metadata_settings' => $libraryData['metadataSettings'] ? 1 : 0,
         'add_to' => isset($libraryData['addTo']) ? json_encode($libraryData['addTo']) : NULL,
       ))
       ->condition('library_id', $libraryData['libraryId'])
