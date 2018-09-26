@@ -105,7 +105,7 @@ class H5peditorDrupalStorage implements H5peditorStorage {
               minor_version,
               restricted,
               tutorial_url,
-              metadata
+              metadata_settings
        FROM {h5p_libraries}
        WHERE runnable = 1
        AND semantics IS NOT NULL
@@ -114,10 +114,11 @@ class H5peditorDrupalStorage implements H5peditorStorage {
       // Convert result object properties to camelCase.
       $library = H5PCore::snakeToCamel($library, true);
 
+      $library->metadataSettings = json_decode($library->metadataSettings);
+
       // Make sure we only display the newest version of a library.
       foreach ($libraries as $existingLibrary) {
         if ($library->name === $existingLibrary->name) {
-
           // Mark old ones
           // This is the newest
           if (($library->majorVersion === $existingLibrary->majorVersion && $library->minorVersion > $existingLibrary->minorVersion) ||
