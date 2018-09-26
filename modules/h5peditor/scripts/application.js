@@ -72,8 +72,11 @@ var ns = H5PEditor;
           // Calculate & set max score
           $maxscore.val(h5peditor.getMaxScore(params.params));
 
-          // Set Drupal 7's title field to the metadata title if the field is not displayed
-          titleFormElement.value = params.metadata.title || '';
+          // Set Drupal 7's title field to the metadata title if the field
+          // is not displayed
+          var tmp = document.createElement('div');
+          tmp.innerHTML = params.metadata.title;
+          titleFormElement.value = tmp.textContent;
         }
       }
     });
