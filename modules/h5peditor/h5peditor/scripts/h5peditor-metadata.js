@@ -280,7 +280,7 @@ H5PEditor.MetadataForm = (function (EventDispatcher, $, metadataSemantics) {
       extraTitle.$item.appendTo($container);
       self.appendButtonTo(extraTitle.$item);
 
-      H5PEditor.sync(extraTitle.$input, titleField.$input);
+      linkFields(titleField, extraTitle);
     }
 
     if (!parent.passReadies) {
@@ -299,12 +299,14 @@ H5PEditor.MetadataForm = (function (EventDispatcher, $, metadataSemantics) {
     const legacyForm = {
       passReadies: false,
       getExtraTitleField: function () {
-        return H5PEditor.findField('extraTitle', legacyForm);
+        return H5PEditor.findField('title', legacyForm);
       }
     };
 
     // Generate the form
-    H5PEditor.processSemanticsChunk([getExtraTitleFieldSemantics()], params, $container, legacyForm);
+    const field = getExtraTitleFieldSemantics();
+    field.name = 'title';
+    H5PEditor.processSemanticsChunk([field], params, $container, legacyForm);
 
     return legacyForm;
   };
@@ -362,6 +364,53 @@ H5PEditor.MetadataForm = (function (EventDispatcher, $, metadataSemantics) {
       if (objProp === value) {
         return list[i];
       }
+    }
+  };
+
+  /**
+   * Automatically sync all the given fields when one value changes.
+   * Note: Currently only supports H5PEditor.Text field widgets.
+   *
+   * @private
+   * @param {...*} var_args
+   */
+  const linkFields = function (var_args) {
+    const fields = arguments;
+
+    let preventLoop;
+
+    /**
+     * Change event handler for all fields
+     * @private
+     * @param {*} value
+     */
+    const updateAllFields = function (value) {
+      if (preventLoop || value === undefined) {
+        return;
+      }
+
+      // Do not run updates for this update
+      preventLoop = true;
+
+      // Apply value to all fields
+      for (let i = 0; i < fields.length; i++) {
+        fields[i].$input.val(value).change();
+      }
+
+      // Done
+      preventLoop = false;
+    };
+
+    // Add change event listeners
+    for (let i = 0; i < fields.length; i++) {
+      fields[i].change(updateAllFields);
+    }
+
+    // Use initial value from first field
+    if (fields[0].value !== undefined) {
+      const escaper = document.createElement('div');
+      escaper.innerHTML = fields[0].value;
+      updateAllFields(escaper.innerText);
     }
   };
 
