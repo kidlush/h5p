@@ -717,7 +717,7 @@ function h5p_content_upgrade_progress($library_id) {
     foreach ($params as $id => $param) {
       $upgraded = json_decode($param);
 
-      $fields = array_merge(H5PMetadata::toDBArray($upgraded->metadata, false), array(
+      $fields = array_merge(H5PMetadata::toDBArray($upgraded->metadata, false, false), array(
         'main_library_id' => $to_library->id,
         'json_content' => json_encode($upgraded->params),
         'filtered' => '',
