@@ -176,7 +176,6 @@ class H5peditorFile {
         if (!$this->check($allowed)) {
           $this->result->error = $this->interface->t('Invalid audio file format. Use mp3 or wav.');
           return FALSE;
-
         }
 
         $this->result->mime = $this->type;
