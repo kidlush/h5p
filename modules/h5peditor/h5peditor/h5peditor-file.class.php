@@ -167,6 +167,7 @@ class H5peditorFile {
         $allowed = array(
           'audio/mpeg' => 'mp3',
           'audio/mp3' => 'mp3',
+          'audio/mp4' => 'm4a',
           'audio/x-wav' => 'wav',
           'audio/wav' => 'wav',
           //'application/ogg' => 'ogg',
@@ -176,6 +177,7 @@ class H5peditorFile {
         if (!$this->check($allowed)) {
           $this->result->error = $this->interface->t('Invalid audio file format. Use mp3 or wav.');
           return FALSE;
+
         }
 
         $this->result->mime = $this->type;
