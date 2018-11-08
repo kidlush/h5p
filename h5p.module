@@ -385,6 +385,16 @@ function _h5p_add_display_option (&$element, $name, $title, $value, $visibility_
 function _h5p_form_submit($form, &$form_state) {
   $core = _h5p_get_instance('core');
   $form_state['values']['disable'] = $core->getStorableDisplayOptions($form_state['values'], $form_state['values']['disable']);
+
+  $json_content = json_decode($form_state['values']['json_content']);
+  if ($json_content === NULL) {
+    // Error in JSON, prevent saving it and use the old one
+    unset($form_state['values']['json_content']);
+  }
+  else {
+    $form_state['values']['json_content'] = json_encode($json_content->params);
+    $form_state['values']['metadata'] = $json_content->metadata;
+  }
 }
 
 /**
@@ -485,6 +495,7 @@ function h5p_insert($node) {
       'id' => h5p_get_content_id($node),
       'title' => $node->title,
       'params' => $node->json_content,
+      'metadata' => $node->metadata,
       'embed_type' => $node->embed_type,
       'disable' => $node->disable,
       'library' => $lib,

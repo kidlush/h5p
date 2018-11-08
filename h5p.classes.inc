@@ -508,20 +508,7 @@ class H5PDrupal implements H5PFrameworkInterface {
       return;
     }
 
-    /*
-     * The form content is passed in JSON format like
-     * {params: {...}, metadata: {...}} and needs to be decomposed.
-     * The decode-encode chain would convert empty objects {} to empty arrays [].
-     * Replacing {} with a placeholder and reverting this afterwards fixes the problem.
-     * We can't use JSON_FORCE_OBJECT for json_encode because we'd then use real [].
-     */
-    $content['params'] = str_replace('{}', '{"REPLACEME":"REPLACEME"}', $content['params']);
-    $content_json = json_decode($content['params'], true);
-    $content['params'] = json_encode($content_json['params']);
-    $content['params'] = str_replace('{"REPLACEME":"REPLACEME"}', '{}', $content['params']);
-    $metadata = $content_json['metadata'];
-
-    $fields = array_merge(H5PMetadata::toDBArray($metadata, false), array(
+    $fields = array_merge(H5PMetadata::toDBArray($content['metadata'], false), array(
       'json_content' => $content['params'],
       'embed_type' => 'div', // TODO: Determine from library?
       'main_library_id' => $content['library']['libraryId'],
@@ -564,19 +551,7 @@ class H5PDrupal implements H5PFrameworkInterface {
    * Implements insertContent
    */
   public function insertContent($content, $contentMainId = NULL) {
-    /*
-     * The form content is passed in JSON format like
-     * {params: {...}, metadata: {...}} and needs to be decomposed.
-     * The decode-encode chain would convert empty objects {} to empty arrays [].
-     * Replacing {} with a placeholder and reverting this afterwards fixes the problem.
-     * We can't use JSON_FORCE_OBJECT for json_encode because we'd then use real [].
-     */
-    $content['params'] = str_replace('{}', '{"REPLACEME":"REPLACEME"}', $content['params']);
-    $content_json = json_decode($content['params'], true);
-    $content['params'] = json_encode($content_json['params']);
-    $content['params'] = str_replace('{"REPLACEME":"REPLACEME"}', '{}', $content['params']);
-
-    $fields = array_merge(H5PMetadata::toDBArray($content_json['metadata'], false), array(
+    $fields = array_merge(H5PMetadata::toDBArray($content['metadata'], false), array(
       'content_id' => $content['id'],
       'nid' => $contentMainId,
       'json_content' => $content['params'],
