@@ -261,6 +261,10 @@ function h5p_form(&$node, $form_state) {
 
   $core = _h5p_get_instance('core');
 
+  // When a node is being translated, the original node is found in $node->translation_source
+  // We need to use that to get metadata and other H5P-specific data
+  $source_node = isset($node->translation_source) ? $node->translation_source : $node;
+
   $type = node_type_get_type($node);
 
   $form['#validate'][] = 'h5p_form_validate';
@@ -268,7 +272,7 @@ function h5p_form(&$node, $form_state) {
   $form['title'] = array(
     '#type' => 'hidden',
     '#required' => TRUE,
-    '#default_value' => $node->title,
+    '#default_value' => $source_node->title,
     '#attributes' => array('id' => 'h5p-plugin-form-title', 'style' => 'display: none;')
   );
 
@@ -281,8 +285,8 @@ function h5p_form(&$node, $form_state) {
     '#weight' => 2,
   );
 
-  if (isset($node->json_content) || isset($node->translation_source) && isset($node->translation_source->json_content)) {
-    $content = h5p_get_content(isset($node->translation_source) ? $node->translation_source : $node);
+  if (isset($source_node->json_content)) {
+    $content = h5p_get_content($source_node);
     $filtered_params = $core->filterParameters($content);
   }
   else {
@@ -291,8 +295,8 @@ function h5p_form(&$node, $form_state) {
 
   // Combine params and metadata in one JSON object
   $main_content_data = array('params' => json_decode($filtered_params));
-  if (isset($node->metadata)) {
-    $main_content_data['metadata'] = $node->metadata;
+  if (isset($source_node->metadata)) {
+    $main_content_data['metadata'] = $source_node->metadata;
   }
   $main_content_data = json_encode($main_content_data, TRUE);
 
@@ -303,22 +307,22 @@ function h5p_form(&$node, $form_state) {
 
   $form['main_library_id'] = array(
     '#type' => 'value',
-    '#default_value' => isset($node->main_library_id) ? $node->main_library_id : '',
+    '#default_value' => isset($source_node->main_library_id) ? $source_node->main_library_id : '',
   );
 
   $form['embed_type'] = array(
     '#type' => 'value',
-    '#default_value' => isset($node->embed_type) ? $node->embed_type : 'div',
+    '#default_value' => isset($source_node->embed_type) ? $source_node->embed_type : 'div',
   );
 
-  if (!isset($node->disable)) {
+  if (!isset($source_node->disable)) {
     $node->disable = H5PCore::DISABLE_NONE;
   }
 
   // Keep track of the old disable value
   $form['disable'] = array(
     '#type' => 'value',
-    '#value' => $node->disable
+    '#value' => $source_node->disable
   );
 
   // Display options
@@ -338,7 +342,7 @@ function h5p_form(&$node, $form_state) {
     );
 
     // Add display options
-    $display_options = $core->getDisplayOptionsForEdit($node->disable !== H5PCore::DISABLE_NONE ? $node->disable : NULL);
+    $display_options = $core->getDisplayOptionsForEdit($source_node->disable !== H5PCore::DISABLE_NONE ? $source_node->disable : NULL);
     $labels = _h5p_get_disable_labels();
     foreach ($display_options as $name => $value) {
       _h5p_add_display_option($form['h5p_options'], $name, $labels[$name], $value, ($name === H5PCore::DISPLAY_OPTION_FRAME ? '.h5p-action-bar-settings .form-item:not(.form-item-frame)' : NULL));
