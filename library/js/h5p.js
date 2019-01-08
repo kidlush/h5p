@@ -2208,22 +2208,12 @@ H5P.createTitle = function (rawTitle, maxLength) {
   };
 
   /**
-   * This is a cache for pasted data to prevent parsing multiple times.
-   * @type {Object}
-   */
-  var parsedClipboard = null;
-
-  /**
    * Retrieve parsed clipboard data.
    *
    * @return {Object}
    */
   H5P.getClipboard = function () {
-    if (!parsedClipboard) {
-      parsedClipboard = parseClipboard();
-    }
-
-    return parsedClipboard;
+    return parseClipboard();
   };
 
   /**
@@ -2233,9 +2223,6 @@ H5P.createTitle = function (rawTitle, maxLength) {
    */
   H5P.setClipboard = function (clipboardItem) {
     localStorage.setItem('h5pClipboard', JSON.stringify(clipboardItem));
-
-    // Clear cache
-    parsedClipboard = null;
 
     // Trigger an event so all 'Paste' buttons may be enabled.
     H5P.externalDispatcher.trigger('datainclipboard', {reset: false});
@@ -2256,7 +2243,6 @@ H5P.createTitle = function (rawTitle, maxLength) {
    * Get item from the H5P Clipboard.
    *
    * @private
-   * @param {boolean} [skipUpdateFileUrls]
    * @return {Object}
    */
   var parseClipboard = function () {
@@ -2274,8 +2260,8 @@ H5P.createTitle = function (rawTitle, maxLength) {
       return;
     }
 
-    // Update file URLs
-    updateFileUrls(clipboardData.specific, function (path) {
+    // Update file URLs and reset content Ids
+    recursiveUpdate(clipboardData.specific, function (path) {
       var isTmpFile = (path.substr(-4, 4) === '#tmp');
       if (!isTmpFile && clipboardData.contentId) {
         // Comes from existing content
@@ -2296,22 +2282,20 @@ H5P.createTitle = function (rawTitle, maxLength) {
     if (clipboardData.generic) {
       // Use reference instead of key
       clipboardData.generic = clipboardData.specific[clipboardData.generic];
-
-      // Avoid multiple content with same ID
-      delete clipboardData.generic.subContentId;
     }
 
     return clipboardData;
   };
 
   /**
-   * Update file URLs. Useful when copying content.
+   * Update file URLs and reset content IDs.
+   * Useful when copying content.
    *
    * @private
    * @param {object} params Reference
    * @param {function} handler Modifies the path to work when pasted
    */
-  var updateFileUrls = function (params, handler) {
+  var recursiveUpdate = function (params, handler) {
     for (var prop in params) {
       if (params.hasOwnProperty(prop) && params[prop] instanceof Object) {
         var obj = params[prop];
@@ -2319,7 +2303,11 @@ H5P.createTitle = function (rawTitle, maxLength) {
           obj.path = handler(obj.path);
         }
         else {
-          updateFileUrls(obj, handler);
+          if (obj.library !== undefined && obj.subContentId !== undefined) {
+            // Avoid multiple content with same ID
+            delete obj.subContentId;
+          }
+          recursiveUpdate(obj, handler);
         }
       }
     }
@@ -2331,9 +2319,6 @@ H5P.createTitle = function (rawTitle, maxLength) {
     window.addEventListener('storage', function (event) {
       // Pick up clipboard changes from other tabs
       if (event.key === 'h5pClipboard') {
-        // Clear cache
-        parsedClipboard = null;
-
         // Trigger an event so all 'Paste' buttons may be enabled.
         H5P.externalDispatcher.trigger('datainclipboard', {reset: event.newValue === null});
       }
