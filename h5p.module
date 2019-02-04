@@ -347,9 +347,9 @@ function h5p_form(&$node, $form_state) {
     foreach ($display_options as $name => $value) {
       _h5p_add_display_option($form['h5p_options'], $name, $labels[$name], $value, ($name === H5PCore::DISPLAY_OPTION_FRAME ? '.h5p-action-bar-settings .form-item:not(.form-item-frame)' : NULL));
     }
-
-    $form['#submit'][] = '_h5p_form_submit';
   }
+
+  $form['#submit'][] = '_h5p_form_submit';
 
   return $form;
 }
