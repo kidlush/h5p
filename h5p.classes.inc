@@ -671,7 +671,7 @@ class H5PDrupal implements H5PFrameworkInterface {
   public function loadAddons() {
     // Load addons
     $db_stmt = db_query(
-      "SELECT l1.machine_name, l1.major_version, l1.minor_version,
+      "SELECT l1.machine_name, l1.major_version, l1.minor_version, l1.patch_version,
               l1.library_id, l1.add_to, l1.preloaded_js, l1.preloaded_css
        FROM {h5p_libraries} AS l1
        LEFT JOIN {h5p_libraries} AS l2
