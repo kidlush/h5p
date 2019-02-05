@@ -977,8 +977,9 @@ class H5PDrupal implements H5PFrameworkInterface {
   /**
    * Implements getNumContent.
    */
-  public function getNumContent($library_id) {
-    return intval(db_query('SELECT COUNT(content_id) FROM {h5p_nodes} WHERE main_library_id = :id', array(':id' => $library_id))->fetchField());
+  public function getNumContent($library_id, $skip = NULL) {
+    $skip_query = empty($skip) ? '' : " AND content_id NOT IN ($skip)";
+    return intval(db_query('SELECT COUNT(content_id) FROM {h5p_nodes} WHERE main_library_id = :id' . $skip_query, array(':id' => $library_id))->fetchField());
   }
 
   /**
@@ -1088,5 +1089,24 @@ class H5PDrupal implements H5PFrameworkInterface {
         ))
         ->execute();
     }
+  }
+
+  /**
+   * Implements libraryHasUpgrade
+   */
+  public function libraryHasUpgrade($library) {
+    return !!db_query(
+      "SELECT library_id
+         FROM {h5p_libraries}
+        WHERE machine_name = :name
+          AND (major_version > :major
+           OR (major_version = :major AND minor_version > :minor))
+        LIMIT 1",
+      array(
+        ':name' => $library['machineName'],
+        ':major' => $library['majorVersion'],
+        ':minor' => $library['minorVersion']
+      )
+    )->fetchField();
   }
 }

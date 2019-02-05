@@ -235,18 +235,26 @@ function h5peditor_h5p_content_node_form_validate($form, $form_state) {
       form_set_error('h5p_editor', t('You must choose an H5P content type or upload an H5P file.'));
     }
     else {
-      $is_runnable = db_query(
-        "SELECT runnable
-        FROM {h5p_libraries}
-        WHERE machine_name = :machine_name
-        AND major_version = :major_version
-        AND minor_version = :minor_version", array(
-          ':machine_name' => $library_data['machineName'],
-          ':major_version' => $library_data['majorVersion'],
-          ':minor_version' => $library_data['minorVersion'],
-        ))->fetchField();
-      if (!$is_runnable) {
-        form_set_error('h5p_editor', t('Invalid H5P content type'));
+      // Check that this is the latest version of the content type we have
+      $core = _h5p_get_instance('core');
+      if ($core->h5pF->libraryHasUpgrade($library_data)) {
+        // We do not allow storing old content due to security concerns
+        form_set_error('h5p_editor', t('Something unexpected happened. We were unable to save this content.'));
+      }
+      else {
+        $is_runnable = db_query(
+          "SELECT runnable
+          FROM {h5p_libraries}
+          WHERE machine_name = :machine_name
+          AND major_version = :major_version
+          AND minor_version = :minor_version", array(
+            ':machine_name' => $library_data['machineName'],
+            ':major_version' => $library_data['majorVersion'],
+            ':minor_version' => $library_data['minorVersion'],
+          ))->fetchField();
+        if (!$is_runnable) {
+          form_set_error('h5p_editor', t('Invalid H5P content type'));
+        }
       }
     }
   }
