@@ -841,6 +841,10 @@ class H5PDrupal implements H5PFrameworkInterface {
         ))
         ->fetchObject();
 
+      if ($content === FALSE) {
+        return NULL;
+      }
+
       // Build metadata object
       $content->metadata = array();
       foreach(array('authors', 'source', 'license', 'license_version', 'license_extras' ,'year_from', 'year_to', 'changes', 'author_comments') as $value) {
@@ -857,7 +861,7 @@ class H5PDrupal implements H5PFrameworkInterface {
       $content->metadata['title'] = $content->title;
       $content->metadata = H5PCore::snakeToCamel($content->metadata);
 
-    return ($content === FALSE ? NULL : H5PCore::snakeToCamel($content));
+    return H5PCore::snakeToCamel($content);
   }
 
   /**
