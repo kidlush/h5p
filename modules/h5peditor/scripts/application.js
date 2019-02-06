@@ -61,6 +61,9 @@ var ns = H5PEditor;
         // Get content from editor
         h5peditor.getContent(function (content) {
 
+          // Set Drupal 7's title field
+          titleFormElement.value = content.title
+
           // Set main library
           $library.val(content.library);
 
@@ -69,11 +72,6 @@ var ns = H5PEditor;
 
           // Calculate & set max score
           //$maxscore.val(h5peditor.getMaxScore(params.params)); TODO: Return as part of content
-
-          // Set Drupal 7's title field to the metadata title if the field is not displayed
-          var tmp = document.createElement('div');
-          tmp.innerHTML = content.title;
-          titleFormElement.value = tmp.textContent;
 
           // Submit form data
           formIsUpdated = true;
