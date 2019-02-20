@@ -108,7 +108,7 @@ class H5PEditorDrupalAjax implements H5PEditorAjaxInterface {
 
   /**
    * Get translations for a language for a list of libraries
-   * 
+   *
    * @param array $libraries An array of libraries, in the form "<machineName> <majorVersion>.<minorVersion>
    * @param string $language_code
    * @return array
@@ -134,7 +134,7 @@ class H5PEditorDrupalAjax implements H5PEditorAjaxInterface {
         ':language_code' => $language_code)
       )->fetchField();
 
-      if ($transltion !== FALSE) {
+      if ($translation !== FALSE) {
         $translations[$library] = json_decode($translation);
       }
     }
