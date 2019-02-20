@@ -54,6 +54,17 @@ function h5peditor_menu() {
     'access arguments' => array(2),
     'type' => MENU_CALLBACK,
   );
+
+  // Return translations for a set of libraries
+  $items['h5peditor/%/%/translations/%'] = array(
+    'title' => 'H5peditor Libraries',
+    'page callback' => 'h5peditor_translations_callback',
+    'page arguments' => array(4),
+    'access callback' => 'h5peditor_access',
+    'access arguments' => array(2),
+    'type' => MENU_CALLBACK,
+  );
+
   $items['h5peditor/%/%/files'] = array(
     'title' => 'H5peditor Files',
     'page callback' => 'h5peditor_files_callback',
@@ -319,6 +330,14 @@ function _h5peditor_create_content($node) {
 function h5peditor_libraries_callback() {
   $editor = h5peditor_get_instance();
   $editor->ajax->action(H5PEditorEndpoints::LIBRARIES);
+}
+
+/**
+ * Callback that returns translations for a set of H5P libraries
+ */
+function h5peditor_translations_callback($language) {
+  $editor = h5peditor_get_instance();
+  $editor->ajax->action(H5PEditorEndpoints::TRANSLATIONS, $language);
 }
 
 /**
