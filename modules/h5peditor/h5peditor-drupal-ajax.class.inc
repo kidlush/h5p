@@ -135,7 +135,7 @@ class H5PEditorDrupalAjax implements H5PEditorAjaxInterface {
       )->fetchField();
 
       if ($translation !== FALSE) {
-        $translations[$library] = json_decode($translation);
+        $translations[$library] = $translation;
       }
     }
 
