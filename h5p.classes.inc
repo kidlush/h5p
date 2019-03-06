@@ -1032,6 +1032,7 @@ class H5PDrupal implements H5PFrameworkInterface {
   public function hasPermission($permission, $content_id = NULL) {
     switch ($permission) {
       case H5PPermission::DOWNLOAD_H5P:
+      case H5PPermission::COPY_H5P:
         return $content_id !== NULL && (
           user_access('download all h5ps') ||
           (self::mayCurrentUserUpdateNode($content_id) && user_access('download own h5ps'))

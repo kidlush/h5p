@@ -40,7 +40,15 @@ function h5p_admin_settings($form, &$form_state) {
     )
   );
 
-  $button_behaviours = array(
+  $button_behaviours_download = array(
+    H5PDisplayOptionBehaviour::NEVER_SHOW => t('Never'),
+    H5PDisplayOptionBehaviour::ALWAYS_SHOW => t('Always '),
+    H5PDisplayOptionBehaviour::CONTROLLED_BY_PERMISSIONS => t('Only if permitted through permissions'),
+    H5PDisplayOptionBehaviour::CONTROLLED_BY_AUTHOR_DEFAULT_ON => t('Controlled by author, default is on'),
+    H5PDisplayOptionBehaviour::CONTROLLED_BY_AUTHOR_DEFAULT_OFF => t('Controlled by author, default is off'),
+  );
+
+  $button_behaviours_embed = array(
     H5PDisplayOptionBehaviour::NEVER_SHOW => t('Never show'),
     H5PDisplayOptionBehaviour::ALWAYS_SHOW => t('Always show'),
     H5PDisplayOptionBehaviour::CONTROLLED_BY_PERMISSIONS => t('Show only if permitted through permissions'),
@@ -50,14 +58,14 @@ function h5p_admin_settings($form, &$form_state) {
 
   _h5p_add_display_option($form['h5p_display_options'], 'h5p_frame', t('Display buttons (download, embed and copyright)'), variable_get('h5p_frame', TRUE), '.form-item-h5p-export, .form-item-h5p-embed, .form-item-h5p-copyright, .form-item-h5p-icon');
   $form['h5p_display_options']['h5p_export'] = array(
-    '#title' => t('Download button'),
-    '#options' => $button_behaviours,
+    '#title' => t('Allow download'),
+    '#options' => $button_behaviours_download,
     '#default_value' => variable_get('h5p_export', H5PDisplayOptionBehaviour::ALWAYS_SHOW),
     '#type' => 'select',
   );
   $form['h5p_display_options']['h5p_embed'] = array(
     '#title' => t('Embed button'),
-    '#options' => $button_behaviours,
+    '#options' => $button_behaviours_embed,
     '#default_value' => variable_get('h5p_embed', H5PDisplayOptionBehaviour::ALWAYS_SHOW),
     '#type' => 'select',
   );
