@@ -263,6 +263,11 @@ H5P.init = function (target) {
           var parentHeight = iframe.parentElement.style.height;
           iframe.parentElement.style.height = iframe.parentElement.clientHeight + 'px';
 
+          // Note:  Force layout reflow
+          //        This fixes a flickering bug for embedded content on iPads
+          //        @see https://github.com/h5p/h5p-moodle-plugin/issues/237
+          iframe.getBoundingClientRect();
+
           // Reset iframe height, in case content has shrinked.
           iframe.style.height = '1px';
 
@@ -1932,7 +1937,7 @@ H5P.libraryFromString = function (library) {
  *   The full path to the library.
  */
 H5P.getLibraryPath = function (library) {
-  return (H5PIntegration.libraryUrl !== undefined ? H5PIntegration.libraryUrl + '/' : H5PIntegration.url + '/libraries/') + library;
+  return H5PIntegration.url + '/libraries/' + library;
 };
 
 /**
