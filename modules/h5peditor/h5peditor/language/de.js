@@ -7,6 +7,7 @@ H5PEditor.language.core = {
   notImageOrDimensionsField: '":path" ist kein Bild oder Dimensionsfeld.',
   requiredProperty: ':property wird benötigt und muss einen Wert besitzen.',
   onlyNumbers: 'Der Wert des Feldes ":property" kann nur Nummern beinhalten.',
+  illegalDecimalNumber: ':property can only contain numbers with max :decimals decimals.',
   exceedsMax: 'Der Wert des Feldes ":property" übersteigt das Maximum von :max.',
   listExceedsMax: 'Die Liste ist länger als die Maximallänge von :max Einträgen.',
   belowMin: 'Der Wert des Feldes ":property" liegt unter dem Minimum von :min.',
@@ -207,5 +208,6 @@ H5PEditor.language.core = {
   changeLanguage: 'Change language to :language?',
   thisWillPotentially: "This will potentially reset all the text and translations. You can't undo this. The content itself will not be changed. Do you want to proceed?",
   notAllTextsChanged: 'Not all texts were changed, there is only partial coverage for :language.',
-  contributeTranslations: 'If you want to complete the translation for :language you can learn about <a href=":url" target="_new">contributing translations to H5P</a>'
+  contributeTranslations: 'If you want to complete the translation for :language you can learn about <a href=":url" target="_new">contributing translations to H5P</a>',
+  unknownLibrary: 'Unfortunately, the selected content type \'%lib\' isn\'t installed on this system.'
 };

@@ -136,6 +136,8 @@ H5P.init = function (target) {
     // Create new instance.
     var instance = H5P.newRunnable(library, contentId, $container, true, {standalone: true});
 
+    H5P.offlineRequestQueue = new H5P.OfflineRequestQueue({instance: instance});
+
     // Check if we should add and display a fullscreen button for this H5P.
     if (contentData.fullScreen == 1 && H5P.fullscreenSupported) {
       H5P.jQuery(
@@ -1937,7 +1939,13 @@ H5P.libraryFromString = function (library) {
  *   The full path to the library.
  */
 H5P.getLibraryPath = function (library) {
-  return H5PIntegration.url + '/libraries/' + library;
+  if (H5PIntegration.urlLibraries !== undefined) {
+    // This is an override for those implementations that has a different libraries URL, e.g. Moodle
+    return H5PIntegration.urlLibraries + '/' + library;
+  }
+  else {
+    return H5PIntegration.url + '/libraries/' + library;
+  }
 };
 
 /**
@@ -2059,14 +2067,18 @@ H5P.setFinished = function (contentId, score, maxScore, time) {
     };
 
     // Post the results
-    H5P.jQuery.post(H5PIntegration.ajax.setFinished, {
+    const data = {
       contentId: contentId,
       score: score,
       maxScore: maxScore,
       opened: toUnix(H5P.opened[contentId]),
       finished: toUnix(new Date()),
       time: time
-    });
+    };
+    H5P.jQuery.post(H5PIntegration.ajax.setFinished, data)
+      .fail(function () {
+        H5P.offlineRequestQueue.add(H5PIntegration.ajax.setFinished, data);
+      });
   }
 };
 

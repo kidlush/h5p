@@ -6,6 +6,7 @@
     H5PEditor.ajaxPath = H5PIntegration.editor.ajaxPath;
     H5PEditor.filesPath = H5PIntegration.editor.filesPath;
     H5PEditor.apiVersion = H5PIntegration.editor.apiVersion;
+    H5PEditor.contentLanguage = H5PIntegration.editor.language;
 
     // Semantics describing what copyright information can be stored for media.
     H5PEditor.copyrightSemantics = H5PIntegration.editor.copyrightSemantics;
@@ -45,6 +46,15 @@
     else {
       $type.filter('input[value="create"]').attr('checked', true).change();
     }
+
+    // Duplicate the submit button input because it is not posted when calling $form.submit()
+    const $submitters = $form.find('input[type="submit"]');
+    $submitters.click(function () {
+      // Create hidden input and give it the value
+      const name = $(this).prop('name');
+      const value = $(this).prop('value');
+      $('<input type="hidden" name="' + name + '" value="' + value + '" />').appendTo($form);
+    });
 
     let formIsUpdated = false;
     $form.submit(function (event) {
