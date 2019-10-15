@@ -962,8 +962,7 @@ class H5PDrupal implements H5PFrameworkInterface {
       "JOIN {h5p_nodes_libraries} AS l " . 
       "ON n.content_id = l.content_id " .
       "SET n.filtered = '' " . 
-      "WHERE l.library_id IN (:library_ids) " .
-      "AND l.dependency_type = 'preloaded'",
+      "WHERE l.library_id IN (:library_ids) ",
       array(
         ':library_ids' => $library_ids
       )
