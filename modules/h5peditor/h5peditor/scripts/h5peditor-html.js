@@ -25,6 +25,16 @@ ns.Html.prototype.inTags = function (value) {
   return (ns.$.inArray(value.toLowerCase(), this.tags) >= 0);
 };
 
+/**
+ * Check if the provided button is enabled by config.
+ *
+ * @param {string} value
+ * @return {boolean}
+ */
+ns.Html.prototype.inButtons = function (button) {
+  return (H5PIntegration.editor.wysiwygButtons !== undefined && H5PIntegration.editor.wysiwygButtons.indexOf(button) !== -1);
+};
+
 ns.Html.prototype.createToolbar = function () {
   var basicstyles = [];
   var paragraph = [];
@@ -104,6 +114,14 @@ ns.Html.prototype.createToolbar = function () {
     ns.$.merge(this.tags, ["tr", "td", "th", "colgroup", "thead", "tbody", "tfoot"]);
   }
   if (this.inTags("hr")) inserts.push("HorizontalRule");
+  if (this.inTags('code')) {
+    if (this.inButtons('inlineCode')) {
+      inserts.push('Code');
+    }
+    if (this.inTags('pre') && this.inButtons('codeSnippet')) {
+      inserts.push('CodeSnippet');
+    }
+  }
   if (inserts.length > 0) {
     toolbar.push({
       name: "insert",
@@ -294,7 +312,9 @@ ns.Html.prototype.appendTo = function ($wrapper) {
     startupFocus: true,
     enterMode: CKEDITOR.ENTER_DIV,
     allowedContent: true, // Disables the ckeditor content filter, might consider using it later... Must make sure it doesn't remove math...
-    protectedSource: []
+    protectedSource: [],
+    contentsCss: ns.basePath + 'styles/css/cke-contents.css', // We want to customize the CSS inside the editor
+    codeSnippet_codeClass: 'h5p-hl'
   };
   ns.$.extend(ckConfig, this.createToolbar());
 
