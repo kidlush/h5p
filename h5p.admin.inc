@@ -229,7 +229,7 @@ function h5p_library_list() {
   $i = 0;
   foreach ($libraries as $versions) {
     foreach ($versions as $library) {
-      $usage = $core->h5pF->getLibraryUsage($library->id, $numNotFiltered ? TRUE : FALSE);
+
       if ($library->runnable) {
         $upgrades = $core->getUpgrades($library, $versions);
         $upgradeUrl = empty($upgrades) ? FALSE : url('admin/content/h5p/libraries/' . $library->id . '/upgrade', array('query' => drupal_get_destination()));
@@ -249,18 +249,27 @@ function h5p_library_list() {
         $restricted_url = NULL;
       }
 
-      $settings['libraryList']['listData'][] = array(
+      $lib_settings = array(
         'title' => $library->title . ' (' . H5PCore::libraryVersion($library) . ')',
         'restricted' => $restricted,
         'restrictedUrl' => $restricted_url,
-        'numContent' => $core->h5pF->getNumContent($library->id),
-        'numContentDependencies' => $usage['content'] === -1 ? '' : $usage['content'],
-        'numLibraryDependencies' => $usage['libraries'],
+        'numContent' => '?',
+        'numContentDependencies' => '?',
+        'numLibraryDependencies' => '?',
         'upgradeUrl' => $upgradeUrl,
         'detailsUrl' => url('admin/content/h5p/libraries/' . $library->id),
         'deleteUrl' => url('admin/content/h5p/libraries/' . $library->id . '/delete', array('query' => drupal_get_destination()))
       );
 
+      $params = drupal_get_query_parameters();
+      if (!isset($params['skip-usage'])) {
+        $usage = $core->h5pF->getLibraryUsage($library->id, $numNotFiltered ? TRUE : FALSE);
+        $lib_settings['numContent'] = $core->h5pF->getNumContent($library->id);
+        $lib_settings['numContentDependencies'] = $usage['content'] === -1 ? '' : $usage['content'];
+        $lib_settings['numLibraryDependencies'] = $usage['libraries'];
+      }
+
+      $settings['libraryList']['listData'][] = $lib_settings;
       $i++;
     }
   }
