@@ -614,6 +614,20 @@ function h5p_schema() {
         'description' => 'Default language for common fields',
         'type' => 'varchar',
         'length' => 32
+      ),
+      'shared' => array(
+        'description' => 'Shared status for the content hub',
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'synced' => array(
+        'description' => 'Sync status with the content hub',
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
       )
     ),
     'primary key' => array('content_id'),
@@ -817,6 +831,21 @@ function h5p_schema() {
       ),
     ),
     'primary key' => array('type', 'library_name', 'library_version')
+  );
+
+  $schema['h5p_content_hub_metadata_cache'] = array(
+    'description' => 'JSON representation of the content hub metadata cache',
+    'fields' => array(
+      'language' => array(
+        'description' => 'Language of metadata',
+        'type' => 'varchar',
+        'length' => 31,
+      ),
+      'json' => array(
+        'description' => 'Metadata as JSON',
+        'type' => 'text',
+      ),
+    )
   );
 
   return $schema;
@@ -1796,6 +1825,46 @@ function h5p_update_7122() {
       'description' => 'Default language for common fields',
       'type' => 'varchar',
       'length' => 32
+    ));
+  }
+}
+
+/**
+ * Add content hub metadata cache
+ */
+function h5p_update_7123() {
+  db_create_table('h5p_content_hub_metadata_cache', array(
+    'description' => 'JSON representation of the content hub metadata cache',
+    'fields'      => array(
+      'language' => array(
+        'description' => 'Language of metadata',
+        'type'        => 'varchar',
+        'length'      => 31,
+      ),
+      'json'     => array(
+        'description' => 'Metadata as JSON',
+        'type'        => 'text',
+      ),
+    ),
+  ));
+
+  if (!db_field_exists('h5p_nodes', 'shared')) {
+    db_add_field('h5p_nodes', 'shared', array(
+      'description' => 'Shared status for the content hub',
+      'type' => 'int',
+      'size' => 'tiny',
+      'unsigned' => TRUE,
+      'not null' => TRUE,
+      'default' => 0,
+    ));
+  }
+
+  if (!db_field_exists('h5p_nodes', 'synced')) {
+    db_add_field('h5p_nodes', 'synced', array(
+      'description' => 'Sync status with the content hub',
+      'type' => 'int',
+      'size' => 'tiny',
+      'unsigned' => TRUE,
     ));
   }
 }
