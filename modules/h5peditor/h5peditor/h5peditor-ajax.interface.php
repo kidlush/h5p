@@ -49,4 +49,13 @@ interface H5PEditorAjaxInterface {
    * @return array
    */
   public function getTranslations($libraries, $language_code);
+
+  /**
+   * Get content hub metadata cache from db
+   *
+   * @param  string  $lang Language code in ISO 639-1
+   *
+   * @return JsonSerializable Json string
+   */
+  public function getContentHubMetadataCache($lang = 'en');
 }

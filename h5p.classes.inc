@@ -20,13 +20,16 @@ class H5PDrupal implements H5PFrameworkInterface {
   /**
    * Implements fetchExternalData
    */
-  public function fetchExternalData($url, $data = NULL, $blocking = TRUE, $stream = NULL) {
-    $options = array();
+  public function fetchExternalData($url, $data = NULL, $blocking = TRUE, $stream = NULL, $allData = FALSE, $headers = []) {
+    $options = array(
+      'headers' => $headers,
+    );
+
     if (!empty($data)) {
       $options['method'] = 'POST';
-      $options['headers'] = array(
+      $options['headers'] = array_merge(array(
         'Content-Type' => 'application/x-www-form-urlencoded'
-      );
+      ), $options['headers']);
       $options['data'] = drupal_http_build_query($data);
     }
     if ($stream) {
@@ -44,6 +47,14 @@ class H5PDrupal implements H5PFrameworkInterface {
     if (isset($response->error)) {
       $this->setErrorMessage(t($response->error), 'failed-fetching-external-data');
       return NULL;
+    }
+
+    if ($allData) {
+      return [
+        'status' => intval($response->code),
+        'data' => $response->data,
+        'headers' => $response->headers,
+      ];
     }
 
     return $response->data;
@@ -1118,5 +1129,15 @@ class H5PDrupal implements H5PFrameworkInterface {
         ':minor' => $library['minorVersion']
       )
     )->fetchField();
+  }
+
+  public function replaceContentHubMetadataCache($metadata, $lang = 'en') {
+    // Insert or update
+    db_merge('h5p_content_hub_metadata_cache')
+      ->key(array('language' => $lang))
+      ->fields(array(
+        'json' => $metadata,
+      ))
+      ->execute();
   }
 }

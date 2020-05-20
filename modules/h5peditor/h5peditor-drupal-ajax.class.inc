@@ -141,4 +141,21 @@ class H5PEditorDrupalAjax implements H5PEditorAjaxInterface {
 
     return $translations;
   }
+
+  /**
+   * Get content hub metadata cache as json from db
+   *
+   * @param  string  $lang
+   *
+   * @return DatabaseStatementInterface|JsonSerializable|null
+   */
+  public function getContentHubMetadataCache($lang = 'en') {
+    $results =  db_select('h5p_content_hub_metadata_cache', 'meta')
+      ->fields('meta', array('json'))
+      ->condition('language', $lang)
+      ->execute()
+      ->fetchAssoc();
+
+    return $results['json'];
+  }
 }

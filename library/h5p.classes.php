@@ -19,13 +19,23 @@ interface H5PFrameworkInterface {
   /**
    * Fetches a file from a remote server using HTTP GET
    *
-   * @param string $url Where you want to get or send data.
-   * @param array $data Data to post to the URL.
-   * @param bool $blocking Set to 'FALSE' to instantly time out (fire and forget).
-   * @param string $stream Path to where the file should be saved.
-   * @return string The content (response body). NULL if something went wrong
+   * @param  string  $url  Where you want to get or send data.
+   * @param  array  $data  Data to post to the URL.
+   * @param  bool  $blocking  Set to 'FALSE' to instantly time out (fire and forget).
+   * @param  string  $stream  Path to where the file should be saved.
+   * @param  bool  $fullData  Return additional response data such as headers and potentially other data
+   * @param  array  $headers Headers to send
+   *
+   * @return string|array The content (response body), or an array with data. NULL if something went wrong
    */
-  public function fetchExternalData($url, $data = NULL, $blocking = TRUE, $stream = NULL);
+  public function fetchExternalData(
+    $url,
+    $data = null,
+    $blocking = true,
+    $stream = null,
+    $fullData = false,
+    $headers = []
+  );
 
   /**
    * Set the tutorial URL for a library. All versions of the library is set
@@ -623,6 +633,17 @@ interface H5PFrameworkInterface {
    * @return boolean
    */
   public function libraryHasUpgrade($library);
+
+
+  /**
+   * Replace content hub metadata cache
+   *
+   * @param JsonSerializable $metadata Metadata as received from content hub
+   * @param string $lang Language in ISO 639-1
+   *
+   * @return mixed
+   */
+  public function replaceContentHubMetadataCache($metadata, $lang);
 }
 
 /**
@@ -1984,6 +2005,7 @@ abstract class H5PDisplayOptionBehaviour {
 abstract class H5PHubEndpoints {
   const CONTENT_TYPES = 'api.h5p.org/v1/content-types/';
   const SITES = 'api.h5p.org/v1/sites';
+  const METADATA = 'api-test.h5p.org/v1/metadata';
 
   public static function createURL($endpoint) {
     $protocol = (extension_loaded('openssl') ? 'https' : 'http');
@@ -3285,6 +3307,35 @@ class H5PCore {
     $interface->setInfoMessage($interface->t('Library cache was successfully updated!'));
     $interface->setOption('content_type_cache_updated_at', time());
     return $data;
+  }
+
+  /**
+   * Update content hub metadata cache
+   */
+  public function updateContentHubMetadataCache($lang = 'en') {
+    // TODO: Use credentials when communicating with content hub
+
+    $url          = H5PHubEndpoints::createURL(H5PHubEndpoints::METADATA);
+    $lastModified = $this->h5pF->getOption("content_hub_metadata:{$lang}");
+    $headers      = [];
+    if (!empty($lastModified)) {
+      $headers['If-Modified-Since'] = $lastModified;
+    }
+    $data = $this->h5pF->fetchExternalData("{$url}?lang={$lang}", null, true,
+      null,
+      true, $headers);
+
+    $lastChecked = new DateTime('now', new DateTimeZone('GMT'));
+    $this->h5pF->setOption("content_hub_metadata:{$lang}",
+      $lastChecked->format(DateTimeInterface::RFC7231));
+
+    // Not modified
+    if ($data['status'] === 304) {
+      return null;
+    }
+    $this->h5pF->replaceContentHubMetadataCache($data['data'], $lang);
+
+    return $data['data'];
   }
 
   /**
