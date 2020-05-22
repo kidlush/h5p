@@ -90,6 +90,15 @@ function h5peditor_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  $items['h5peditor/%/%/get-content/%'] = array(
+    'title' => 'H5peditor Get Content',
+    'page callback' => 'h5peditor_get_hub_content_callback',
+    'page arguments' => array(1, 2, 4),
+    'access callback' => 'h5peditor_access',
+    'access arguments' => array(2),
+    'type' => MENU_CALLBACK
+  );
+
   return $items;
 }
 
@@ -388,6 +397,14 @@ function h5peditor_content_type_cache_callback() {
 function h5peditor_content_hub_metadata_cache_callback() {
   $editor = h5peditor_get_instance();
   $editor->ajax->action(H5PEditorEndpoints::CONTENT_HUB_METADATA_CACHE);
+}
+
+/**
+ * Install library from external file
+ */
+function h5peditor_get_hub_content_callback($token, $localContentId, $hubId) {
+  $editor = h5peditor_get_instance();
+  $editor->ajax->action(H5PEditorEndpoints::GET_HUB_CONTENT, $token, $hubId, $localContentId);
 }
 
 /**
