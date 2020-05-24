@@ -24,7 +24,8 @@ interface H5PFrameworkInterface {
    * @param  bool  $blocking  Set to 'FALSE' to instantly time out (fire and forget).
    * @param  string  $stream  Path to where the file should be saved.
    * @param  bool  $fullData  Return additional response data such as headers and potentially other data
-   * @param  array  $headers Headers to send
+   * @param  array  $headers  Headers to send
+   * @param  array  $files Files to send
    *
    * @return string|array The content (response body), or an array with data. NULL if something went wrong
    */
@@ -34,7 +35,8 @@ interface H5PFrameworkInterface {
     $blocking = true,
     $stream = null,
     $fullData = false,
-    $headers = []
+    $headers = [],
+    $files = []
   );
 
   /**
@@ -2005,7 +2007,8 @@ abstract class H5PDisplayOptionBehaviour {
 abstract class H5PHubEndpoints {
   const CONTENT_TYPES = 'api.h5p.org/v1/content-types/';
   const SITES = 'api.h5p.org/v1/sites';
-  const METADATA = 'api-test.h5p.org/v1/metadata';
+  const METADATA = 'h5phub.ngrok.io/v1/metadata';
+  const REGISTER = 'h5phub.ngrok.io/v1/accounts';
 
   public static function createURL($endpoint) {
     $protocol = (extension_loaded('openssl') ? 'https' : 'http');

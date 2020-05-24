@@ -20,7 +20,7 @@ class H5PDrupal implements H5PFrameworkInterface {
   /**
    * Implements fetchExternalData
    */
-  public function fetchExternalData($url, $data = NULL, $blocking = TRUE, $stream = NULL, $allData = FALSE, $headers = []) {
+  public function fetchExternalData($url, $data = NULL, $blocking = TRUE, $stream = NULL, $allData = FALSE, $headers = [], $files = []) {
     $options = array(
       'headers' => $headers,
     );
@@ -32,6 +32,30 @@ class H5PDrupal implements H5PFrameworkInterface {
       ), $options['headers']);
       $options['data'] = drupal_http_build_query($data);
     }
+    if (!empty($files)) {
+      // We have to use multipart form-data encoding with boundary since the
+      // old drupal http client does not natively support posting files
+      $boundary = md5(uniqid('', true));
+      $options['method'] = 'POST';
+      $options['timeout'] = 50;
+      $encoded_data = '';
+      foreach ($data as $key => $value) {
+        $encoded_data .= "--$boundary\r\n";
+        if (!empty($value)) {
+          $encoded_data .= h5p_multipart_enc_text($key, $value);
+        }
+      }
+
+      foreach ($files as $key => $value) {
+        $encoded_data .= "--$boundary\r\n";
+        $encoded_data .= h5p_multipart_enc_file($key, $value);
+      }
+
+      $encoded_data .= "--$boundary--";
+      $options['data'] = $encoded_data;
+      $options['headers']['Content-Type'] = "multipart/form-data; boundary=$boundary";
+    }
+
     if ($stream) {
       @set_time_limit(0);
     }

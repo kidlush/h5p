@@ -840,3 +840,52 @@ function h5p_restrict_library_callback($library_id) {
     )),
   ));
 }
+
+/**
+ * Register account with site uuid on the content hub
+ *
+ * @return bool Returns true if the registration was successful
+ */
+function h5p_register_account() {
+  $core = _h5p_get_instance('core');
+  $uuid = $core->h5pF->getOption('site_uuid', '');
+  if (empty($uuid)) {
+    $errorMessage = $core->h5pF->t('Site is missing a unique site uuid. The H5P Content Hub is disabled until this problem can be resolved. Please enable the H5P Hub through your site settings before trying again.');
+    $core->h5pF->setErrorMessage($errorMessage);
+    return FALSE;
+  }
+
+  $logo = isset($_FILES['logo']) ? $_FILES['logo'] : NULL;
+
+  $url = H5PHubEndpoints::createURL(H5PHubEndpoints::REGISTER);
+  $registration = $core->h5pF->fetchExternalData($url, [
+    'name' => filter_input(INPUT_POST, 'name'),
+    'email' => filter_input(INPUT_POST, 'email'),
+    'description' => filter_input(INPUT_POST, 'description'),
+    'contact_person' => filter_input(INPUT_POST, 'contact_person'),
+    'phone' => filter_input(INPUT_POST, 'phone'),
+    'address' => filter_input(INPUT_POST, 'address'),
+    'city' => filter_input(INPUT_POST, 'city'),
+    'zip' => filter_input(INPUT_POST, 'zip'),
+    'country' => filter_input(INPUT_POST, 'country'),
+    'site_uuid' => $uuid,
+  ], NULL, NULL, FALSE, [], [
+    'logo' => $logo,
+  ]);
+
+  try {
+    $results = json_decode($registration);
+  }
+  catch (Exception $e) {
+    $core->h5pF->setErrorMessage('Could not parse json response.');
+    return FALSE;
+  }
+
+  if ($results['success'] === FALSE || !isset($registration['account']['secret'])) {
+    $core->h5pF->setErrorMessage('Registration failed.');
+    return FALSE;
+  }
+
+  $core->h5pF->setOption('h5p_hub_secret', $registration['account']['secret']);
+  return TRUE;
+}

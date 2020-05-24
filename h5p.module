@@ -115,6 +115,14 @@ function h5p_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  $items['admin/config/system/h5p/register-account'] = array(
+    'title' => 'H5P Register Content Hub Account',
+    'page callback' => 'h5p_register_account',
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_CALLBACK,
+    'file' => 'h5p.admin.inc',
+  );
+
   return $items;
 }
 
@@ -1580,4 +1588,43 @@ function h5p_variable_set($name, $value) {
   if (variable_get($name) !== $value) {
     variable_set($name, $value);
   }
+}
+
+/**
+ * Function to multipart encode a uploaded file.
+ *
+ * @param object $file The uploaded file.
+ *
+ * @return string A string with the mimetype and the file.
+ */
+function h5p_multipart_enc_file($name, $file){
+  $path = $file['tmp_name'];
+  if (substr($path, 0, 1) === '@') {
+    $path = substr($path, 1);
+  }
+  // Lets get the filename.
+  $filename = $file['name'];
+  // Set the mimetype to be a binary.
+  $mimetype = "application/octet-stream";
+  $data = "Content-Disposition: form-data; name=\"$name\"; filename=\"$filename\"\r\n"; // "file" key.
+  $data .= "Content-Transfer-Encoding: binary\r\n";
+  $data .= "Content-Type: $mimetype\r\n\r\n";
+  // Add the encoded file.
+  $data .= file_get_contents($path) . "\r\n";
+  return $data;
+}
+
+/**
+ * Function to encode text data.
+ *
+ * @param string $name
+ *   The name of the field.
+ * @param string $value
+ *   The value of the field.
+ *
+ * @return string
+ *   A string encoded text data.
+ */
+function h5p_multipart_enc_text($name, $value){
+  return "Content-Disposition: form-data; name=\"$name\"\r\n\r\n$value\r\n";
 }
