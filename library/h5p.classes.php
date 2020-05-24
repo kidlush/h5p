@@ -2007,8 +2007,9 @@ abstract class H5PDisplayOptionBehaviour {
 abstract class H5PHubEndpoints {
   const CONTENT_TYPES = 'api.h5p.org/v1/content-types/';
   const SITES = 'api.h5p.org/v1/sites';
-  const METADATA = 'h5phub.ngrok.io/v1/metadata';
-  const REGISTER = 'h5phub.ngrok.io/v1/accounts';
+  const METADATA = 'api-test.h5p.org/v1/metadata';
+  const CONTENT = 'api-test.h5p.org/v1/contents/';
+  const REGISTER = 'api-test.h5p.org/v1/accounts';
 
   public static function createURL($endpoint) {
     $protocol = (extension_loaded('openssl') ? 'https' : 'http');
