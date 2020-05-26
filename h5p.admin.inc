@@ -858,7 +858,7 @@ function h5p_register_account() {
   $logo = isset($_FILES['logo']) ? $_FILES['logo'] : NULL;
 
   $url = H5PHubEndpoints::createURL(H5PHubEndpoints::REGISTER);
-  $registration = $core->h5pF->fetchExternalData($url, [
+  $registration = $core->h5pF->fetchExternalData($url, array(
     'name' => filter_input(INPUT_POST, 'name'),
     'email' => filter_input(INPUT_POST, 'email'),
     'description' => filter_input(INPUT_POST, 'description'),
@@ -869,9 +869,9 @@ function h5p_register_account() {
     'zip' => filter_input(INPUT_POST, 'zip'),
     'country' => filter_input(INPUT_POST, 'country'),
     'site_uuid' => $uuid,
-  ], NULL, NULL, FALSE, [], [
+  ), NULL, NULL, FALSE, array(), array(
     'logo' => $logo,
-  ]);
+  ));
 
   try {
     $results = json_decode($registration);

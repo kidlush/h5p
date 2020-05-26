@@ -35,8 +35,8 @@ interface H5PFrameworkInterface {
     $blocking = true,
     $stream = null,
     $fullData = false,
-    $headers = [],
-    $files = []
+    $headers = array(),
+    $files = array()
   );
 
   /**

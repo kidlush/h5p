@@ -20,7 +20,7 @@ class H5PDrupal implements H5PFrameworkInterface {
   /**
    * Implements fetchExternalData
    */
-  public function fetchExternalData($url, $data = NULL, $blocking = TRUE, $stream = NULL, $allData = FALSE, $headers = [], $files = []) {
+  public function fetchExternalData($url, $data = NULL, $blocking = TRUE, $stream = NULL, $allData = FALSE, $headers = array(), $files = array()) {
     $options = array(
       'headers' => $headers,
     );
