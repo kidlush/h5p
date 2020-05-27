@@ -887,5 +887,7 @@ function h5p_register_account() {
   }
 
   $core->h5pF->setOption('hub_secret', $results->account->secret);
-  return TRUE;
+  $msg = $core->h5pF->t('Account successfully registered.');
+  $core->h5pF->setInfoMessage($msg);
+  // TODO: How to return results ? json or redirect ?
 }

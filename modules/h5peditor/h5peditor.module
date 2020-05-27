@@ -596,7 +596,7 @@ function h5peditor_unpublish($content) {
   $core = _h5p_get_instance('core');
   $url = H5PHubEndpoints::createURL(H5PHubEndpoints::CONTENT);
   $hubId = $content->content_hub_id;
-  $response = $core->h5pF->fetchExternalData("{$url}{$hubId}", array(
+  $response = $core->h5pF->fetchExternalData("{$url}/{$hubId}", array(
     'published' => '0',
   ), true, null, true, array(), array(), 'PUT');
 
@@ -682,7 +682,7 @@ function h5peditor_sync_to_content_hub($content) {
   $h5pName = $slug . $content->id . '.h5p';
   $exportPath = _h5p_get_h5p_path() . '/exports/' . $h5pName;
   $exportUrl = file_create_url($exportPath);
-  $response = $core->h5pF->fetchExternalData("{$url}{$hubId}", array(
+  $response = $core->h5pF->fetchExternalData("{$url}/{$hubId}", array(
     'download_url' => $exportUrl,
   ), true, null, true, array(), array(), 'PUT');
 
@@ -695,6 +695,10 @@ function h5peditor_sync_to_content_hub($content) {
 
     $msg = $core->h5pF->t('Content sync queued');
     $core->h5pF->setInfoMessage($msg);
+  }
+  else {
+    $msg = $core->h5pF->t('Content sync failed');
+    $core->h5pF->setErrorMessage($msg);
   }
 
   drupal_goto("node/{$content->nid}");
