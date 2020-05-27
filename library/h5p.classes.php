@@ -3576,24 +3576,22 @@ class H5PCore {
 
     $response = $this->h5pF->fetchExternalData(
       H5PHubEndpoints::createURL(H5PHubEndpoints::CONTENT),
-      $data, NULL, NULL, FALSE, $headers, $files
+      $data, NULL, NULL, TRUE, $headers, $files
     );
 
-    if (empty($response)) {
+    if (empty($response['data'])) {
       throw new Exception($this->h5pF->t('Unable to authorize with the H5P Hub. Please check your Hub registration and connection.'));
     }
 
-    $result = json_decode($response);
+    $result = json_decode($response['data']);
     if ($result->success === TRUE) {
       return $result;
     }
     elseif (!empty($result->errors)) {
       // Relay any error messages
-      throw new Exception($result->errors);
-      // Will never happen for validation errors because fetchExternalData()
-      // only returns if there are no errors.
-      // And if there are errors we store them in session...
-      // TODO: Create seprate fetchExternalData() to communicate with the Hub and support AJAX + returning errors.
+      $e = new Exception($this->h5pF->t('Validation failed.'));
+      $e->errors = $result->errors;
+      throw $e;
     }
   }
 

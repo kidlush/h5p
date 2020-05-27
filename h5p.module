@@ -1728,6 +1728,6 @@ function h5p_share($node) {
     H5PCore::ajaxSuccess();
   }
   catch (Exception $e) {
-    H5PCore::ajaxError($e->getMessage());
+    H5PCore::ajaxError(!empty($e->errors) ? $e->errors : $e->getMessage());
   }
 }
