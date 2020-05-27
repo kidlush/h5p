@@ -639,6 +639,9 @@ function h5p_load($nodes) {
       $node->disable = $content['disable'];
       $node->h5p_slug = $content['slug'];
       $node->metadata = $content['metadata'];
+      $node->shared = $content['shared'];
+      $node->synced = $content['synced'];
+      $node->content_hub_id = $content['contentHubId'];
     }
   }
 }

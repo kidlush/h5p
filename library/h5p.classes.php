@@ -25,7 +25,8 @@ interface H5PFrameworkInterface {
    * @param  string  $stream  Path to where the file should be saved.
    * @param  bool  $fullData  Return additional response data such as headers and potentially other data
    * @param  array  $headers  Headers to send
-   * @param  array  $files Files to send
+   * @param  array  $files  Files to send
+   * @param  string  $method Request method
    *
    * @return string|array The content (response body), or an array with data. NULL if something went wrong
    */
@@ -36,7 +37,8 @@ interface H5PFrameworkInterface {
     $stream = null,
     $fullData = false,
     $headers = array(),
-    $files = array()
+    $files = array(),
+    $method = 'POST'
   );
 
   /**
