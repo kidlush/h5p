@@ -352,7 +352,7 @@ class H5PEditorAjax {
    */
   private function getHubContent($hubId, $localContentId) {
     // Download H5P file
-    if (!$this->callHubEndpoint(H5PHubEndpoints::CONTENT . $hubId . '/export')) {
+    if (!$this->callHubEndpoint(H5PHubEndpoints::CONTENT . '/' . $hubId . '/export')) {
       return; // Download failed
     }
 

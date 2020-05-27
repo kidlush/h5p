@@ -46,9 +46,20 @@ class H5PDrupal implements H5PFrameworkInterface {
         }
       }
 
-      foreach ($files as $key => $value) {
-        $encoded_data .= "--$boundary\r\n";
-        $encoded_data .= h5p_multipart_enc_file($key, $value);
+      // TODO: Should we check $_FILES[]['size'] (+ combiend size) before trying to post something we know is too large?
+      foreach ($files as $name => $file) {
+        if (is_array($file['name'])) {
+          // Array of files uploaded (multiple)
+          for ($i = 0; $i < count($file['name']); $i++) {
+            $encoded_data .= "--$boundary\r\n";
+            $encoded_data .= h5p_multipart_enc_file($name . '[]', $file['tmp_name'][$i], $file['name'][$i], $file['type'][$i]);
+          }
+        }
+        else {
+          // Single file
+          $encoded_data .= "--$boundary\r\n";
+          $encoded_data .= h5p_multipart_enc_file($name, $file['tmp_name'], $file['name'], $file['type']);
+        }
       }
 
       $encoded_data .= "--$boundary--";
@@ -994,9 +1005,9 @@ class H5PDrupal implements H5PFrameworkInterface {
   public function clearFilteredParameters($library_ids) {
     db_query(
       "UPDATE {h5p_nodes} AS n " .
-      "JOIN {h5p_nodes_libraries} AS l " . 
+      "JOIN {h5p_nodes_libraries} AS l " .
       "ON n.content_id = l.content_id " .
-      "SET n.filtered = '' " . 
+      "SET n.filtered = '' " .
       "WHERE l.library_id IN (:library_ids) ",
       array(
         ':library_ids' => $library_ids
