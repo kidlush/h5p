@@ -1718,6 +1718,11 @@ function h5p_share($node) {
   }
   // TODO: Check CSRF token
 
+  if (!empty($node->content_hub_id)) {
+    H5PCore::ajaxError(t('Content already shared on the H5P Hub.'));
+    return;
+  }
+
   // Find H5P content for node
   $content = h5p_get_content($node);
 
