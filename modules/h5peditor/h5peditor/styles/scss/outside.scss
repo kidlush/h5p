@@ -10,8 +10,17 @@
   font-display: block;
 }
 
-.unpublish:before {
-  font-family: "h5p-content-hub";
-  content: "\e902";
-  margin-right: 0.5em;
+.h5p-content-hub-button {
+  &:before {
+    font-family: "h5p-content-hub";
+    margin-right: 0.5em;
+  }
+
+  &.unpublish:before {
+    content: "\e902";
+  }
+
+  &.sync:before {
+    content: "\e901";
+  }
 }

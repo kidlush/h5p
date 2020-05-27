@@ -2006,6 +2006,13 @@ abstract class H5PDisplayOptionBehaviour {
   const CONTROLLED_BY_PERMISSIONS = 4;
 }
 
+abstract class H5PContentHubSyncStatus {
+  const NOT_SYNCED = 0;
+  const SYNCED = 1;
+  const WAITING = 2;
+  const FAILED = 3;
+}
+
 abstract class H5PHubEndpoints {
   const CONTENT_TYPES = 'api.h5p.org/v1/content-types/';
   const SITES = 'api.h5p.org/v1/sites';

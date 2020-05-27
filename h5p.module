@@ -628,9 +628,12 @@ function h5p_delete_h5p_content($content) {
 function h5p_load($nodes) {
   $h5p = _h5p_get_instance('core');
   foreach ($nodes as $nid => &$node) {
-    $content = $h5p->loadContent(h5p_get_content_id($node));
+    $id = h5p_get_content_id($node);
+    $content = $h5p->loadContent($id);
+    // TODO: If content hub id is set, and not synced yet, check sync status here
 
     if ($content !== NULL) {
+      $node->id = $id;
       $node->json_content = $content['params'];
       $node->main_library_id = $content['library']['id'];
       $node->embed_type = $content['embedType'];

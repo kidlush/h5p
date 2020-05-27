@@ -111,6 +111,18 @@ function h5peditor_menu() {
     'context' => MENU_CONTEXT_PAGE,
   );
 
+  $items['node/%node/sync'] = array(
+    'description' => 'Sync content changes to the content hub',
+    'title' => 'Sync changes',
+    'page callback' => 'h5peditor_sync_to_content_hub',
+    'page arguments' => array(1),
+    'access callback' => 'h5peditor_access_sync',
+    'access arguments' => array(1),
+    'weight' => 0,
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE,
+  );
+
   return $items;
 }
 
@@ -592,7 +604,7 @@ function h5peditor_unpublish($content) {
   if (!empty($response) && $response['status'] === 200) {
     db_update('h5p_nodes')
       ->fields(array('shared' => 0))
-      ->condition('nid', $content->nid)
+      ->condition('content_id', $content->id)
       ->execute();
 
     $msg = $core->h5pF->t('Content successfully unpublished');
@@ -608,11 +620,82 @@ function h5peditor_unpublish($content) {
  * @param array $variables Variables for menu_local_task button
  */
 function h5p_preprocess_menu_local_task(&$variables) {
-  if (isset($variables['element']['#link']['localized_options']) && $variables['element']['#link']['path'] === 'node/%/unpublish') {
-    $variables['element']['#link']['localized_options']['attributes'] = array(
-      'class' => array('publishing', 'unpublish'),
+  $link = &$variables['element']['#link'];
+  if (!isset($link['localized_options'])) {
+    return;
+  }
+
+  static $cssAdded = false;
+
+  if ($link['path'] === 'node/%/unpublish') {
+    $link['localized_options']['attributes'] = array(
+      'class' => array('h5p-content-hub-button', 'publishing', 'unpublish'),
     );
+  }
+
+  if ($link['path'] === 'node/%/sync') {
+    $link['localized_options']['attributes'] = array(
+      'class' => array('h5p-content-hub-button', 'sync'),
+    );
+  }
+
+  if (!$cssAdded) {
     $path = drupal_get_path('module', 'h5peditor');
     drupal_add_css("$path/h5peditor/styles/css/outside.css");
+    $cssAdded = true;
   }
+}
+
+/**
+ * Checks if the user has access to syncing content
+ *
+ * @param object $content The content
+ *
+ * @return bool True if the user can do the action
+ */
+function h5peditor_access_sync($content) {
+  // Must have content hub id and be shared to sync
+  if (empty($content->content_hub_id) || $content->shared === "0") {
+    return false;
+  }
+
+  // Do not show if already in sync or syncing
+  if (intval($content->synced) === H5PContentHubSyncStatus::SYNCED
+    || intval($content->synced) === H5PContentHubSyncStatus::WAITING
+  ) {
+    return false;
+  }
+
+  return h5peditor_access($content->nid);
+}
+
+/**
+ * Syncs content to the content hub
+ *
+ * @param object $content The content
+ */
+function h5peditor_sync_to_content_hub($content) {
+  $core = _h5p_get_instance('core');
+  $url = H5PHubEndpoints::createURL(H5PHubEndpoints::CONTENT);
+  $hubId = $content->content_hub_id;
+  $slug = !empty($content->h5p_slug) ? $content->h5p_slug . '-' : '';
+  $h5pName = $slug . $content->id . '.h5p';
+  $exportPath = _h5p_get_h5p_path() . '/exports/' . $h5pName;
+  $exportUrl = file_create_url($exportPath);
+  $response = $core->h5pF->fetchExternalData("{$url}{$hubId}", array(
+    'download_url' => $exportUrl,
+  ), true, null, true, array(), array(), 'PUT');
+
+  // Update sync status
+  if (!empty($response) && $response['status'] === 200) {
+    db_update('h5p_nodes')
+      ->fields(array('synced' => H5PContentHubSyncStatus::WAITING))
+      ->condition('content_id', $content->id)
+      ->execute();
+
+    $msg = $core->h5pF->t('Content sync queued');
+    $core->h5pF->setInfoMessage($msg);
+  }
+
+  drupal_goto("node/{$content->nid}");
 }
