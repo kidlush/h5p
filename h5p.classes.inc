@@ -79,17 +79,16 @@ class H5PDrupal implements H5PFrameworkInterface {
       return TRUE;
     }
 
-    if (isset($response->error)) {
-      $this->setErrorMessage(t($response->error), 'failed-fetching-external-data');
-      return NULL;
-    }
-
     if ($allData) {
       return [
         'status' => intval($response->code),
         'data' => $response->data,
         'headers' => $response->headers,
       ];
+    }
+    elseif (isset($response->error)) {
+      $this->setErrorMessage(t($response->error), 'failed-fetching-external-data');
+      return NULL;
     }
 
     return $response->data;
