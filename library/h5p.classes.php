@@ -2017,7 +2017,7 @@ abstract class H5PHubEndpoints {
   const CONTENT_TYPES = 'api.h5p.org/v1/content-types/';
   const SITES = 'api.h5p.org/v1/sites';
   const METADATA = 'api-test.h5p.org/v1/metadata';
-  const CONTENT = 'api-test.h5p.org/v1/contents/';
+  const CONTENT = 'api-test.h5p.org/v1/contents';
   const REGISTER = 'api-test.h5p.org/v1/accounts';
 
   public static function createURL($endpoint) {
@@ -2779,7 +2779,7 @@ class H5PCore {
     foreach ($arr as $key => $val) {
       $next = -1;
       while (($next = strpos($key, '_', $next + 1)) !== FALSE) {
-        $key = substr_replace($key, strtoupper($key{$next + 1}), $next, 2);
+        $key = substr_replace($key, strtoupper($key{$next + 1}), $next, 2); // TODO: Deprected! Please fix
       }
 
       $newArr[$key] = $val;
@@ -3560,6 +3560,59 @@ class H5PCore {
       'offlineDialogRetryButtonLabel' => $this->h5pF->t('Retry now'),
       'offlineSuccessfulSubmit' => $this->h5pF->t('Successfully submitted results.'),
     );
+  }
+
+  /**
+   * Publish content on the H5P Hub.
+   *
+   * @param array $data Data from content publishing process
+   * @param array $files Files to upload with the content publish
+   * @return stdClass
+   */
+  public function hubPublishContent($data, $files) {
+    $headers = array(
+      'Authorization' => $this->hubGetAuthorizationHeader(),
+    );
+
+    $response = $this->h5pF->fetchExternalData(
+      H5PHubEndpoints::createURL(H5PHubEndpoints::CONTENT),
+      $data, NULL, NULL, FALSE, $headers, $files
+    );
+
+    if (empty($response)) {
+      throw new Exception($this->h5pF->t('Unable to authorize with the H5P Hub. Please check your Hub registration and connection.'));
+    }
+
+    $result = json_decode($response);
+    if ($result->success === TRUE) {
+      return $result;
+    }
+    elseif (!empty($result->errors)) {
+      // Relay any error messages
+      throw new Exception($result->errors);
+      // Will never happen for validation errors because fetchExternalData()
+      // only returns if there are no errors.
+      // And if there are errors we store them in session...
+      // TODO: Create seprate fetchExternalData() to communicate with the Hub and support AJAX + returning errors.
+    }
+  }
+
+  /**
+   * Creates the authorization header needed to access the private parts of
+   * the H5P Hub.
+   *
+   * @return string
+   */
+  private function hubGetAuthorizationHeader() {
+    $site_uuid = $this->h5pF->getOption('site_uuid', '');
+    $hub_secret = $this->h5pF->getOption('hub_secret', '');
+    if (empty($site_uuid)) {
+      throw new Exception($this->h5pF->t('Missing Site UUID. Please check your Hub registration.'));
+    }
+    if (empty($hub_secret)) {
+      throw new Exception($this->h5pF->t('Missing Hub Secret. Please check your Hub registration.'));
+    }
+    return 'Basic ' . base64_encode("$site_uuid:$hub_secret");
   }
 }
 

@@ -123,6 +123,15 @@ function h5p_menu() {
     'file' => 'h5p.admin.inc',
   );
 
+  $items['h5p/share/%node'] = array(
+    'title' => 'H5P Share',
+    'page callback' => 'h5p_share',
+    'page arguments' => array(2),
+    'access callback' => 'h5p_share_access',
+    'access arguments' => array(2),
+    'type' => MENU_CALLBACK,
+  );
+
   return $items;
 }
 
@@ -255,6 +264,14 @@ function h5p_permission() {
     'embed own h5ps' => array(
       'title' => t('Embed enabled for own H5Ps'),
       'description' => t("The embed button will be available for H5Ps the user has access to edit even even if embed button is hidden by configuration settings. This won't have any effect if embed button is globally disabled"),
+    ),
+    'share any h5p content' => array(
+      'title' => t('Share any H5P content'),
+      'description' => t('Share any H5P content in the H5P Hub.'),
+    ),
+    'share own h5p content' => array(
+      'title' => t('Share own H5P content'),
+      'description' => t('Share own H5P content in the H5P Hub.'),
     ),
   );
 }
@@ -1599,24 +1616,23 @@ function h5p_variable_set($name, $value) {
 /**
  * Function to multipart encode a uploaded file.
  *
- * @param object $file The uploaded file.
+ * @param string $name The form data name
+ * @param string $filepath Path to file location (tmp_name)
+ * @param string $filename Original file name (as posted)
+ * @param string $mimetype Original mime type (as posted)
  *
  * @return string A string with the mimetype and the file.
  */
-function h5p_multipart_enc_file($name, $file){
-  $path = $file['tmp_name'];
-  if (substr($path, 0, 1) === '@') {
-    $path = substr($path, 1);
+function h5p_multipart_enc_file($name, $filepath, $filename, $mimetype = 'application/octet-stream') {
+  if (substr($filepath, 0, 1) === '@') {
+    $filepath = substr($filepath, 1);
   }
-  // Lets get the filename.
-  $filename = $file['name'];
-  // Set the mimetype to be a binary.
-  $mimetype = "application/octet-stream";
   $data = "Content-Disposition: form-data; name=\"$name\"; filename=\"$filename\"\r\n"; // "file" key.
   $data .= "Content-Transfer-Encoding: binary\r\n";
   $data .= "Content-Type: $mimetype\r\n\r\n";
-  // Add the encoded file.
-  $data .= file_get_contents($path) . "\r\n";
+
+  // Add the encoded file
+  $data .= file_get_contents($filepath) . "\r\n";
   return $data;
 }
 
@@ -1633,4 +1649,85 @@ function h5p_multipart_enc_file($name, $file){
  */
 function h5p_multipart_enc_text($name, $value){
   return "Content-Disposition: form-data; name=\"$name\"\r\n\r\n$value\r\n";
+}
+
+/**
+ * Handler for access to sharing content on the hub
+ */
+function h5p_share_access($node) {
+  global $user;
+
+  if ($node->type == 'h5p_content') {
+    if (user_access('share any h5p content')) {
+      return TRUE;
+    }
+    elseif (user_access('share own h5p content') && $user->uid === $node->uid) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * Handler for access to sharing content on the hub
+ */
+function h5p_share($node) {
+  if (!$_POST) { // Only support POST
+    return drupal_not_found();
+  }
+  // TODO: Check CSRF token
+
+  // Find H5P content for node
+  $content = h5p_get_content($node);
+
+  // Determine export path and file size
+  $export = _h5p_get_h5p_path() . '/exports/' . ($content['slug'] ? $content['slug'] . '-' : '') . $content['id'] . '.h5p';
+  $size = filesize($export);
+
+  // Prepare data to POST to Hub
+  $data = array(
+    'download_url' => file_create_url($export),
+    'size' => empty($size) ? -1 : $size,
+  );
+
+  // Add POST fields to redirect to Hub
+  $map = array(
+    'title',
+    'language',
+    'level',
+    'license',
+    'license_version',
+    'disciplines',
+    'keywords',
+    'summary',
+    'description'
+  );
+  foreach ($map as $field) {
+    $data[$field] = filter_input(INPUT_POST, $field);
+  }
+
+  // Add the icon and any screenshots
+  $files = array(
+    'icon' => !empty($_FILES['icon']) ? $_FILES['icon'] : NULL,
+    'screenshots' => !empty($_FILES['screenshots']) ? $_FILES['screenshots'] : NULL,
+  );
+
+  $core = _h5p_get_instance('core');
+  try {
+    $result = $core->hubPublishContent($data, $files);
+
+    // Store the content hub id
+    db_update('h5p_nodes')
+      ->fields(array(
+        'content_hub_id' => $result->content->id
+      ))
+      ->condition('content_id', h5p_get_content_id($node))
+      ->execute();
+
+    H5PCore::ajaxSuccess();
+  }
+  catch (Exception $e) {
+    H5PCore::ajaxError($e->getMessage());
+  }
 }
