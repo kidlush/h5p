@@ -2013,6 +2013,15 @@ abstract class H5PContentHubSyncStatus {
   const FAILED = 3;
 }
 
+abstract class H5PContentStatus {
+  const STATUS_UNPUBLISHED = 0;
+  const STATUS_DOWNLOADED = 1;
+  const STATUS_WAITING = 2;
+  const STATUS_FAILED_DOWNLOAD = 3;
+  const STATUS_FAILED_VALIDATION = 4;
+  const STATUS_SUSPENDED = 5;
+}
+
 abstract class H5PHubEndpoints {
   const CONTENT_TYPES = 'api.h5p.org/v1/content-types/';
   const SITES = 'api.h5p.org/v1/sites';
@@ -3601,7 +3610,7 @@ class H5PCore {
    *
    * @return string
    */
-  private function hubGetAuthorizationHeader() {
+  public function hubGetAuthorizationHeader() {
     $site_uuid = $this->h5pF->getOption('site_uuid', '');
     $hub_secret = $this->h5pF->getOption('hub_secret', '');
     if (empty($site_uuid)) {
