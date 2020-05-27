@@ -20,13 +20,13 @@ class H5PDrupal implements H5PFrameworkInterface {
   /**
    * Implements fetchExternalData
    */
-  public function fetchExternalData($url, $data = NULL, $blocking = TRUE, $stream = NULL, $allData = FALSE, $headers = array(), $files = array()) {
+  public function fetchExternalData($url, $data = NULL, $blocking = TRUE, $stream = NULL, $allData = FALSE, $headers = array(), $files = array(), $method = 'POST') {
     $options = array(
       'headers' => $headers,
     );
 
     if (!empty($data)) {
-      $options['method'] = 'POST';
+      $options['method'] = $method;
       $options['headers'] = array_merge(array(
         'Content-Type' => 'application/x-www-form-urlencoded'
       ), $options['headers']);
@@ -36,8 +36,7 @@ class H5PDrupal implements H5PFrameworkInterface {
       // We have to use multipart form-data encoding with boundary since the
       // old drupal http client does not natively support posting files
       $boundary = md5(uniqid('', true));
-      $options['method'] = 'POST';
-      $options['timeout'] = 50;
+      $options['method'] = $method;
       $encoded_data = '';
       foreach ($data as $key => $value) {
         $encoded_data .= "--$boundary\r\n";
@@ -877,7 +876,10 @@ class H5PDrupal implements H5PFrameworkInterface {
               hn.year_to AS meta_year_to,
               hn.changes AS meta_changes,
               hn.author_comments AS meta_author_comments,
-              hn.default_language AS meta_default_language
+              hn.default_language AS meta_default_language,
+              hn.shared AS shared,
+              hn.synced AS synced,
+              hn.content_hub_id AS content_hub_id
       FROM {h5p_nodes} hn
       JOIN {node} n ON n.nid = hn.nid
       JOIN {h5p_libraries} hl ON hl.library_id = hn.main_library_id
