@@ -702,7 +702,24 @@ function h5p_view($node, $view_mode = 'full') {
         $core->h5pF->setErrorMessage($msg);
       }
       else {
-        $contentStatus = intval($response['data']);
+        $data = json_decode($response['data']);
+
+        if ($data->messages) {
+          // TODO: Is this the right place/way to display them? 
+
+          if (!empty($data->messages->info)) {
+            foreach ($data->messages->info as $info) {
+              $core->h5pF->setInfoMessage($info);
+            }
+          }
+          if (!empty($data->messages->error)) {
+            foreach ($data->messages->error as $error) {
+              $core->h5pF->setErrorMessage($error->message, $error->code);
+            }
+          }
+        }
+
+        $contentStatus = intval($data->status);
         // Content status updated
         if ($contentStatus !== H5PContentStatus::STATUS_WAITING) {
           $newState = H5PContentHubSyncStatus::SYNCED;
