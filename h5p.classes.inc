@@ -39,8 +39,8 @@ class H5PDrupal implements H5PFrameworkInterface {
       $options['method'] = $method;
       $encoded_data = '';
       foreach ($data as $key => $value) {
-        $encoded_data .= "--$boundary\r\n";
         if (!empty($value)) {
+          $encoded_data .= "--$boundary\r\n";
           $encoded_data .= h5p_multipart_enc_text($key, $value);
         }
       }

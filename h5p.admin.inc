@@ -881,11 +881,11 @@ function h5p_register_account() {
     return FALSE;
   }
 
-  if ($results['success'] === FALSE || !isset($registration['account']['secret'])) {
+  if ($results->success === FALSE || !isset($results->account->secret)) {
     $core->h5pF->setErrorMessage('Registration failed.');
     return FALSE;
   }
 
-  $core->h5pF->setOption('h5p_hub_secret', $registration['account']['secret']);
+  $core->h5pF->setOption('hub_secret', $results->account->secret);
   return TRUE;
 }
