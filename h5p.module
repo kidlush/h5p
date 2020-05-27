@@ -1687,6 +1687,7 @@ function h5p_share($node) {
 
   // Add POST fields to redirect to Hub
   $map = array(
+    'title',
     'language',
     'level',
     'license',
