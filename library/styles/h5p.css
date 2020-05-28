@@ -3,11 +3,11 @@
 /* Custom H5P font to use for icons. */
 @font-face {
   font-family: 'h5p';
-  src:    url('../fonts/h5p-core-23.eot?mz1lkp');
-  src:    url('../fonts/h5p-core-23.eot?mz1lkp#iefix') format('embedded-opentype'),
-  url('../fonts/h5p-core-23.ttf?mz1lkp') format('truetype'),
-  url('../fonts/h5p-core-23.woff?mz1lkp') format('woff'),
-  url('../fonts/h5p-core-23.svg?mz1lkp#h5p') format('svg');
+  src:  url('../fonts/h5p-core-25.eot?g8rkpr');
+  src:  url('../fonts/h5p-core-25.eot?g8rkpr#iefix') format('embedded-opentype'),
+  url('../fonts/h5p-core-25.ttf?g8rkpr') format('truetype'),
+  url('../fonts/h5p-core-25.woff?g8rkpr') format('woff'),
+  url('../fonts/h5p-core-25.svg?g8rkpr#h5p-core') format('svg');
   font-weight: normal;
   font-style: normal;
 }
@@ -563,4 +563,17 @@ iframe.h5peditor-semi-fullscreen {
 
 .h5p-content.using-mouse *:not(textarea):focus {
   outline: none !important;
+}
+
+.h5p-content-hub-button:before {
+  font-family: "h5p";
+  margin-right: 0.5em;
+}
+
+.h5p-content-hub-button.unpublish:before {
+  content: "\e917";
+}
+
+.h5p-content-hub-button.sync:before {
+  content: "\e916";
 }
