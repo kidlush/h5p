@@ -3621,6 +3621,81 @@ class H5PCore {
     }
     return 'Basic ' . base64_encode("$site_uuid:$hub_secret");
   }
+
+  /**
+   * Unpublish content from content hub
+   *
+   * @param  integer  $hubId  Content hub id
+   * @param  string  $token  CSRF token
+   *
+   * @return bool True if successful
+   */
+  public function hubUnpublishContent($hubId, $token) {
+    if (!self::validToken('hub_unpublish', $token)) {
+      $msg = $this->h5pF->t('Could not unpublish content because token was invalid. Please try again.');
+      $this->h5pF->setErrorMessage($msg);
+
+      return false;
+    }
+
+    $headers = array(
+      'Authorization' => $this->hubGetAuthorizationHeader(),
+    );
+
+    $url = H5PHubEndpoints::createURL(H5PHubEndpoints::CONTENT);
+    $response = $this->h5pF->fetchExternalData("{$url}/{$hubId}", array(
+      'published' => '0',
+    ), true, null, true, $headers, array(), 'PUT');
+
+    // Remove shared status if successful
+    if (!empty($response) && $response['status'] === 200) {
+      $msg = $this->h5pF->t('Content successfully unpublished');
+      $this->h5pF->setInfoMessage($msg);
+
+      return true;
+    }
+    $msg = $this->h5pF->t('Content unpublish failed');
+    $this->h5pF->setErrorMessage($msg);
+
+    return false;
+  }
+
+  /**
+   * Sync content with content hub
+   *
+   * @param integer $hubId Content hub id
+   * @param string $token CSRF token
+   * @param string $exportPath Export path where .h5p for content can be found
+   *
+   * @return bool
+   */
+  public function hubSyncContent($hubId, $token, $exportPath) {
+    if (!self::validToken('hub_sync', $token)) {
+      $msg = $this->h5pF->t('Could not sync content because token was invalid. Please try again.');
+      $this->h5pF->setErrorMessage($msg);
+
+      return false;
+    }
+
+    $headers = array(
+      'Authorization' => $this->hubGetAuthorizationHeader(),
+    );
+
+    $url = H5PHubEndpoints::createURL(H5PHubEndpoints::CONTENT);
+    $response = $this->h5pF->fetchExternalData("{$url}/{$hubId}", array(
+      'download_url' => $exportPath,
+    ), true, null, true, $headers, array(), 'PUT');
+
+    if (!empty($response) && $response['status'] === 200) {
+      $msg = $this->h5pF->t('Content sync queued');
+      $this->h5pF->setInfoMessage($msg);
+      return true;
+    }
+
+    $msg = $this->h5pF->t('Content sync failed');
+    $this->h5pF->setErrorMessage($msg);
+    return false;
+  }
 }
 
 /**

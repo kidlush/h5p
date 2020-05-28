@@ -132,6 +132,30 @@ function h5p_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  $items['node/%node/h5p-unpublish'] = array(
+    'description' => 'Unpublish content from the content hub',
+    'title' => 'Unshare',
+    'page callback' => 'h5p_unpublish',
+    'page arguments' => array(1),
+    'access callback' => 'h5p_access_toggle_publish',
+    'access arguments' => array(FALSE, 1),
+    'weight' => 0,
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE,
+  );
+
+  $items['node/%node/h5p-sync'] = array(
+    'description' => 'Sync content changes to the content hub',
+    'title' => 'Sync changes',
+    'page callback' => 'h5p_sync_to_content_hub',
+    'page arguments' => array(1),
+    'access callback' => 'h5p_access_sync',
+    'access arguments' => array(1),
+    'weight' => 0,
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE,
+  );
+
   return $items;
 }
 
@@ -649,7 +673,7 @@ function h5p_load($nodes) {
     $content = $h5p->loadContent($id);
 
     if ($content !== NULL) {
-      $node->id = $id;
+      $node->h5p_id = $id;
       $node->json_content = $content['params'];
       $node->main_library_id = $content['library']['id'];
       $node->embed_type = $content['embedType'];
@@ -658,8 +682,8 @@ function h5p_load($nodes) {
       $node->disable = $content['disable'];
       $node->h5p_slug = $content['slug'];
       $node->metadata = $content['metadata'];
-      $node->shared = $content['shared'];
-      $node->synced = $content['synced'];
+      $node->h5p_shared = $content['shared'];
+      $node->h5p_synced = $content['synced'];
       $node->content_hub_id = $content['contentHubId'];
     }
   }
@@ -684,8 +708,8 @@ function h5p_view($node, $view_mode = 'full') {
     // Check and update sync status if user can share the content and the state
     //  can not have changed externally
     if (!empty($node->content_hub_id)
-      && intval($node->synced) !== H5PContentHubSyncStatus::FAILED
-      && intval($node->synced) !== H5PContentHubSyncStatus::NOT_SYNCED
+      && intval($node->h5p_synced) !== H5PContentHubSyncStatus::FAILED
+      && intval($node->h5p_synced) !== H5PContentHubSyncStatus::NOT_SYNCED
       && h5p_share_access($node)
     ) {
       $core    = _h5p_get_instance('core');
@@ -731,10 +755,10 @@ function h5p_view($node, $view_mode = 'full') {
             ->fields(array(
               'synced' => $newState,
             ))
-            ->condition('content_id', $node->id)
+            ->condition('content_id', $node->h5p_id)
             ->execute();
 
-          $node->synced = $newState;
+          $node->h5p_synced = $newState;
         }
       }
     }
@@ -1780,7 +1804,9 @@ function h5p_share($node) {
     // Store the content hub id
     db_update('h5p_nodes')
       ->fields(array(
-        'content_hub_id' => $result->content->id
+        'content_hub_id' => $result->content->id,
+        'synced' => H5PContentHubSyncStatus::SYNCED,
+        'shared' => 1,
       ))
       ->condition('content_id', h5p_get_content_id($node))
       ->execute();
@@ -1790,4 +1816,154 @@ function h5p_share($node) {
   catch (Exception $e) {
     H5PCore::ajaxError(!empty($e->errors) ? $e->errors : $e->getMessage());
   }
+}
+
+/**
+ * Changes the class and css of h5p specific menu_local_task button
+ *
+ * @param array $variables Variables for menu_local_task button
+ */
+function h5p_preprocess_menu_local_task(&$variables) {
+  $link = &$variables['element']['#link'];
+  if (!isset($link['localized_options'])) {
+    return;
+  }
+
+  static $jsAdded = false;
+
+  if ($link['path'] === 'node/%/h5p-unpublish') {
+    $link['localized_options']['attributes'] = array(
+      'class' => array('h5p-content-hub-button', 'publishing', 'unpublish'),
+    );
+  }
+
+  if ($link['path'] === 'node/%/h5p-sync') {
+    $link['localized_options']['attributes'] = array(
+      'class' => array('h5p-content-hub-button', 'sync'),
+    );
+  }
+
+  if (!$jsAdded) {
+    $path = drupal_get_path('module', 'h5p');
+    $settings = array(
+      'h5pIntegration' => array(
+        'unpublishToken' => H5PCore::createToken('hub_unpublish'),
+        'syncToken' => H5PCore::createToken('hub_sync'),
+      ),
+    );
+
+    drupal_add_js($settings, 'setting');
+    drupal_add_js("$path/scripts/h5p-integration.js");
+    $jsAdded = true;
+  }
+}
+
+/**
+ * Checks if user has access to publish or unpublish
+ *
+ * @param bool $isPublishing True if publishing, otherwise unpublishing
+ * @param object $node The node
+ *
+ * @return bool True if the user has access to the action
+ */
+function h5p_access_toggle_publish($isPublishing, $node) {
+  if ($node->type !== 'h5p_content') {
+    return FALSE;
+  }
+
+  if ($isPublishing) {
+    // Already published and shared
+    if (!empty($node->content_hub_id) && $node->h5p_shared !== "0") {
+      return FALSE;
+    }
+  }
+  else {
+    // Not associated with a hub id or not shared
+    if (empty($node->content_hub_id) || $node->h5p_shared === "0") {
+      return FALSE;
+    }
+  }
+
+  return h5p_share_access($node);
+}
+
+/**
+ * Unpublish content
+ *
+ * @param object $node The node
+ */
+function h5p_unpublish($node) {
+  if (!$_POST) {
+    return drupal_not_found();
+  }
+
+  $token = filter_input(INPUT_POST, 'token');
+  $core = _h5p_get_instance('core');
+  $success = $core->hubUnpublishContent($node->content_hub_id, $token);
+  if ($success) {
+    db_update('h5p_nodes')
+      ->fields(array('shared' => 0))
+      ->condition('content_id', $node->h5p_id)
+      ->execute();
+  }
+
+  drupal_goto("node/{$node->nid}");
+}
+
+
+
+/**
+ * Checks if the user has access to syncing content
+ *
+ * @param object $node The node
+ *
+ * @return bool True if the user can do the action
+ */
+function h5p_access_sync($node) {
+  if ($node->type !== 'h5p_content') {
+    return FALSE;
+  }
+
+  // Must have content hub id and be shared to sync
+  if (empty($node->content_hub_id) || $node->h5p_shared === "0") {
+    return false;
+  }
+
+  // Do not show if already in sync or syncing
+  if (intval($node->h5p_synced) === H5PContentHubSyncStatus::SYNCED
+    || intval($node->h5p_synced) === H5PContentHubSyncStatus::WAITING
+  ) {
+    return false;
+  }
+
+  return h5p_share_access($node);
+}
+
+/**
+ * Syncs content to the content hub
+ *
+ * @param object $node The node
+ */
+function h5p_sync_to_content_hub($node) {
+  if (!$_POST) {
+    return drupal_not_found();
+  }
+
+  $core = _h5p_get_instance('core');
+  $slug = !empty($node->h5p_slug) ? $node->h5p_slug . '-' : '';
+  $h5pName = $slug . $node->h5p_id . '.h5p';
+  $exportPath = _h5p_get_h5p_path() . '/exports/' . $h5pName;
+  $exportUrl = file_create_url($exportPath);
+  $hubId = $node->content_hub_id;
+  $token = filter_input(INPUT_POST, 'token');
+  $success = $core->hubSyncContent($hubId, $token, $exportUrl);
+
+  if ($success) {
+    db_update('h5p_nodes')
+      ->fields(array('synced' => H5PContentHubSyncStatus::WAITING))
+      ->condition('content_id', $node->h5p_id)
+      ->execute();
+  }
+
+  drupal_goto("node/{$node->nid}");
 }
