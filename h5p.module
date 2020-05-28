@@ -1705,7 +1705,7 @@ function h5p_multipart_enc_file($name, $filepath, $filename, $mimetype = 'applic
  *   A string encoded text data.
  */
 function h5p_multipart_enc_text($name, $value){
-  return "Content-Disposition: form-data; name=\"$name\"\r\n\r\n$value\r\n";
+  return "Content-Disposition: form-data; name=\"$name\"\r\n\r\n$value\r\n"; // TODO: Should we be using rawurlencode ?
 }
 
 /**
@@ -1740,6 +1740,22 @@ function h5p_share($node) {
     return;
   }
 
+  // Add POST fields to redirect to Hub
+  $data = filter_input_array(INPUT_POST, array(
+    'title' => FILTER_SANITIZE_STRING,
+    'language' => FILTER_SANITIZE_STRING,
+    'level' => FILTER_SANITIZE_STRING,
+    'license' => FILTER_SANITIZE_STRING,
+    'license_version' => FILTER_SANITIZE_STRING,
+    'disciplines' => array(
+      'filter'    => FILTER_SANITIZE_STRING,
+      'flags'     => FILTER_REQUIRE_ARRAY,
+    ),
+    'keywords' => FILTER_SANITIZE_STRING,
+    'summary' => FILTER_SANITIZE_STRING,
+    'description' => FILTER_SANITIZE_STRING,
+  ));
+
   // Find H5P content for node
   $content = h5p_get_content($node);
 
@@ -1747,27 +1763,9 @@ function h5p_share($node) {
   $export = _h5p_get_h5p_path() . '/exports/' . ($content['slug'] ? $content['slug'] . '-' : '') . $content['id'] . '.h5p';
   $size = filesize($export);
 
-  // Prepare data to POST to Hub
-  $data = array(
-    'download_url' => file_create_url($export),
-    'size' => empty($size) ? -1 : $size,
-  );
-
-  // Add POST fields to redirect to Hub
-  $map = array(
-    'title',
-    'language',
-    'level',
-    'license',
-    'license_version',
-    'disciplines',
-    'keywords',
-    'summary',
-    'description'
-  );
-  foreach ($map as $field) {
-    $data[$field] = filter_input(INPUT_POST, $field);
-  }
+  // Prepare additional data to POST to Hub
+  $data['download_url'] = file_create_url($export);
+  $data['size'] = empty($size) ? -1 : $size;
 
   // Add the icon and any screenshots
   $files = array(

@@ -25,13 +25,6 @@ class H5PDrupal implements H5PFrameworkInterface {
       'headers' => $headers,
     );
 
-    if (!empty($data)) {
-      $options['method'] = $method;
-      $options['headers'] = array_merge(array(
-        'Content-Type' => 'application/x-www-form-urlencoded'
-      ), $options['headers']);
-      $options['data'] = drupal_http_build_query($data);
-    }
     if (!empty($files)) {
       // We have to use multipart form-data encoding with boundary since the
       // old drupal http client does not natively support posting files
@@ -39,7 +32,17 @@ class H5PDrupal implements H5PFrameworkInterface {
       $options['method'] = $method;
       $encoded_data = '';
       foreach ($data as $key => $value) {
-        if (!empty($value)) {
+        if (empty($value)) {
+          continue;
+        }
+
+        if (is_array($value)) {
+          foreach ($value as $val) {
+            $encoded_data .= "--$boundary\r\n";
+            $encoded_data .= h5p_multipart_enc_text($key . '[]', $val);
+          }
+        }
+        else {
           $encoded_data .= "--$boundary\r\n";
           $encoded_data .= h5p_multipart_enc_text($key, $value);
         }
@@ -64,6 +67,13 @@ class H5PDrupal implements H5PFrameworkInterface {
       $encoded_data .= "--$boundary--";
       $options['data'] = $encoded_data;
       $options['headers']['Content-Type'] = "multipart/form-data; boundary=$boundary";
+    }
+    elseif (!empty($data)) {
+      $options['method'] = $method;
+      $options['headers'] = array_merge(array(
+        'Content-Type' => 'application/x-www-form-urlencoded'
+      ), $options['headers']);
+      $options['data'] = drupal_http_build_query($data);
     }
 
     if ($stream) {
