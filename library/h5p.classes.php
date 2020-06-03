@@ -25,21 +25,12 @@ interface H5PFrameworkInterface {
    * @param  string  $stream  Path to where the file should be saved.
    * @param  bool  $fullData  Return additional response data such as headers and potentially other data
    * @param  array  $headers  Headers to send
-   * @param  array  $files  Files to send
-   * @param  string  $method Request method
+   * @param  array  $files Files to send
+   * @param  string  $method
    *
    * @return string|array The content (response body), or an array with data. NULL if something went wrong
    */
-  public function fetchExternalData(
-    $url,
-    $data = null,
-    $blocking = true,
-    $stream = null,
-    $fullData = false,
-    $headers = array(),
-    $files = array(),
-    $method = 'POST'
-  );
+  public function fetchExternalData($url, $data = NULL, $blocking = TRUE, $stream = NULL, $fullData = FALSE, $headers = array(), $files = array(), $method = 'POST');
 
   /**
    * Set the tutorial URL for a library. All versions of the library is set
@@ -1648,7 +1639,7 @@ class H5PStorage {
     }
 
     // Go through the libraries again to save dependencies.
-    $library_ids = [];
+    $library_ids = array();
     foreach ($this->h5pC->librariesJsonData as &$library) {
       if (!$library['saveDependencies']) {
         continue;
