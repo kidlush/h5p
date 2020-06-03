@@ -3326,17 +3326,15 @@ class H5PCore {
    * Update content hub metadata cache
    */
   public function updateContentHubMetadataCache($lang = 'en') {
-    // TODO: Use credentials when communicating with content hub
-
     $url          = H5PHubEndpoints::createURL(H5PHubEndpoints::METADATA);
-    $lastModified = $this->h5pF->getOption("content_hub_metadata:{$lang}");
-    $headers      = [];
+    $lastModified = $this->h5pF->getOption("content_hub_metadata:{$lang}"); // TODO: Should we not store this in the h5p_content_hub_metadata_cache table?
+    $headers = array(
+      'Authorization' => $this->hubGetAuthorizationHeader(),
+    );
     if (!empty($lastModified)) {
       $headers['If-Modified-Since'] = $lastModified;
     }
-    $data = $this->h5pF->fetchExternalData("{$url}?lang={$lang}", null, true,
-      null,
-      true, $headers);
+    $data = $this->h5pF->fetchExternalData("{$url}?lang={$lang}", NULL, TRUE, NULL, TRUE, $headers, NULL, 'GET');
 
     $lastChecked = new DateTime('now', new DateTimeZone('GMT'));
     $this->h5pF->setOption("content_hub_metadata:{$lang}",
@@ -3346,7 +3344,7 @@ class H5PCore {
     if ($data['status'] === 304) {
       return null;
     }
-    $this->h5pF->replaceContentHubMetadataCache($data['data'], $lang);
+    $this->h5pF->replaceContentHubMetadataCache($data['data'], $lang); // TODO: We must check if metadata is actually valid before storing it
 
     return $data['data'];
   }
@@ -3576,7 +3574,7 @@ class H5PCore {
 
     $response = $this->h5pF->fetchExternalData(
       H5PHubEndpoints::createURL(H5PHubEndpoints::CONTENT),
-      $data, NULL, NULL, TRUE, $headers, $files
+      $data, TRUE, NULL, TRUE, $headers, $files
     );
 
     if (empty($response['data'])) {
