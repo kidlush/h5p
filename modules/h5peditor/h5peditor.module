@@ -244,7 +244,10 @@ function h5peditor_h5p_content_node_form_after_build($form) {
       'contentRelUrl' => '../h5p/content/',
       'editorRelUrl' => '../../../h5peditor/',
       'apiVersion' => H5PCore::$coreApi,
-      'language' => $language->language
+      'language' => $language->language,
+      'hub' => array(
+        'contentSearchUrl' => H5PHubEndpoints::createURL(H5PHubEndpoints::CONTENT),
+      ),
     ),
   );
 
@@ -546,5 +549,3 @@ function h5peditor_field_extra_fields() {
 
   return $extra;
 }
-
-

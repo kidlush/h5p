@@ -125,7 +125,9 @@ class H5PEditorAjax {
           $lang = $params['language'];
         }
 
-        H5PCore::ajaxSuccess($this->getUpdatedContentHubMetadataCache($lang), TRUE);
+        header('Cache-Control: no-cache');
+        header('Content-Type: application/json; charset=utf-8');
+        print '{"success":true,"data":' . $this->getUpdatedContentHubMetadataCache($lang) . '}';
         break;
 
       case H5PEditorEndpoints::LIBRARY_INSTALL:

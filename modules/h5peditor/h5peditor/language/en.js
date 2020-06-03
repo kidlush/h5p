@@ -84,11 +84,9 @@ H5PEditor.language.core = {
   h5pFileWrongExtensionTitle: 'The selected file could not be uploaded',
   h5pFileWrongExtensionContent: 'Only files with the .h5p extension are allowed.',
   h5pFileValidationFailedTitle: 'Could not validate H5P file.',
-  h5pFileValidationFailedContent: 'Make sure the uploaded H5P contains valid H5P content. H5P' +
-  ' files containing only libraries should be uploaded through the H5P Libraries page.',
+  h5pFileValidationFailedContent: 'Make sure the uploaded H5P contains valid H5P content. H5P files containing only libraries should be uploaded through the H5P Libraries page.',
   h5pFileUploadServerErrorTitle: 'The H5P file could not be uploaded',
-  h5pFileUploadServerErrorContent: 'An unexpected error occured. Check your server error log for' +
-  ' more details.',
+  h5pFileUploadServerErrorContent: 'An unexpected error occured. Check your server error log for more details.',
   contentTypeSectionAll: 'All Content Types',
   searchResults: 'Search Results',
   contentTypeSearchFieldPlaceholder: 'Search for Content Types',
@@ -166,7 +164,7 @@ H5PEditor.language.core = {
   addTitle: 'Add title',
   usedForSearchingReportsAndCopyrightInformation: 'Used for searching, reports and copyright information',
   metadataSharingAndLicensingInfo: 'Metadata (sharing and licensing info)',
-  fillInTheFieldsBelow : 'Fill in the fields below',
+  fillInTheFieldsBelow: 'Fill in the fields below',
   saveMetadata: 'Save metadata',
   addAuthor: 'Save author',
   confirmRemoveAuthor: 'Are you sure you would like to remove this author?',
@@ -193,9 +191,10 @@ H5PEditor.language.core = {
   pasteAndReplaceFromClipboard: 'Replace existing content with H5P Content from the clipboard',
   pasteNoContent: 'No H5P content on the clipboard',
   pasteError: 'Cannot paste from clipboard',
-  pasteContentNotSupported: 'The content you’re trying to paste is not supported in this context',
-  pasteTooOld: 'The content you’re trying to paste is of a lower version (:clip) than what is supported in this context (:local), if possible try to have the content you want to paste upgraded, copy it again and try pasting it here.',
-  pasteTooNew: 'The content you’re trying to paste is of a higher version (:clip) than what is supported in this context (:local), if possible try to have this content upgraded first, and then try pasting the content here again.',
+  pasteContentNotSupported: 'The content in the H5P clipboard is not supported in this context',
+  pasteContentRestricted: 'The content in the clipboard has been restricted on this site',
+  pasteTooOld: 'The content in the H5P clipboard is of a lower version (:clip) than what is supported in this context (:local), if possible try to have the content you want to paste upgraded, copy it again and try pasting it here.',
+  pasteTooNew: 'The content in the H5P clipboard is of a higher version (:clip) than what is supported in this context (:local), if possible try to have this content upgraded first, and then try pasting the content here again.',
   ok: 'OK',
   avTablistLabel: 'Insert using',
   tabTitleBasicFileUpload: 'File Upload',
@@ -214,5 +213,78 @@ H5PEditor.language.core = {
   unknownLibrary: 'Unfortunately, the selected content type \'%lib\' isn\'t installed on this system.',
   proceedButtonLabel: 'Proceed to save',
   enterFullscreenButtonLabel: 'Enter fullscreen',
-  exitFullscreenButtonLabel: 'Exit fullscreen'
+  exitFullscreenButtonLabel: 'Exit fullscreen',
+  noContentHeader: 'No Fitting Content?',
+  noContentSuggestion: 'Create one yourself!',
+  tutorials: 'Tutorials',
+  contentSectionAll: 'All shared content',
+  popularContent: 'Popular Content',
+  allPopular: 'All Popular',
+  newOnTheHub: 'New on the Hub',
+  allNew: 'All New',
+  filterBy: 'Filter by',
+  filter: 'Filter',
+  filters: {
+    level: {
+      dropdownLabel: 'Level',
+      dialogHeader: 'Select level of education',
+      dialogButtonLabel: 'Filter level of education'
+    },
+    language: {
+      dropdownLabel: 'Language',
+      dialogHeader: 'Select language(s)',
+      dialogButtonLabel: 'Filter languages',
+      searchPlaceholder: 'Select one or more languages'
+    },
+    reviewed: {
+      dropdownLabel: 'Reviewed',
+      dialogHeader: 'Reviewed Content',
+      dialogButtonLabel: 'Filter',
+      optionLabel: 'Show only reviewed content'
+    },
+    contentTypes: {
+      dropdownLabel: 'Content types',
+      dialogHeader: 'Select Content type(s)',
+      dialogButtonLabel: 'Filter Content Types',
+      searchPlaceholder: 'Select one or more content types'
+    },
+    disciplines: {
+      dropdownLabel: 'Discipline',
+      dialogHeader: 'Select Your Discipline',
+      dialogButtonLabel: 'Filter Disciplines',
+      searchPlaceholder: 'Select one or more disciplines'
+    },
+    licenses: {
+      dropdownLabel: 'License',
+      dialogHeader: 'Select preferred rights of use',
+      dialogButtonLabel: 'Filter licenses',
+      options: {
+        modified: 'Can be modified',
+        commercial: 'Allows commercial use'
+      }
+    }
+  },
+  clearFilters: 'Clear all filters',
+  contentSearchFieldPlaceholder: 'Search for Content',
+  loadingContentTitle: 'We are loading content for you...',
+  loadingContentSubtitle: 'Please wait',
+  by: 'By',
+  dropdownButton: 'Open dropdown',
+  paginationNavigation: 'Pagination navigation',
+  page: 'Page',
+  currentPage: 'Current page',
+  nextPage: 'Go to next page',
+  previousPage: 'Go to previous page',
+  contentPreviewButtonLabel: 'Preview',
+  contentDownloadButtonLabel: 'Get Content',
+  reuseContentTabLabel: 'Get Shared Content',
+  contentPublisherPanelHeader: 'Publisher Info',
+  noContentFoundDesc: 'There is no content that matches your search criteria.',
+  h5pType: 'H5P Type',
+  level: 'Level',
+  size: 'Size',
+  failedFetchingData: 'Failed fetching data',
+  filterErrorMessage: 'Something went wrong. Please reload the page.',
+  in: 'in',
+  navigateToParent: 'Navigate to parent'
 };
