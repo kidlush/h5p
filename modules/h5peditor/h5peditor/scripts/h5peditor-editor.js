@@ -80,7 +80,7 @@ ns.Editor = function (library, defaultParams, replace, iframeLoaded) {
    * @private
    */
   var resize = function () {
-    if (!iframe.contentDocument.body || self.preventResize) {
+    if (!iframe.contentDocument || !iframe.contentDocument.body || self.preventResize) {
       return; // Prevent crashing when iframe is unloaded
     }
     if (iframe.clientHeight === iframe.contentDocument.body.scrollHeight &&
@@ -230,7 +230,7 @@ ns.Editor = function (library, defaultParams, replace, iframeLoaded) {
 
   // Need to put this after the above replaceAll(), since that one makes Safari
   // 11 trigger a load event for the iframe
-  $iframe.load(load);
+  $iframe.on('load', load);
 
   // Populate iframe with the H5P Editor
   // (should not really be done until 'load', but might be here in case the iframe is reloaded?)
