@@ -132,6 +132,27 @@ function h5p_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  $items['node/%node/h5p-publish-data'] = array(
+    'title' => 'H5P Share Data',
+    'page callback' => 'h5p_publish_data',
+    'page arguments' => array(1),
+    'access callback' => 'h5p_share_access',
+    'access arguments' => array(1),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['node/%node/h5p-publish'] = array(
+    'description' => 'Publish content to the content hub',
+    'title' => 'Share',
+    'page callback' => 'h5p_publish',
+    'page arguments' => array(1),
+    'access callback' => 'h5p_access_toggle_publish',
+    'access arguments' => array(TRUE, 1),
+    'weight' => 0,
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE,
+  );
+
   $items['node/%node/h5p-unpublish'] = array(
     'description' => 'Unpublish content from the content hub',
     'title' => 'Unshare',
@@ -729,7 +750,7 @@ function h5p_view($node, $view_mode = 'full') {
         $data = json_decode($response['data']);
 
         if ($data->messages) {
-          // TODO: Is this the right place/way to display them? 
+          // TODO: Is this the right place/way to display them?
 
           if (!empty($data->messages->info)) {
             foreach ($data->messages->info as $info) {
@@ -1825,11 +1846,17 @@ function h5p_share($node) {
  */
 function h5p_preprocess_menu_local_task(&$variables) {
   $link = &$variables['element']['#link'];
-  if (!isset($link['localized_options'])) {
+  if (!isset($link['localized_options'])) {  // TODO: Check $link['access'] ?
     return;
   }
 
   static $jsAdded = false;
+
+  if ($link['path'] === 'node/%/h5p-publish') {
+    $link['localized_options']['attributes'] = array(
+      'class' => array('h5p-content-hub-button', 'publishing', 'publish'),
+    );
+  }
 
   if ($link['path'] === 'node/%/h5p-unpublish') {
     $link['localized_options']['attributes'] = array(
@@ -1846,13 +1873,15 @@ function h5p_preprocess_menu_local_task(&$variables) {
   if (!$jsAdded) {
     $path = drupal_get_path('module', 'h5p');
     $settings = array(
-      'h5pIntegration' => array(
-        'unpublishToken' => H5PCore::createToken('hub_unpublish'),
-        'syncToken' => H5PCore::createToken('hub_sync'),
+      'h5pContentHub' => array(
+        'publishData' => url('node/:id/h5p-publish-data'),
+        'token' => H5PCore::createToken('content_hub_token'),
       ),
     );
 
     drupal_add_js($settings, 'setting');
+    drupal_add_js("$path/library/js/h5p-hub-sharing.js");
+    drupal_add_css("$path/library/styles/h5p-hub-sharing.css");
     drupal_add_js("$path/scripts/h5p-integration.js");
     $jsAdded = true;
   }
@@ -1888,6 +1917,51 @@ function h5p_access_toggle_publish($isPublishing, $node) {
 }
 
 /**
+ * Get Publish data
+ *
+ * @param object $node The node
+ */
+function h5p_publish_data($node) {
+  global $language;
+
+  $core = _h5p_get_instance('core');
+  $h5pcontent = h5p_get_content($node);
+
+  header('Cache-Control: no-cache');
+  header('Content-Type: application/json; charset=utf-8');
+  print '{"success":true,"data":{"l10n":' . json_encode($core->getLocalization()) .
+    ',"metadata":' . $core->updateContentHubMetadataCache($language->language) .
+    ',"title":' . json_encode($h5pcontent['title'])  .
+    ',"contentType":' . json_encode(H5PCore::libraryToString($h5pcontent['library'])) .
+    ',"language":' . json_encode($language->language) . '}}';
+}
+
+/**
+ * Unpublish content
+ *
+ * @param object $node The node
+ */
+function h5p_publish($node) {
+  if (!$_POST) {
+    return drupal_not_found();
+  }
+
+  var_dump('success!'); exit;
+
+  $token = filter_input(INPUT_POST, 'token');
+  $core = _h5p_get_instance('core');
+  $success = $core->hubUnpublishContent($node->content_hub_id, $token);
+  if ($success) {
+    db_update('h5p_nodes')
+      ->fields(array('shared' => 0))
+      ->condition('content_id', $node->h5p_id)
+      ->execute();
+  }
+
+  drupal_goto("node/{$node->nid}");
+}
+
+/**
  * Unpublish content
  *
  * @param object $node The node
@@ -1909,8 +1983,6 @@ function h5p_unpublish($node) {
 
   drupal_goto("node/{$node->nid}");
 }
-
-
 
 /**
  * Checks if the user has access to syncing content

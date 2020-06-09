@@ -3557,6 +3557,79 @@ class H5PCore {
       'offlineDialogRetryMessage' => $this->h5pF->t('Retrying in :num....'),
       'offlineDialogRetryButtonLabel' => $this->h5pF->t('Retry now'),
       'offlineSuccessfulSubmit' => $this->h5pF->t('Successfully submitted results.'),
+      'mainTitle' => $this->h5pF->t('Sharing <strong>:title</strong>'),
+      'cancel' => $this->h5pF->t('Cancel'),
+      'back' => $this->h5pF->t('Back'),
+      'next' => $this->h5pF->t('Next'),
+      'reviewInfo' => $this->h5pF->t('Review info'),
+      'share' => $this->h5pF->t('Share'),
+      'close' => $this->h5pF->t('Close'),
+      'registerOnHub' => $this->h5pF->t('Register on the Hub'),
+      'requiredInfo' => $this->h5pF->t('Required Info'),
+      'optionalInfo' => $this->h5pF->t('Optional Info'),
+      'reviewAndShare' => $this->h5pF->t('Review & Share'),
+      'shared' => $this->h5pF->t('Shared'),
+      'currentStep' => $this->h5pF->t('Step :step of :total'),
+      'sharingNote' => $this->h5pF->t('All content details can be edited after sharing'),
+      'licenseDescription' => $this->h5pF->t('Select a license for your content'),
+      'licenseVersion' => $this->h5pF->t('License Version'),
+      'licenseVersionDescription' => $this->h5pF->t('Select a license version'),
+      'disciplineLabel' => $this->h5pF->t('Disciplines'),
+      'disciplineDescription' => $this->h5pF->t('You can select multiple disciplines'),
+      'discipline' => array(
+        'searchPlaceholder' => $this->h5pF->t('Select one or more disciplines'),
+        'in' => $this->h5pF->t('in'),
+        'dropdownButton' => $this->h5pF->t('Dropdown button'),
+      ),
+      'removeChip' => $this->h5pF->t('Remove :chip from the list'),
+      'keywordsPlaceholder' => $this->h5pF->t('Add keywords'),
+      'keywords' => $this->h5pF->t('Keywords'),
+      'keywordsDescription' => $this->h5pF->t('You can add multiple keywords. Press "Enter" to confirm each keyword'),
+      'altText' => $this->h5pF->t('Alt text'),
+      'reviewMessage' => $this->h5pF->t('Please review the info below before you share'),
+      'subContentWarning' => $this->h5pF->t('Sub-content (images, questions etc.) will be shared under :license unless otherwise specified in the authoring tool'),
+      'title' => $this->h5pF->t('Title'),
+      'license' => $this->h5pF->t('License'),
+      'disciplines' => $this->h5pF->t('Disciplines'),
+      'shortDescription' => $this->h5pF->t('Short description'),
+      'longDescription' => $this->h5pF->t('Long description'),
+      'icon' => $this->h5pF->t('Icon'),
+      'screenshots' => $this->h5pF->t('Screenshots'),
+      'helpChoosingLicense' => $this->h5pF->t('Help me choose a license'),
+      'shareFailed' => $this->h5pF->t('Share failed.'),
+      'shareTryAgain' => $this->h5pF->t('Something went wrong, please try to share agian.'),
+      'pleaseWait' => $this->h5pF->t('Please wait...'),
+      'language' => $this->h5pF->t('Language'),
+      'level' => $this->h5pF->t('Level'),
+      'shortDescriptionPlaceholder' => $this->h5pF->t('Short description of your content'),
+      'longDescriptionPlaceholder' => $this->h5pF->t('Long description of your content'),
+      'description' => $this->h5pF->t('Description'),
+      'iconDescription' => $this->h5pF->t('640x480px. If not selected content will use category icon'),
+      'screenshotsDescription' => $this->h5pF->t('Add up to five screenshots of your content'),
+      'submitted' => $this->h5pF->t('Submitted!'),
+      'isNowSubmitted' => $this->h5pF->t('Is now submitted to H5P Hub'),
+      'contentAvailable' => $this->h5pF->t('Your content will soon be available for download'),
+      'contentLicenseTitle' => $this->h5pF->t('Content License Info'),
+      'licenseDialogDescription' => $this->h5pF->t('Click on a specific license to get info about proper usage'),
+      'publisherFieldTitle' => $this->h5pF->t('Publisher'),
+      'publisherFieldDescription' => $this->h5pF->t('This will display as the "Publisher name" on shared content'),
+      'emailAddress' => $this->h5pF->t('Email Address'),
+      'publisherDescription' => $this->h5pF->t('Publisher description'),
+      'publisherDescriptionText' => $this->h5pF->t('This will be displayed under "Publisher info" on shared content'),
+      'contactPerson' => $this->h5pF->t('Contact Person'),
+      'phone' => $this->h5pF->t('Phone'),
+      'address' => $this->h5pF->t('Address'),
+      'city' => $this->h5pF->t('City'),
+      'zip' => $this->h5pF->t('Zip'),
+      'country' => $this->h5pF->t('Country'),
+      'logoUploadText' => $this->h5pF->t('Organization logo or avatar'),
+      'acceptTerms' => $this->h5pF->t('I accept the terms of the license agreement'),
+      'successfullyRegistred' => $this->h5pF->t('You have successfully registered an account on the H5P Hub'),
+      'successfullyRegistredDescription' => $this->h5pF->t('You account details can be changed'),
+      'accountDetailsLinkText' => $this->h5pF->t('here'),
+      'registrationTitle' => $this->h5pF->t('Hub Registration and End User License Agreement (EULA)'),
+      'registrationFailed' => $this->h5pF->t('An error occured'),
+      'registrationFailedDescription' => $this->h5pF->t('We were not able to create an account at this point. Something went wrong. Try again later.'),
     );
   }
 
@@ -3620,7 +3693,7 @@ class H5PCore {
    * @return bool True if successful
    */
   public function hubUnpublishContent($hubId, $token) {
-    if (!self::validToken('hub_unpublish', $token)) {
+    if (!self::validToken('content_hub_token', $token)) {
       $msg = $this->h5pF->t('Could not unpublish content because token was invalid. Please try again.');
       $this->h5pF->setErrorMessage($msg);
 
@@ -3659,7 +3732,7 @@ class H5PCore {
    * @return bool
    */
   public function hubSyncContent($hubId, $token, $exportPath) {
-    if (!self::validToken('hub_sync', $token)) {
+    if (!self::validToken('content_hub_token', $token)) {
       $msg = $this->h5pF->t('Could not sync content because token was invalid. Please try again.');
       $this->h5pF->setErrorMessage($msg);
 
