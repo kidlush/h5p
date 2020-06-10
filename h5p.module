@@ -1769,7 +1769,11 @@ function h5p_share($node) {
   if (!$_POST) { // Only support POST
     return drupal_not_found();
   }
-  // TODO: Check CSRF token
+
+  if (!H5PCore::validToken('content_hub_token', filter_input(INPUT_POST, 'token'))) {
+    H5PCore::ajaxError(t('Invalid security token.'));
+    return;
+  }
 
   if (!empty($node->content_hub_id)) {
     H5PCore::ajaxError(t('Content already shared on the H5P Hub.'));
