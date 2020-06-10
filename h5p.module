@@ -132,22 +132,13 @@ function h5p_menu() {
     'type' => MENU_CALLBACK,
   );
 
-  $items['node/%node/h5p-publish-data'] = array(
-    'title' => 'H5P Share Data',
-    'page callback' => 'h5p_publish_data',
-    'page arguments' => array(1),
-    'access callback' => 'h5p_share_access',
-    'access arguments' => array(1),
-    'type' => MENU_CALLBACK,
-  );
-
   $items['node/%node/h5p-publish'] = array(
     'description' => 'Publish content to the content hub',
     'title' => 'Share',
     'page callback' => 'h5p_publish',
     'page arguments' => array(1),
-    'access callback' => 'h5p_access_toggle_publish',
-    'access arguments' => array(TRUE, 1),
+    'access callback' => 'h5p_share_access',
+    'access arguments' => array(1),
     'weight' => 0,
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_PAGE,
@@ -1759,7 +1750,7 @@ function h5p_multipart_enc_text($name, $value){
 function h5p_share_access($node) {
   global $user;
 
-  if ($node->type == 'h5p_content') {
+  if ($node->type == 'h5p_content' && empty($node->content_hub_id) && $node->h5p_shared === "0") {
     if (user_access('share any h5p content')) {
       return TRUE;
     }
@@ -1796,7 +1787,10 @@ function h5p_share($node) {
       'filter'    => FILTER_SANITIZE_STRING,
       'flags'     => FILTER_REQUIRE_ARRAY,
     ),
-    'keywords' => FILTER_SANITIZE_STRING,
+    'keywords' => array(
+      'filter'    => FILTER_SANITIZE_STRING,
+      'flags'     => FILTER_REQUIRE_ARRAY,
+    ),
     'summary' => FILTER_SANITIZE_STRING,
     'description' => FILTER_SANITIZE_STRING,
   ));
@@ -1852,12 +1846,6 @@ function h5p_preprocess_menu_local_task(&$variables) {
 
   static $jsAdded = false;
 
-  if ($link['path'] === 'node/%/h5p-publish') {
-    $link['localized_options']['attributes'] = array(
-      'class' => array('h5p-content-hub-button', 'publishing', 'publish'),
-    );
-  }
-
   if ($link['path'] === 'node/%/h5p-unpublish') {
     $link['localized_options']['attributes'] = array(
       'class' => array('h5p-content-hub-button', 'publishing', 'unpublish'),
@@ -1874,14 +1862,11 @@ function h5p_preprocess_menu_local_task(&$variables) {
     $path = drupal_get_path('module', 'h5p');
     $settings = array(
       'h5pContentHub' => array(
-        'publishData' => url('node/:id/h5p-publish-data'),
         'token' => H5PCore::createToken('content_hub_token'),
       ),
     );
 
     drupal_add_js($settings, 'setting');
-    drupal_add_js("$path/library/js/h5p-hub-sharing.js");
-    drupal_add_css("$path/library/styles/h5p-hub-sharing.css");
     drupal_add_js("$path/scripts/h5p-integration.js");
     $jsAdded = true;
   }
@@ -1917,48 +1902,34 @@ function h5p_access_toggle_publish($isPublishing, $node) {
 }
 
 /**
- * Get Publish data
- *
- * @param object $node The node
- */
-function h5p_publish_data($node) {
-  global $language;
-
-  $core = _h5p_get_instance('core');
-  $h5pcontent = h5p_get_content($node);
-
-  header('Cache-Control: no-cache');
-  header('Content-Type: application/json; charset=utf-8');
-  print '{"success":true,"data":{"l10n":' . json_encode($core->getLocalization()) .
-    ',"metadata":' . $core->updateContentHubMetadataCache($language->language) .
-    ',"title":' . json_encode($h5pcontent['title'])  .
-    ',"contentType":' . json_encode(H5PCore::libraryToString($h5pcontent['library'])) .
-    ',"language":' . json_encode($language->language) . '}}';
-}
-
-/**
  * Unpublish content
  *
  * @param object $node The node
  */
 function h5p_publish($node) {
-  if (!$_POST) {
-    return drupal_not_found();
-  }
+  global $language;
 
-  var_dump('success!'); exit;
+  $path = drupal_get_path('module', 'h5p');
+  drupal_add_js("$path/library/js/h5p-hub-sharing.js");
+  drupal_add_js("$path/scripts/h5p-hub-sharing-behavior.js");
+  drupal_add_css("$path/library/styles/h5p-hub-sharing.css");
 
-  $token = filter_input(INPUT_POST, 'token');
   $core = _h5p_get_instance('core');
-  $success = $core->hubUnpublishContent($node->content_hub_id, $token);
-  if ($success) {
-    db_update('h5p_nodes')
-      ->fields(array('shared' => 0))
-      ->condition('content_id', $node->h5p_id)
-      ->execute();
-  }
+  $h5pcontent = h5p_get_content($node);
+  $settings = array(
+    'h5pContentHubPublish' => array(
+      'token' => H5PCore::createToken('content_hub_token'),
+      'publishURL' => url('h5p/share/' . $node->nid),
+      'l10n' => $core->getLocalization(),
+      'metadata' => json_decode($core->updateContentHubMetadataCache($language->language)),
+      'title' => $h5pcontent['title'],
+      'contentType' => H5PCore::libraryToString($h5pcontent['library']),
+      'language' => $language->language,
+    ),
+  );
+  drupal_add_js($settings, 'setting');
 
-  drupal_goto("node/{$node->nid}");
+  return '<div id="h5p-publish">Waiting for JavaScript...</div>';
 }
 
 /**
