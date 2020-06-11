@@ -178,6 +178,14 @@ function h5p_admin_settings($form, &$form_state) {
     ),
   );
 
+  // TODO: Check if already registered, then display account info
+  $form['test'] = array(
+    '#type'   => 'item',
+    '#title'  => t('Hub Account Settings'),
+    '#markup' => t('Register an account on the Hub <a href="@url">here</a>.',
+      array('@url' => '/admin/config/system/h5p/register')),
+  );
+
   // Set h5p settings class on form container
   $form['#attributes'] = array('class' => array('h5p-settings-container'));
 
@@ -869,25 +877,68 @@ function h5p_register_account() {
     'zip' => filter_input(INPUT_POST, 'zip'),
     'country' => filter_input(INPUT_POST, 'country'),
     'site_uuid' => $uuid,
-  ), NULL, NULL, FALSE, array(), array(
+  ), NULL, NULL, TRUE, array(), array(
     'logo' => $logo,
   ));
 
   try {
-    $results = json_decode($registration);
+    $results = json_decode($registration['data']);
   }
   catch (Exception $e) {
-    $core->h5pF->setErrorMessage('Could not parse json response.');
-    return FALSE;
+    $message = 'Could not parse json response.';
+    $core->h5pF->setErrorMessage($message);
+    drupal_add_http_header('status', '500');
+    H5PCore::ajaxError($message);
   }
 
-  if ($results->success === FALSE || !isset($results->account->secret)) {
-    $core->h5pF->setErrorMessage('Registration failed.');
-    return FALSE;
+  if (isset($results->errors->site_uuid)) {
+    $message = 'Site UUID is not unique.';
+    $core->h5pF->setErrorMessage($message);
+    H5PCore::ajaxError($message);
+    drupal_add_http_header('status', '422');
+    return;
+  }
+
+  if ($results->success === FALSE || !isset($results->account->secret) || $registration['status'] !== 200) {
+    $message = 'Registration failed.';
+    $core->h5pF->setErrorMessage($message);
+    H5PCore::ajaxError($message);
+    drupal_add_http_header('status', '422');
+    return;
   }
 
   $core->h5pF->setOption('hub_secret', $results->account->secret);
   $msg = $core->h5pF->t('Account successfully registered.');
   $core->h5pF->setInfoMessage($msg);
-  // TODO: How to return results ? json or redirect ?
+  H5PCore::ajaxSuccess($msg);
+  return;
+}
+
+/**
+ * Hub registration page
+ *
+ * @return string html
+ */
+function h5p_hub_registration() {
+  $core = _h5p_get_instance('core');
+
+  $settings = array(
+    'H5PContentHubRegistration' => array(
+      'registrationURL' => url('admin/config/system/h5p/register-account'),
+      'accountSettingsUrl' => '',
+      'token' => H5PCore::createToken('content_hub_token'),
+      'l10n' => $core->getLocalization(),
+      'licenseAgreementTitle' => 'End User License Agreement (EULA)',
+      'licenseAgreementDescription' => 'Please read the following agreement before proceeding with the ',
+      'licenseAgreementMainText' => 'TODO'
+    ),
+  );
+
+  $path = drupal_get_path('module', 'h5p');
+  drupal_add_js($settings, 'setting');
+  drupal_add_js("$path/library/js/h5p-hub-registration.js");
+  drupal_add_css("$path/library/styles/h5p-hub-registration.css");
+  drupal_add_js("$path/scripts/h5p-hub-registration.js");
+
+  return '<div id="h5p-hub-registration"/>';
 }

@@ -24,6 +24,15 @@ function h5p_menu() {
     'file' => 'h5p.admin.inc',
   );
 
+  $items['admin/config/system/h5p/register'] = array(
+    'title' => 'Register with the H5P Hub',
+    'description' => 'Register site with content hub to enable sharing',
+    'page callback' => 'h5p_hub_registration',
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'h5p.admin.inc',
+  );
+
   $items['admin/content/h5p'] = array(
     'title' => 'H5P Libraries',
     'description' => 'List, delete and get detailed info on the installed H5P libraries',
