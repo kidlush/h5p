@@ -2021,7 +2021,7 @@ abstract class H5PHubEndpoints {
   const REGISTER = 'api-test.h5p.org/v1/accounts';
 
   public static function createURL($endpoint) {
-    $protocol = 'http';// (extension_loaded('openssl') ? 'https' : 'http');
+    $protocol = (extension_loaded('openssl') ? 'https' : 'http');
     return "{$protocol}://{$endpoint}";
   }
 }
