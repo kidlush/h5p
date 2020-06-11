@@ -1921,13 +1921,21 @@ function h5p_access_toggle_publish($isPublishing, $node) {
  */
 function h5p_publish($node) {
   global $language;
+  $core = _h5p_get_instance('core');
+
+  // Redirect to registration if we're not registered yet
+  if (empty($core->h5pF->getOption('hub_secret', ''))) {
+    if (user_access('administer site configuration')) {
+      drupal_goto('admin/config/system/h5p/register');
+    }
+    return t('Your site is not yet registered with the content hub. Please contact an administrator.');
+  }
 
   $path = drupal_get_path('module', 'h5p');
   drupal_add_js("$path/library/js/h5p-hub-sharing.js");
   drupal_add_js("$path/scripts/h5p-hub-sharing-behavior.js");
   drupal_add_css("$path/library/styles/h5p-hub-sharing.css");
 
-  $core = _h5p_get_instance('core');
   $h5pcontent = h5p_get_content($node);
   $settings = array(
     'h5pContentHubPublish' => array(

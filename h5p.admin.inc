@@ -905,6 +905,15 @@ function h5p_restrict_library_callback($library_id) {
  */
 function h5p_register_account() {
   $core = _h5p_get_instance('core');
+
+  $token = filter_input(INPUT_POST, 'token');
+  if (!H5PCore::validToken('content_hub_registration', $token)) {
+    $message = 'Invalid token.';
+    $core->h5pF->setErrorMessage($message);
+    drupal_add_http_header('status', '401');
+    H5PCore::ajaxError($message);
+  }
+
   $uuid = $core->h5pF->getOption('site_uuid', '');
   if (empty($uuid)) {
     $errorMessage = $core->h5pF->t('Site is missing a unique site uuid. The H5P Content Hub is disabled until this problem can be resolved. Please enable the H5P Hub through your site settings before trying again.');
@@ -975,7 +984,7 @@ function h5p_hub_registration() {
     'H5PContentHubRegistration' => array(
       'registrationURL' => url('admin/config/system/h5p/register-account'),
       'accountSettingsUrl' => '',
-      'token' => H5PCore::createToken('content_hub_token'),
+      'token' => H5PCore::createToken('content_hub_registration'),
       'l10n' => $core->getLocalization(),
       'licenseAgreementTitle' => 'End User License Agreement (EULA)',
       'licenseAgreementDescription' => 'Please read the following agreement before proceeding with the ',
@@ -985,6 +994,7 @@ function h5p_hub_registration() {
 
   $path = drupal_get_path('module', 'h5p');
   drupal_add_js($settings, 'setting');
+  drupal_add_css("$path/library/styles/h5p.css");
   drupal_add_js("$path/library/js/h5p-hub-registration.js");
   drupal_add_css("$path/library/styles/h5p-hub-registration.css");
   drupal_add_js("$path/scripts/h5p-hub-registration.js");
