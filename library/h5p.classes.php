@@ -3757,6 +3757,33 @@ print $response['data']; exit;
     $this->h5pF->setErrorMessage($msg);
     return false;
   }
+
+  /**
+   * Fetch account info for our site from the content hub
+   *
+   * @return array|bool|string False if account is not setup, otherwise data
+   */
+  public function hubAccountInfo() {
+    $siteUuid = $this->h5pF->getOption('site_uuid', null);
+    $secret   = $this->h5pF->getOption('hub_secret', null);
+    if (empty($siteUuid) || empty($secret)) {
+      return false;
+    }
+
+    $headers = array(
+      'Authorization' => $this->hubGetAuthorizationHeader(),
+    );
+
+    $url = H5PHubEndpoints::createURL(H5PHubEndpoints::REGISTER);
+    $accountInfo = $this->h5pF->fetchExternalData("{$url}/{$siteUuid}",
+      null, true, null, true, $headers, array(), 'GET');
+
+    if ($accountInfo['status'] !== 200) {
+      return false;
+    }
+
+    return json_decode($accountInfo['data'])->data;
+  }
 }
 
 /**
