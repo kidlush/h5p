@@ -2016,9 +2016,9 @@ abstract class H5PContentStatus {
 abstract class H5PHubEndpoints {
   const CONTENT_TYPES = 'api.h5p.org/v1/content-types/';
   const SITES = 'api.h5p.org/v1/sites';
-  const METADATA = '127.0.0.1:8001/v1/metadata';//'api-test.h5p.org/v1/metadata'; // '127.0.0.1:8001/v1/metadata'; //'api-test.h5p.org/v1/metadata';
-  const CONTENT = '127.0.0.1:8001/v1/contents';//'api-test.h5p.org/v1/contents'; //'127.0.0.1:8001/v1/contents'; //'api-test.h5p.org/v1/contents';
-  const REGISTER = '127.0.0.1:8001/v1/accounts';//'api-test.h5p.org/v1/accounts'; //'127.0.0.1:8001/v1/accounts'; //'api-test.h5p.org/v1/accounts';
+  const METADATA = 'api-test.h5p.org/v1/metadata';
+  const CONTENT = 'api-test.h5p.org/v1/contents';
+  const REGISTER = 'api-test.h5p.org/v1/accounts';
 
   public static function createURL($endpoint) {
     $protocol = 'http';// (extension_loaded('openssl') ? 'https' : 'http');
@@ -3648,7 +3648,7 @@ class H5PCore {
       H5PHubEndpoints::createURL(H5PHubEndpoints::CONTENT),
       $data, TRUE, NULL, TRUE, $headers, $files
     );
-print $response['data']; exit;
+
     if (empty($response['data'])) {
       throw new Exception($this->h5pF->t('Unable to authorize with the H5P Hub. Please check your Hub registration and connection.'));
     }
