@@ -3330,6 +3330,7 @@ class H5PCore {
     $lastModified = $this->h5pF->getOption("content_hub_metadata:{$lang}"); // TODO: Should we not store this in the h5p_content_hub_metadata_cache table?
     $headers = array(
       'Authorization' => $this->hubGetAuthorizationHeader(),
+      'Accept' => 'application/json',
     );
     if (!empty($lastModified)) {
       //$headers['If-Modified-Since'] = $lastModified;
@@ -3642,6 +3643,7 @@ class H5PCore {
   public function hubPublishContent($data, $files) {
     $headers = array(
       'Authorization' => $this->hubGetAuthorizationHeader(),
+      'Accept' => 'application/json',
     );
 
     $response = $this->h5pF->fetchExternalData(
@@ -3701,6 +3703,7 @@ class H5PCore {
 
     $headers = array(
       'Authorization' => $this->hubGetAuthorizationHeader(),
+      'Accept' => 'application/json',
     );
 
     $url = H5PHubEndpoints::createURL(H5PHubEndpoints::CONTENT);
@@ -3740,6 +3743,7 @@ class H5PCore {
 
     $headers = array(
       'Authorization' => $this->hubGetAuthorizationHeader(),
+      'Accept' => 'application/json',
     );
 
     $url = H5PHubEndpoints::createURL(H5PHubEndpoints::CONTENT);
@@ -3772,6 +3776,7 @@ class H5PCore {
 
     $headers = array(
       'Authorization' => $this->hubGetAuthorizationHeader(),
+      'Accept' => 'application/json',
     );
 
     $url = H5PHubEndpoints::createURL(H5PHubEndpoints::REGISTER);
