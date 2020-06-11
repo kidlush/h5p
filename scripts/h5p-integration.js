@@ -28,27 +28,6 @@
     });
   }
 
-  /**
-   * Add CSRF token to link
-   *
-   * @param {HTMLAnchorElement} button Link
-   * @param {string} token Token
-   */
-  const addSharing = function (button, settings) {
-    const originalHref = button.href;
-    const urlData = button.href.match(/\/node\/(\d+)\/([^\/]+)$/i);
-    const publishPath = settings.publishData.replace(encodeURIComponent(':id'), urlData[1]);
-    button.href = '#' + urlData[2];
-    button.addEventListener('click', function (e)  {
-      $.get(publishPath, function (data) {
-        data.data.publishURL = originalHref;
-        data.data.container = document.getElementById('block-system-main');
-        H5PHub.createSharingUI(data.data);
-      });
-      e.preventDefault();
-    });
-  }
-
   Drupal.behaviors.h5pContentHub = {
     attach: function (context, settings) {
       const buttons = context.getElementsByClassName('h5p-content-hub-button');
@@ -56,13 +35,8 @@
         if (buttons[i].classList.contains('processed')) {
           continue; // Skip
         }
-
-        if (buttons[i].classList.contains('publish')) {
-          addSharing(buttons[i], settings.h5pContentHub);
-        }
-        else {
-          addCSRFToken(buttons[i], settings.h5pContentHub.token);
-        }
+        buttons[i].classList.add('processed');
+        addCSRFToken(buttons[i], settings.h5pContentHub.token);
       }
     }
   };
