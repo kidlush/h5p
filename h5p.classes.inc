@@ -1202,4 +1202,46 @@ class H5PDrupal implements H5PFrameworkInterface {
 
     return $results['json'];
   }
+
+  /**
+   * Get when content hub metadata cache was last checked
+   *
+   * @param  string  $lang ISO 639-1 lang code
+   *
+   * @return string|null Returns time in RFC 7231 format
+   */
+  public function getContentHubMetadataChecked($lang = 'en') {
+    $results = db_select('h5p_content_hub_metadata_cache', 'meta')
+      ->fields('meta', array('last_checked'))
+      ->condition('language', $lang)
+      ->execute()
+      ->fetchField();
+
+    if (!empty($results)) {
+      $time = new DateTime();
+      $time->setTimestamp($results);
+      $results = $time->format(DateTimeInterface::RFC7231);
+    }
+
+    return $results;
+  }
+
+  /**
+   * Set when content hub metadata cache was last checked
+   *
+   * @param  int|null  $time UNIX timestamp for when last check
+   * @param  string  $lang ISO 639-1 lang code
+   *
+   * @return bool
+   */
+  public function setContentHubMetadataChecked($time, $lang = 'en') {
+    db_update('h5p_content_hub_metadata_cache')
+      ->fields(array(
+        'last_checked' => $time,
+      ))
+      ->condition('language', $lang)
+      ->execute();
+
+    return true;
+  }
 }

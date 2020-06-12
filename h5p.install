@@ -851,6 +851,10 @@ function h5p_schema() {
         'description' => 'Metadata as JSON',
         'type' => 'text',
       ),
+      'last_checked' => array(
+        'description' => 'Last time metadata was checked.',
+        'type' => 'int',
+      ),
     )
   );
 
@@ -1851,6 +1855,10 @@ function h5p_update_7123() {
         'json'     => array(
           'description' => 'Metadata as JSON',
           'type'        => 'text',
+        ),
+        'last_checked' => array(
+          'description' => 'Last time metadata was checked.',
+          'type' => 'int',
         ),
       ),
     ));

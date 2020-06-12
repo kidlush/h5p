@@ -328,8 +328,8 @@ function h5peditor_node_insert($node) {
 function h5peditor_node_update($node) {
   _h5peditor_create_content($node);
   // Set new synced status when shared content is updated
-  if (!empty($node['content_hub_id'])
-    && intval($node['synced']) === H5PContentHubSyncStatus::SYNCED
+  if (!empty($node->content_hub_id)
+    && intval($node->synced) === H5PContentHubSyncStatus::SYNCED
   ) {
     $contentId = h5p_get_content_id($node);
     db_update('h5p_nodes')
