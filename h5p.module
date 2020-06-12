@@ -1942,7 +1942,7 @@ function h5p_publish($node) {
       'token' => H5PCore::createToken('content_hub_token'),
       'publishURL' => url('h5p/share/' . $node->nid),
       'l10n' => $core->getLocalization(),
-      'metadata' => json_decode($core->updateContentHubMetadataCache($language->language)),
+      'metadata' => json_decode($core->getUpdatedContentHubMetadataCache($language->language)),
       'title' => $h5pcontent['title'],
       'contentType' => H5PCore::libraryToString($h5pcontent['library']),
       'language' => $language->language,

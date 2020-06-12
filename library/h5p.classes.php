@@ -629,7 +629,6 @@ interface H5PFrameworkInterface {
    */
   public function libraryHasUpgrade($library);
 
-
   /**
    * Replace content hub metadata cache
    *
@@ -639,6 +638,15 @@ interface H5PFrameworkInterface {
    * @return mixed
    */
   public function replaceContentHubMetadataCache($metadata, $lang);
+
+  /**
+   * Get content hub metadata cache from db
+   *
+   * @param  string  $lang Language code in ISO 639-1
+   *
+   * @return JsonSerializable Json string
+   */
+  public function getContentHubMetadataCache($lang = 'en');
 }
 
 /**
@@ -3327,26 +3335,71 @@ class H5PCore {
    */
   public function updateContentHubMetadataCache($lang = 'en') {
     $url          = H5PHubEndpoints::createURL(H5PHubEndpoints::METADATA);
-    $lastModified = $this->h5pF->getOption("content_hub_metadata:{$lang}"); // TODO: Should we not store this in the h5p_content_hub_metadata_cache table?
+    $lastModified = $this->h5pF->getOption("content_hub_metadata:{$lang}");
+    // TODO: Should we rather store the timestamp in the h5p_content_hub_metadata_cache table to prevent inconsistencies with the table?
+    // It's important to note we'll have to manually remove all of these in h5p.install - and with a variable we'll be creating a lot of these.
+    // (I'm even a bit unsure if this is even allowed in Drupal).
+
     $headers = array(
       'Authorization' => $this->hubGetAuthorizationHeader(),
       'Accept' => 'application/json',
     );
     if (!empty($lastModified)) {
-      //$headers['If-Modified-Since'] = $lastModified;
+      $headers['If-Modified-Since'] = $lastModified;
     }
     $data = $this->h5pF->fetchExternalData("{$url}?lang={$lang}", NULL, TRUE, NULL, TRUE, $headers, NULL, 'GET');
     $lastChecked = new DateTime('now', new DateTimeZone('GMT'));
-    $this->h5pF->setOption("content_hub_metadata:{$lang}",
-      $lastChecked->format(DateTimeInterface::RFC7231));
+
+    if ($data['status'] !== 200 && $data['status'] !== 304) {
+      // If this was not a success, set the error message and return
+      $this->h5pF->setErrorMessage(
+        $this->h5pF->t('No metadata was received from the H5P Hub. Please try again later.')
+      );
+      return null;
+    }
+
+    // Update timestamp
+    $this->h5pF->setOption("content_hub_metadata:{$lang}", $lastChecked->format(DateTimeInterface::RFC7231));
 
     // Not modified
     if ($data['status'] === 304) {
       return null;
     }
-    $this->h5pF->replaceContentHubMetadataCache($data['data'], $lang); // TODO: We must check if metadata is actually valid before storing it
-
+    $this->h5pF->replaceContentHubMetadataCache($data['data'], $lang);
+    // TODO: If 200 should we have checked if it decodes? Or 'success'? Not sure if necessary though
     return $data['data'];
+  }
+
+  /**
+   * Get updated content hub metadata cache
+   *
+   * @param  string  $lang Language as ISO 639-1 code
+   *
+   * @return JsonSerializable|string
+   */
+  public function getUpdatedContentHubMetadataCache($lang = 'en') {
+    $lastUpdate = $this->h5pF->getOption("content_hub_metadata:{$lang}", null);
+    if (!$lastUpdate) {
+      return $this->updateContentHubMetadataCache($lang);
+    }
+
+    $lastUpdate = new DateTime($lastUpdate);
+    $expirationTime = $lastUpdate->getTimestamp() + (60 * 60 * 24); // Check once per day
+    if (time() > $expirationTime) {
+      $update = $this->updateContentHubMetadataCache($lang);
+      if (!empty($update)) {
+        return $update;
+      }
+    }
+
+    $storedCache = $this->h5pF->getContentHubMetadataCache($lang);
+    if (!$storedCache) {
+      // We don't have the value stored for some reason, reset last update and re-fetch
+      $this->h5pF->setOption("content_hub_metadata:{$lang}", null);
+      return $this->updateContentHubMetadataCache($lang);
+    }
+
+    return $storedCache;
   }
 
   /**

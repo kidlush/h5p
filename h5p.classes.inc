@@ -1177,6 +1177,9 @@ class H5PDrupal implements H5PFrameworkInterface {
     )->fetchField();
   }
 
+  /**
+   * Implements replaceContentHubMetadataCache
+   */
   public function replaceContentHubMetadataCache($metadata, $lang = 'en') {
     // Insert or update
     db_merge('h5p_content_hub_metadata_cache')
@@ -1185,5 +1188,18 @@ class H5PDrupal implements H5PFrameworkInterface {
         'json' => $metadata,
       ))
       ->execute();
+  }
+
+  /**
+   * Implements libraryHasUpgrade
+   */
+  public function getContentHubMetadataCache($lang = 'en') {
+    $results = db_select('h5p_content_hub_metadata_cache', 'meta')
+      ->fields('meta', array('json'))
+      ->condition('language', $lang)
+      ->execute()
+      ->fetchAssoc();
+
+    return $results['json'];
   }
 }
