@@ -731,7 +731,7 @@ function h5p_view($node, $view_mode = 'full') {
     if (!empty($node->content_hub_id)
       && intval($node->h5p_synced) !== H5PContentHubSyncStatus::FAILED
       && intval($node->h5p_synced) !== H5PContentHubSyncStatus::NOT_SYNCED
-      && h5p_share_access($node)
+      && h5p_share_access($node, false)
     ) {
       $core    = _h5p_get_instance('core');
       $url     = H5PHubEndpoints::createURL(H5PHubEndpoints::CONTENT);
@@ -1756,10 +1756,13 @@ function h5p_multipart_enc_text($name, $value){
 /**
  * Handler for access to sharing content on the hub
  */
-function h5p_share_access($node) {
+function h5p_share_access($node, $requireNotShared = true) {
   global $user;
 
-  if ($node->type == 'h5p_content' && empty($node->content_hub_id) && $node->h5p_shared === "0") {
+  $isValidShareState = $requireNotShared
+    ? $node->h5p_shared === '0' && empty($node->content_hub_id)
+    : true;
+  if ($node->type == 'h5p_content' && $isValidShareState) {
     if (user_access('share any h5p content')) {
       return TRUE;
     }
@@ -1833,7 +1836,7 @@ function h5p_share($node) {
     db_update('h5p_nodes')
       ->fields(array(
         'content_hub_id' => $result->content->id,
-        'synced' => H5PContentHubSyncStatus::SYNCED,
+        'synced' => H5PContentHubSyncStatus::WAITING,
         'shared' => 1,
       ))
       ->condition('content_id', h5p_get_content_id($node))
@@ -1911,7 +1914,7 @@ function h5p_access_toggle_publish($isPublishing, $node) {
     }
   }
 
-  return h5p_share_access($node);
+  return h5p_share_access($node, false);
 }
 
 /**
@@ -2000,7 +2003,7 @@ function h5p_access_sync($node) {
     return false;
   }
 
-  return h5p_share_access($node);
+  return h5p_share_access($node, false);
 }
 
 /**

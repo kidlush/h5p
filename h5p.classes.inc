@@ -91,8 +91,8 @@ class H5PDrupal implements H5PFrameworkInterface {
     if ($allData) {
       return [
         'status' => intval($response->code),
-        'data' => $response->data,
-        'headers' => $response->headers,
+        'data' => isset($response->data) ? $response->data : null,
+        'headers' => isset($response->headers) ? $response->headers : null,
       ];
     }
     elseif (isset($response->error)) {
