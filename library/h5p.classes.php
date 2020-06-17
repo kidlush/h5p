@@ -3356,10 +3356,7 @@ class H5PCore {
     $url          = H5PHubEndpoints::createURL(H5PHubEndpoints::METADATA);
     $lastModified = $this->h5pF->getContentHubMetadataChecked($lang);
 
-    $headers = array(
-      'Authorization' => $this->hubGetAuthorizationHeader(),
-      'Accept' => 'application/json',
-    );
+    $headers = array();
     if (!empty($lastModified)) {
       $headers['If-Modified-Since'] = $lastModified;
     }
