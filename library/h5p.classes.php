@@ -3696,6 +3696,9 @@ class H5PCore {
       'registrationTitle' => $this->h5pF->t('Hub Registration and End User License Agreement (EULA)'),
       'registrationFailed' => $this->h5pF->t('An error occured'),
       'registrationFailedDescription' => $this->h5pF->t('We were not able to create an account at this point. Something went wrong. Try again later.'),
+      'maxLength' => $this->h5pF->t(':length is the maximum number of characters'),
+      'keywordExists' => $this->h5pF->t('Keyword already exists!'),
+      'licenseDetails' => $this->h5pF->t('License details'),
     );
   }
 
