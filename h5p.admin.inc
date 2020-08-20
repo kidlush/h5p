@@ -923,21 +923,42 @@ function h5p_register_account() {
 
   $logo = isset($_FILES['logo']) ? $_FILES['logo'] : NULL;
 
-  $url = H5PHubEndpoints::createURL(H5PHubEndpoints::REGISTER);
-  $registration = $core->h5pF->fetchExternalData($url, array(
-    'name' => filter_input(INPUT_POST, 'name'),
-    'email' => filter_input(INPUT_POST, 'email'),
-    'description' => filter_input(INPUT_POST, 'description'),
+  $formData = [
+    'name'           => filter_input(INPUT_POST, 'name'),
+    'email'          => filter_input(INPUT_POST, 'email'),
+    'description'    => filter_input(INPUT_POST, 'description'),
     'contact_person' => filter_input(INPUT_POST, 'contact_person'),
-    'phone' => filter_input(INPUT_POST, 'phone'),
-    'address' => filter_input(INPUT_POST, 'address'),
-    'city' => filter_input(INPUT_POST, 'city'),
-    'zip' => filter_input(INPUT_POST, 'zip'),
-    'country' => filter_input(INPUT_POST, 'country'),
-    'site_uuid' => $uuid,
-  ), NULL, NULL, TRUE, array(), array(
-    'logo' => $logo,
-  ));
+    'phone'          => filter_input(INPUT_POST, 'phone'),
+    'address'        => filter_input(INPUT_POST, 'address'),
+    'city'           => filter_input(INPUT_POST, 'city'),
+    'zip'            => filter_input(INPUT_POST, 'zip'),
+    'country'        => filter_input(INPUT_POST, 'country'),
+    'site_uuid'      => $uuid,
+  ];
+  $headers = array();
+
+  $endpoint = H5PHubEndpoints::REGISTER;
+  // Update if already registered
+  $hasRegistered = $core->h5pF->getOption('hub_secret');
+  if ($hasRegistered) {
+    $endpoint            .= "/{$uuid}";
+    $formData['_method'] = 'PUT';
+    $formData['remove_logo'] = filter_input(INPUT_POST, 'remove_logo');
+    $headers = array(
+      'Authorization' => $core->hubGetAuthorizationHeader(),
+    );
+  }
+
+  $url          = H5PHubEndpoints::createURL($endpoint);
+  $registration = $core->h5pF->fetchExternalData(
+    $url,
+    $formData,
+    NULL,
+    NULL,
+    TRUE,
+    $headers,
+    isset($logo) ? ['logo' => $logo] : array()
+  );
 
   try {
     $results = json_decode($registration['data']);
@@ -957,7 +978,12 @@ function h5p_register_account() {
     return;
   }
 
-  if ($results->success === FALSE || !isset($results->account->secret) || $registration['status'] !== 200) {
+  if (
+    !isset($results->success)
+    || $results->success === FALSE
+    || !$hasRegistered && !isset($results->account->secret)
+    || $registration['status'] !== 200
+  ) {
     $message = 'Registration failed.';
     $core->h5pF->setErrorMessage($message);
     H5PCore::ajaxError($message);
@@ -965,7 +991,10 @@ function h5p_register_account() {
     return;
   }
 
-  $core->h5pF->setOption('hub_secret', $results->account->secret);
+  if (!$hasRegistered) {
+    $core->h5pF->setOption('hub_secret', $results->account->secret);
+  }
+
   $msg = $core->h5pF->t('Account successfully registered.');
   $core->h5pF->setInfoMessage($msg);
   H5PCore::ajaxSuccess($msg);
@@ -979,6 +1008,7 @@ function h5p_register_account() {
  */
 function h5p_hub_registration() {
   $core = _h5p_get_instance('core');
+  $accountInfo = $core->hubAccountInfo();
 
   $settings = array(
     'H5PContentHubRegistration' => array(
@@ -988,7 +1018,8 @@ function h5p_hub_registration() {
       'l10n' => $core->getLocalization(),
       'licenseAgreementTitle' => 'End User License Agreement (EULA)',
       'licenseAgreementDescription' => 'Please read the following agreement before proceeding with the ',
-      'licenseAgreementMainText' => 'TODO'
+      'licenseAgreementMainText' => 'TODO',
+      'accountInfo' => $accountInfo,
     ),
   );
 
