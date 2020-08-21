@@ -1943,6 +1943,7 @@ function h5p_publish($node) {
   drupal_add_js("$path/library/js/h5p-hub-sharing.js");
   drupal_add_js("$path/scripts/h5p-hub-sharing-behavior.js");
   drupal_add_css("$path/library/styles/h5p-hub-sharing.css");
+  drupal_add_css("$path/library/styles/h5p.css");
 
   $h5pcontent = h5p_get_content($node);
   $settings = array(
