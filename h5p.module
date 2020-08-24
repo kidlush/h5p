@@ -1814,6 +1814,10 @@ function h5p_share($node) {
     ),
     'summary' => FILTER_SANITIZE_STRING,
     'description' => FILTER_SANITIZE_STRING,
+    'screenshotAltTexts' => array(
+      'filter' => FILTER_SANITIZE_STRING,
+      'flags' => FILTER_REQUIRE_ARRAY,
+    )
   ));
 
   // Find H5P content for node
