@@ -177,6 +177,18 @@ function h5p_menu() {
     'context' => MENU_CONTEXT_PAGE,
   );
 
+  $items['node/%node/h5p-waiting'] = array(
+    'description' => 'Waiting for content hub to process the content',
+    'title' => 'Sharing...',
+    'page callback' => 'h5p_wait_for_content_hub',
+    'page arguments' => array(1),
+    'access callback' => 'h5p_is_waiting_for_content_hub',
+    'access arguments' => array(1),
+    'weight' => 0,
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE,
+  );
+
   return $items;
 }
 
@@ -1883,6 +1895,12 @@ function h5p_preprocess_menu_local_task(&$variables) {
     );
   }
 
+  if ($link['path'] === 'node/%/h5p-waiting') {
+    $link['localized_options']['attributes'] = array(
+      'class' => array('h5p-content-hub-button', 'waiting'),
+    );
+  }
+
   if (!$jsAdded) {
     $path = drupal_get_path('module', 'h5p');
     $settings = array(
@@ -2042,5 +2060,26 @@ function h5p_sync_to_content_hub($node) {
       ->execute();
   }
 
+  drupal_goto("node/{$node->nid}");
+}
+
+/**
+ * Shows "waiting" tab when content is waiting to be processed by content hub
+ *
+ * @param $node
+ *
+ * @return bool Returns true if content is waiting to be processed
+ */
+function h5p_is_waiting_for_content_hub($node) {
+  return intval($node->h5p_synced) === H5PContentHubSyncStatus::WAITING;
+}
+
+/**
+ * Allows showing an empty MENU_LOCAL_TASK with waiting text...
+ *
+ * @param $node
+ */
+function h5p_wait_for_content_hub($node) {
+  // This does nothing, it is just there to enable the waiting tab for the node
   drupal_goto("node/{$node->nid}");
 }
