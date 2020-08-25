@@ -1950,7 +1950,7 @@ function h5p_access_toggle_publish($isPublishing, $node) {
  * @param object $node The node
  */
 function h5p_publish($node) {
-  global $language;
+  global $user;
   $core = _h5p_get_instance('core');
 
   // Redirect to registration if we're not registered yet
@@ -1973,10 +1973,10 @@ function h5p_publish($node) {
       'token' => H5PCore::createToken('content_hub_token'),
       'publishURL' => url('h5p/share/' . $node->nid),
       'l10n' => $core->getLocalization(),
-      'metadata' => json_decode($core->getUpdatedContentHubMetadataCache($language->language)),
+      'metadata' => json_decode($core->getUpdatedContentHubMetadataCache($user->language)),
       'title' => $h5pcontent['title'],
       'contentType' => H5PCore::libraryToString($h5pcontent['library']),
-      'language' => $language->language,
+      'language' => $user->language,
     ),
   );
   drupal_add_js($settings, 'setting');
