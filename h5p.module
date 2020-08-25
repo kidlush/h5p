@@ -718,6 +718,9 @@ function h5p_load($nodes) {
       $node->h5p_shared = $content['shared'];
       $node->h5p_synced = $content['synced'];
       $node->content_hub_id = $content['contentHubId'];
+      $node->h5p_default_language = isset($content['metadata']['defaultLanguage'])
+        ? $content['metadata']['defaultLanguage']
+        : 'en';
     }
   }
 }
@@ -871,13 +874,14 @@ function _h5p_process_shortcodes($text, $filter) {
 function _include_h5p($node) {
   $content_id = h5p_get_content_id($node);
   $embed = H5PCore::determineEmbedType($node->embed_type, $node->main_library['embedTypes']);
+  $language = $node->h5p_default_language;
 
   h5p_add_files_and_settings($node, $embed);
   if ($embed === 'div') {
     $html = '<div class="h5p-content" data-content-id="' .  $content_id . '"></div>';
   }
   else {
-    $html = '<div class="h5p-iframe-wrapper"><iframe id="h5p-iframe-' . $content_id . '" class="h5p-iframe" data-content-id="' . $content_id . '" style="height:1px" src="about:blank" frameBorder="0" scrolling="no"></iframe></div>';
+    $html = '<div class="h5p-iframe-wrapper"><iframe id="h5p-iframe-' . $content_id . '" class="h5p-iframe" data-content-id="' . $content_id . '" style="height:1px" src="about:blank" frameBorder="0" scrolling="no" lang="' . $language . '"></iframe></div>';
   }
   return $html;
 }
@@ -1109,13 +1113,15 @@ function h5p_get_content_settings($content) {
   foreach ($results as $result) {
     $content_user_data[$result->sub_content_id][$result->data_id] = $result->data;
   }
+  $language = isset($content['metadata']['defaultLanguage'])
+    ? $content['metadata']['defaultLanguage'] : 'en';
 
   return array(
     'library' => H5PCore::libraryToString($content['library']),
     'jsonContent' => $filtered,
     'fullScreen' => $content['library']['fullscreen'],
     'exportUrl' => h5p_get_export_path($content),
-    'embedCode' => '<iframe src="' . url('h5p/embed/' . $content['mainId'], array('absolute' => TRUE)) . '" width=":w" height=":h" frameborder="0" allowfullscreen="allowfullscreen"></iframe>',
+    'embedCode' => '<iframe src="' . url('h5p/embed/' . $content['mainId'], array('absolute' => TRUE)) . '" width=":w" height=":h" frameborder="0" allowfullscreen="allowfullscreen" lang="'. $language . '"></iframe>',
     'resizeCode' => '<script src="' . h5p_get_resize_url() . '" charset="UTF-8"></script>',
     'mainId' => $content['mainId'],
     'url' => $content['url'],

@@ -6,7 +6,7 @@ window.ns = window.H5PEditor = window.H5PEditor || {};
  *
  * @class H5PEditor.Editor
  * @param {string} library
- * @param {Object} defaultParams
+ * @param {string} defaultParams
  * @param {Element} replace
  * @param {Function} iframeLoaded
  */
@@ -15,6 +15,14 @@ ns.Editor = function (library, defaultParams, replace, iframeLoaded) {
 
   // Library may return "0", make sure this doesn't return true in checks
   library = library && library != 0 ? library : '';
+
+  let parsedParams = {};
+  try {
+    parsedParams = JSON.parse(defaultParams);
+  }
+  catch (e) {
+    // Ignore failed parses, this should be handled elsewhere
+  }
 
   // Define iframe DOM Element through jQuery
   var $iframe = ns.$('<iframe/>', {
@@ -32,6 +40,11 @@ ns.Editor = function (library, defaultParams, replace, iframeLoaded) {
     'allowfullscreen': 'allowfullscreen',
     'allow': "fullscreen"
   });
+  const language = (parsedParams.metadata && parsedParams.metadata.defaultLanguage)
+    ? parsedParams.metadata.defaultLanguage
+    : ns.contentLanguage;
+  $iframe.attr('lang', language);
+
 
   // The DOM element is often used directly
   var iframe = $iframe.get(0);
@@ -134,7 +147,8 @@ ns.Editor = function (library, defaultParams, replace, iframeLoaded) {
      * Trigger semi-fullscreen for $element.
      *
      * @param {jQuery} $element Element to put in semi-fullscreen
-     * @param {function} before Callback that runs after entering semi-fullscreen
+     * @param {function} before Callback that runs after entering
+     *   semi-fullscreen
      * @param {function} done Callback that runs after exiting semi-fullscreen
      * @return {function} Exit trigger
      */
@@ -566,7 +580,8 @@ ns.language = {};
  * @param {string} library The library name(machineName), or "core".
  * @param {string} key Translation string identifier.
  * @param {Object} [vars] Placeholders and values to replace in the text.
- * @returns {string} Translated string, or a text if string translation is missing.
+ * @returns {string} Translated string, or a text if string translation is
+ *   missing.
  */
 ns.t = function (library, key, vars) {
   if (ns.language[library] === undefined) {
