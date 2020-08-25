@@ -217,7 +217,7 @@ div.h5p-fullscreen {
   line-height: 23px;
 }
 .h5p-actions > .h5p-button:hover {
-  color: #666;
+  color: #333;
 }
 .h5p-actions > .h5p-button:active,
 .h5p-actions > .h5p-button:focus,
