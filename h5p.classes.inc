@@ -50,19 +50,20 @@ class H5PDrupal implements H5PFrameworkInterface {
 
       // TODO: Should we check $_FILES[]['size'] (+ combiend size) before trying to post something we know is too large?
       foreach ($files as $name => $file) {
-        if ($file !== null) {
-          if (is_array($file['name'])) {
-            // Array of files uploaded (multiple)
-            for ($i = 0; $i < count($file['name']); $i++) {
-              $encoded_data .= "--$boundary\r\n";
-              $encoded_data .= h5p_multipart_enc_file($name . '[]', $file['tmp_name'][$i], $file['name'][$i], $file['type'][$i]);
-            }
-          }
-          else {
-            // Single file
+        if ($file === NULL) {
+          continue;
+        }
+        elseif (is_array($file['name'])) {
+          // Array of files uploaded (multiple)
+          for ($i = 0; $i < count($file['name']); $i++) {
             $encoded_data .= "--$boundary\r\n";
-            $encoded_data .= h5p_multipart_enc_file($name, $file['tmp_name'], $file['name'], $file['type']);
+            $encoded_data .= h5p_multipart_enc_file($name . '[]', $file['tmp_name'][$i], $file['name'][$i], $file['type'][$i]);
           }
+        }
+        else {
+          // Single file
+          $encoded_data .= "--$boundary\r\n";
+          $encoded_data .= h5p_multipart_enc_file($name, $file['tmp_name'], $file['name'], $file['type']);
         }
       }
 
