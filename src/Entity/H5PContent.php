@@ -329,13 +329,17 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
     $h5p_module_path = drupal_get_path('module', 'h5p');
     $embed_url = Url::fromUri('internal:/h5p/' . $this->id() . '/embed', ['absolute' => TRUE])->toString(TRUE)->getGeneratedUrl();
     $resizer_url = Url::fromUri('internal:/' . $h5p_module_path . '/vendor/h5p/h5p-core/js/h5p-resizer.js', ['absolute' => TRUE, 'language' => FALSE])->toString(TRUE)->getGeneratedUrl();
+    $metadata = $this->getMetadata();
+    $language = isset($metadata['defaultLanguage'])
+      ? $metadata['defaultLanguage']
+      : 'en';
 
     return array(
       'library' => $this->getLibraryString(),
       'jsonContent' => $filtered_parameters,
       'fullScreen' => $this->library->fullscreen,
       'exportUrl' => $this->getExportURL(),
-      'embedCode' => '<iframe src="' . $embed_url . '" width=":w" height=":h" frameborder="0" allowfullscreen="allowfullscreen"></iframe>',
+      'embedCode' => '<iframe src="' . $embed_url . '" width=":w" height=":h" frameborder="0" allowfullscreen="allowfullscreen" lang="' . $language . '"></iframe>',
       'resizeCode' => '<script src="' . $resizer_url . '" charset="UTF-8"></script>',
       'url' => $embed_url,
       'metadata' => $this->getMetadata(),
