@@ -3725,7 +3725,7 @@ class H5PCore {
     }
 
     $result = json_decode($response['data']);
-    if ($result->success === TRUE) {
+    if (isset($result->success) && $result->success === TRUE) {
       return $result;
     }
     elseif (!empty($result->errors)) {
