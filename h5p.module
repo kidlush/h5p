@@ -874,7 +874,6 @@ function _h5p_process_shortcodes($text, $filter) {
 function _include_h5p($node) {
   $content_id = h5p_get_content_id($node);
   $embed = H5PCore::determineEmbedType($node->embed_type, $node->main_library['embedTypes']);
-  $language = $node->h5p_default_language;
   $title = $node->title;
   if (isset($node->metadata['a11yTitle'])) {
     $title = $node->metadata['a11yTitle'];
@@ -885,7 +884,7 @@ function _include_h5p($node) {
     $html = '<div class="h5p-content" data-content-id="' .  $content_id . '"></div>';
   }
   else {
-    $html = '<div class="h5p-iframe-wrapper"><iframe id="h5p-iframe-' . $content_id . '" class="h5p-iframe" data-content-id="' . $content_id . '" style="height:1px" src="about:blank" frameBorder="0" scrolling="no" lang="' . $language . '" title="' . $title . '"></iframe></div>';
+    $html = '<div class="h5p-iframe-wrapper"><iframe id="h5p-iframe-' . $content_id . '" class="h5p-iframe" data-content-id="' . $content_id . '" style="height:1px" src="about:blank" frameBorder="0" scrolling="no" title="' . $title . '"></iframe></div>';
   }
   return $html;
 }
@@ -1117,8 +1116,6 @@ function h5p_get_content_settings($content) {
   foreach ($results as $result) {
     $content_user_data[$result->sub_content_id][$result->data_id] = $result->data;
   }
-  $language = isset($content['metadata']['defaultLanguage'])
-    ? $content['metadata']['defaultLanguage'] : 'en';
   $title = isset($content['metadata']['a11yTitle'])
     ? $content['metadata']['a11yTitle']
     : (isset($content['metadata']['title'])
@@ -1131,7 +1128,7 @@ function h5p_get_content_settings($content) {
     'jsonContent' => $filtered,
     'fullScreen' => $content['library']['fullscreen'],
     'exportUrl' => h5p_get_export_path($content),
-    'embedCode' => '<iframe src="' . url('h5p/embed/' . $content['mainId'], array('absolute' => TRUE)) . '" width=":w" height=":h" frameborder="0" allowfullscreen="allowfullscreen" lang="'. $language . '" title="' . $title .'"></iframe>',
+    'embedCode' => '<iframe src="' . url('h5p/embed/' . $content['mainId'], array('absolute' => TRUE)) . '" width=":w" height=":h" frameborder="0" allowfullscreen="allowfullscreen" title="' . $title .'"></iframe>',
     'resizeCode' => '<script src="' . h5p_get_resize_url() . '" charset="UTF-8"></script>',
     'mainId' => $content['mainId'],
     'url' => $content['url'],
@@ -1686,7 +1683,9 @@ function h5p_embed($nid = NULL) {
   $scripts = array_merge($scripts, $core->getAssetsUrls($files['scripts']));
   $styles = array_merge($styles, $core->getAssetsUrls($files['styles']));
 
-  $lang = $language->language;
+  $lang = isset($node->metadata['defaultLanguage'])
+    ? $node->metadata['defaultLanguage']
+    : $language->language;
   include('library/embed.php');
 }
 
