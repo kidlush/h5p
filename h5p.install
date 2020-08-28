@@ -635,6 +635,12 @@ function h5p_schema() {
         'size' => 'big',
         'unsigned' => TRUE,
       ),
+      'a11y_title' => array(
+        'description' => 'Title for assistive technologies',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE
+      ),
     ),
     'primary key' => array('content_id'),
     'indexes' => array(
@@ -1890,6 +1896,15 @@ function h5p_update_7123() {
       'type'        => 'int',
       'size'        => 'big',
       'unsigned'    => true,
+    ));
+  }
+
+  if (!db_field_exists('h5p_nodes', 'a11y_title')) {
+    db_add_field('h5p_nodes', 'a11y_title', array(
+      'description' => 'Title for assistive technologies',
+      'type' => 'varchar',
+      'length' => 255,
+      'not null' => false,
     ));
   }
 }

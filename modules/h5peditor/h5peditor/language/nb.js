@@ -285,5 +285,7 @@ H5PEditor.language.core = {
   failedFetchingData: 'Failed fetching data',
   filterErrorMessage: 'Something went wrong. Please reload the page.',
   in: 'in',
-  navigateToParent: 'Navigate to parent'
+  navigateToParent: 'Navigate to parent',
+  a11yTitleShowLabel: 'Show label for AT',
+  a11yTitleHideLabel: 'Hide label for AT',
 };

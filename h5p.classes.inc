@@ -892,7 +892,8 @@ class H5PDrupal implements H5PFrameworkInterface {
               hn.default_language AS meta_default_language,
               hn.shared AS shared,
               hn.synced AS synced,
-              hn.content_hub_id AS content_hub_id
+              hn.content_hub_id AS content_hub_id,
+              hn.a11y_title AS meta_a11y_title
       FROM {h5p_nodes} hn
       JOIN {node} n ON n.nid = hn.nid
       JOIN {h5p_libraries} hl ON hl.library_id = hn.main_library_id
@@ -908,7 +909,7 @@ class H5PDrupal implements H5PFrameworkInterface {
 
     // Build metadata object
     $content->metadata = array();
-    foreach(array('authors', 'source', 'license', 'license_version', 'license_extras' ,'year_from', 'year_to', 'changes', 'author_comments', 'default_language') as $value) {
+    foreach(array('authors', 'source', 'license', 'license_version', 'license_extras' ,'year_from', 'year_to', 'changes', 'author_comments', 'default_language', 'a11y_title') as $value) {
       $lookup = 'meta_' . $value;
       if (isset($content->$lookup)) {
         $content->metadata[$value] = $content->$lookup;

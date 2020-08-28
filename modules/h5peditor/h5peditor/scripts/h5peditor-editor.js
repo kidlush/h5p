@@ -40,10 +40,22 @@ ns.Editor = function (library, defaultParams, replace, iframeLoaded) {
     'allowfullscreen': 'allowfullscreen',
     'allow': "fullscreen"
   });
-  const language = (parsedParams.metadata && parsedParams.metadata.defaultLanguage)
-    ? parsedParams.metadata.defaultLanguage
+  const metadata = parsedParams.metadata;
+  const language = (metadata && metadata.defaultLanguage)
+    ? metadata.defaultLanguage
     : ns.contentLanguage;
   $iframe.attr('lang', language);
+
+  let title = ''
+  if (metadata) {
+    if (metadata.a11yTitle) {
+      title = metadata.a11yTitle;
+    }
+    else if (metadata.title) {
+      title = metadata.title;
+    }
+  }
+  $iframe.attr('title', title);
 
 
   // The DOM element is often used directly

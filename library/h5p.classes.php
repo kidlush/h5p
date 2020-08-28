@@ -4885,6 +4885,12 @@ class H5PContentValidator {
         'placeholder' => 'La Gioconda'
       ),
       (object) array(
+        'name' => 'a11yTitle',
+        'type' => 'text',
+        'label' => $this->h5pF->t('Assistive Technologies label'),
+        'optional' => TRUE,
+      ),
+      (object) array(
         'name' => 'license',
         'type' => 'select',
         'label' => $this->h5pF->t('License'),
