@@ -6,18 +6,18 @@
         "source": {
             "type": "git",
             "url": "https://github.com/h5p/h5p-php-library.git",
-            "reference": "eb52ec25a09e33e9b42f5ee82fe3b013c03ec856"
+            "reference": "16c71b444b94d865f3742e7a48bd13015d98804b"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/h5p/h5p-php-library/zipball/eb52ec25a09e33e9b42f5ee82fe3b013c03ec856",
-            "reference": "eb52ec25a09e33e9b42f5ee82fe3b013c03ec856",
+            "url": "https://api.github.com/repos/h5p/h5p-php-library/zipball/16c71b444b94d865f3742e7a48bd13015d98804b",
+            "reference": "16c71b444b94d865f3742e7a48bd13015d98804b",
             "shasum": ""
         },
         "require": {
             "php": ">=5.3.0"
         },
-        "time": "2020-08-28T09:17:19+00:00",
+        "time": "2020-08-28T13:26:10+00:00",
         "type": "library",
         "installation-source": "source",
         "autoload": {
