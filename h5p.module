@@ -744,7 +744,6 @@ function h5p_view($node, $view_mode = 'full') {
     // Check and update sync status if user can share the content and the state
     //  can not have changed externally
     if (!empty($node->content_hub_id)
-      && intval($node->h5p_synced) !== H5PContentHubSyncStatus::FAILED
       && intval($node->h5p_synced) !== H5PContentHubSyncStatus::NOT_SYNCED
       && h5p_share_access($node, false)
     ) {
