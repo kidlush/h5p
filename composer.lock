@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/h5p/h5p-php-library.git",
-                "reference": "16c71b444b94d865f3742e7a48bd13015d98804b"
+                "reference": "1a644dda1134b1ce60635db8d0ab5f09caaa03e4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/h5p/h5p-php-library/zipball/16c71b444b94d865f3742e7a48bd13015d98804b",
-                "reference": "16c71b444b94d865f3742e7a48bd13015d98804b",
+                "url": "https://api.github.com/repos/h5p/h5p-php-library/zipball/1a644dda1134b1ce60635db8d0ab5f09caaa03e4",
+                "reference": "1a644dda1134b1ce60635db8d0ab5f09caaa03e4",
                 "shasum": ""
             },
             "require": {
@@ -61,7 +61,7 @@
                 "interactive",
                 "quiz"
             ],
-            "time": "2020-08-28T13:26:10+00:00"
+            "time": "2020-08-28T14:54:16+00:00"
         },
         {
             "name": "h5p/h5p-editor",
@@ -69,12 +69,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/h5p/h5p-editor-php-library.git",
-                "reference": "b9582fdde00dfb7b04f2dbf39f81325cb8061cee"
+                "reference": "3a6465df02eaded06061bea9c970a0c52aeb048d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/h5p/h5p-editor-php-library/zipball/b9582fdde00dfb7b04f2dbf39f81325cb8061cee",
-                "reference": "b9582fdde00dfb7b04f2dbf39f81325cb8061cee",
+                "url": "https://api.github.com/repos/h5p/h5p-editor-php-library/zipball/3a6465df02eaded06061bea9c970a0c52aeb048d",
+                "reference": "3a6465df02eaded06061bea9c970a0c52aeb048d",
                 "shasum": ""
             },
             "require": {
@@ -118,7 +118,7 @@
                 "interactive",
                 "quiz"
             ],
-            "time": "2020-08-28T12:09:25+00:00"
+            "time": "2020-08-28T14:55:17+00:00"
         }
     ],
     "packages-dev": [],

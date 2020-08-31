@@ -337,9 +337,6 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
     $embed_url = Url::fromUri('internal:/h5p/' . $this->id() . '/embed', ['absolute' => TRUE])->toString(TRUE)->getGeneratedUrl();
     $resizer_url = Url::fromUri('internal:/' . $h5p_module_path . '/vendor/h5p/h5p-core/js/h5p-resizer.js', ['absolute' => TRUE, 'language' => FALSE])->toString(TRUE)->getGeneratedUrl();
     $metadata = $this->getMetadata();
-    $language = isset($metadata['defaultLanguage'])
-      ? $metadata['defaultLanguage']
-      : 'en';
     $title = isset($metadata['a11yTitle'])
       ? $metadata['a11yTitle']
       : (isset($metadata['title'])
@@ -352,7 +349,7 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
       'jsonContent' => $filtered_parameters,
       'fullScreen' => $this->library->fullscreen,
       'exportUrl' => $this->getExportURL(),
-      'embedCode' => '<iframe src="' . $embed_url . '" width=":w" height=":h" frameborder="0" allowfullscreen="allowfullscreen" lang="' . $language . '" title="' . $title . '"></iframe>',
+      'embedCode' => '<iframe src="' . $embed_url . '" width=":w" height=":h" frameborder="0" allowfullscreen="allowfullscreen" title="' . $title . '"></iframe>',
       'resizeCode' => '<script src="' . $resizer_url . '" charset="UTF-8"></script>',
       'url' => $embed_url,
       'metadata' => $this->getMetadata(),
