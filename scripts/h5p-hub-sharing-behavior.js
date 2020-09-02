@@ -3,8 +3,7 @@ Drupal.behaviors.h5pContentHubPublish = {
     const publish = document.getElementById('h5p-publish');
     if (!publish.classList.contains('processed')) {
       publish.classList.add('processed');
-      settings.h5pContentHubPublish.container = publish; // Not ideal :-)
-      H5PHub.createSharingUI(settings.h5pContentHubPublish);
+      H5PHub.createSharingUI(publish, settings.h5pContentHubPublish);
     }
   }
 };

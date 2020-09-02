@@ -153,6 +153,18 @@ function h5p_menu() {
     'context' => MENU_CONTEXT_PAGE,
   );
 
+  $items['node/%node/h5p-edit'] = array(
+    'description' => 'Edit content details on the content hub',
+    'title' => 'Edit',
+    'page callback' => 'h5p_edit',
+    'page arguments' => array(1),
+    'access callback' => 'h5p_access_edit',
+    'access arguments' => array(1),
+    'weight' => 0,
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE,
+  );
+
   $items['node/%node/h5p-unpublish'] = array(
     'description' => 'Unpublish content from the content hub',
     'title' => 'Unshare',
@@ -1964,16 +1976,48 @@ function h5p_access_toggle_publish($isPublishing, $node) {
  * @param object $node The node
  */
 function h5p_publish($node) {
-  global $user;
-  $core = _h5p_get_instance('core');
-
   // Redirect to registration if we're not registered yet
+  $core = _h5p_get_instance('core');
   if (empty($core->h5pF->getOption('hub_secret', ''))) {
     if (user_access('administer site configuration')) {
       drupal_goto('admin/config/system/h5p/register');
     }
     return t('Your site is not yet registered with the content hub. Please contact an administrator.');
   }
+
+  return h5p_add_share_ui($node);
+}
+
+/**
+ * Checks if user has access to publish or unpublish
+ *
+ * @param object $node The node
+ *
+ * @return bool True if the user has access to the action
+ */
+function h5p_access_edit($node) {
+  return $node->type === 'h5p_content' && !empty($node->content_hub_id);
+}
+
+/**
+ * Edit content on the Hub
+ *
+ * @param object $node The node
+ */
+function h5p_edit($node) {
+  $core = _h5p_get_instance('core');
+  $hub_content = $core->hubRetrieveContent($node->content_hub_id);
+  return h5p_add_share_ui($node, $hub_content);
+}
+
+/**
+ * Add JavaScript UI for sharing or updating published content.
+ *
+ * @param object $node The node
+ * @param object $hub_content Data from the Hub for already shared content
+ */
+function h5p_add_share_ui($node, $hub_content = NULL) {
+  global $user;
 
   $path = drupal_get_path('module', 'h5p');
   drupal_add_js("$path/library/js/h5p-hub-sharing.js");
@@ -1982,6 +2026,7 @@ function h5p_publish($node) {
   drupal_add_css("$path/library/styles/h5p.css");
 
   $h5pcontent = h5p_get_content($node);
+  $core = _h5p_get_instance('core');
   $settings = array(
     'h5pContentHubPublish' => array(
       'token' => H5PCore::createToken('content_hub_token'),
@@ -1991,8 +2036,17 @@ function h5p_publish($node) {
       'title' => $h5pcontent['title'],
       'contentType' => H5PCore::libraryToString($h5pcontent['library']),
       'language' => $user->language,
+      'hubContent' => $hub_content,
     ),
   );
+  if ($hub_content) {
+    $settings['h5pContentHubPublish']['l10n']['mainTitle'] = t('Edit info for <strong>:title</strong>');
+    $settings['h5pContentHubPublish']['l10n']['reviewAndShare'] = t('Review & Save');
+    $settings['h5pContentHubPublish']['l10n']['share'] = t('Save changes');
+    $settings['h5pContentHubPublish']['l10n']['shareFailed'] = t('Editing failed.');
+    $settings['h5pContentHubPublish']['l10n']['isNowSubmitted'] = t('A change has been submited for');
+    $settings['h5pContentHubPublish']['l10n']['contentAvailable'] = t('Your content will update soon');
+  }
   drupal_add_js($settings, 'setting');
 
   return '<div id="h5p-publish">Waiting for JavaScript...</div>';
