@@ -901,26 +901,9 @@ function h5p_restrict_library_callback($library_id) {
 
 /**
  * Register account with site uuid on the content hub
- *
- * @return bool Returns true if the registration was successful
  */
 function h5p_register_account() {
-  $core = _h5p_get_instance('core');
-
   $token = filter_input(INPUT_POST, 'token');
-  if (!H5PCore::validToken('content_hub_registration', $token)) {
-    $message = 'Invalid token.';
-    $core->h5pF->setErrorMessage($message);
-    drupal_add_http_header('status', '401');
-    H5PCore::ajaxError($message);
-  }
-
-  $uuid = $core->h5pF->getOption('site_uuid', '');
-  if (empty($uuid)) {
-    $errorMessage = $core->h5pF->t('Site is missing a unique site uuid. The H5P Content Hub is disabled until this problem can be resolved. Please enable the H5P Hub through your site settings before trying again.');
-    $core->h5pF->setErrorMessage($errorMessage);
-    return FALSE;
-  }
 
   $logo = isset($_FILES['logo']) ? $_FILES['logo'] : NULL;
 
@@ -934,72 +917,22 @@ function h5p_register_account() {
     'city'           => filter_input(INPUT_POST, 'city'),
     'zip'            => filter_input(INPUT_POST, 'zip'),
     'country'        => filter_input(INPUT_POST, 'country'),
-    'site_uuid'      => $uuid,
+    'remove_logo'    => filter_input(INPUT_POST, 'remove_logo'),
   ];
-  $headers = array();
 
-  $endpoint = H5PHubEndpoints::REGISTER;
-  // Update if already registered
-  $hasRegistered = $core->h5pF->getOption('hub_secret');
-  if ($hasRegistered) {
-    $endpoint            .= "/{$uuid}";
-    $formData['_method'] = 'PUT';
-    $formData['remove_logo'] = filter_input(INPUT_POST, 'remove_logo');
-    $headers = array(
-      'Authorization' => $core->hubGetAuthorizationHeader(),
-    );
-  }
+  $core = _h5p_get_instance('core');
+  $result = $core->hubRegisterAccount($token, $formData, $logo);
 
-  $url          = H5PHubEndpoints::createURL($endpoint);
-  $registration = $core->h5pF->fetchExternalData(
-    $url,
-    $formData,
-    NULL,
-    NULL,
-    TRUE,
-    $headers,
-    isset($logo) ? ['logo' => $logo] : array()
-  );
-
-  try {
-    $results = json_decode($registration['data']);
-  }
-  catch (Exception $e) {
-    $message = 'Could not parse json response.';
-    $core->h5pF->setErrorMessage($message);
-    drupal_add_http_header('status', '500');
-    H5PCore::ajaxError($message);
-  }
-
-  if (isset($results->errors->site_uuid)) {
-    $message = 'Site UUID is not unique.';
-    $core->h5pF->setErrorMessage($message);
-    H5PCore::ajaxError($message);
-    drupal_add_http_header('status', '422');
+  if ($result['success'] === false) {
+    $core->h5pF->setErrorMessage($result['message']);
+    drupal_add_http_header('status', $result['status_code']);
+    H5PCore::ajaxError($result['message'], $result['error_code'], $result['status_code']);
     return;
   }
 
-  if (
-    !isset($results->success)
-    || $results->success === FALSE
-    || !$hasRegistered && !isset($results->account->secret)
-    || $registration['status'] !== 200
-  ) {
-    $message = 'Registration failed.';
-    $core->h5pF->setErrorMessage($message);
-    H5PCore::ajaxError($message);
-    drupal_add_http_header('status', '422');
-    return;
-  }
-
-  if (!$hasRegistered) {
-    $core->h5pF->setOption('hub_secret', $results->account->secret);
-  }
-
-  $msg = $core->h5pF->t('Account successfully registered.');
-  $core->h5pF->setInfoMessage($msg);
-  H5PCore::ajaxSuccess($msg);
-  return;
+  $core->h5pF->setInfoMessage($result['message']);
+  drupal_add_http_header('status', 200);
+  H5PCore::ajaxSuccess($result['message']);
 }
 
 /**
