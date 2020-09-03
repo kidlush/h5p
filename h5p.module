@@ -137,7 +137,7 @@ function h5p_menu() {
     'page callback' => 'h5p_share',
     'page arguments' => array(2),
     'access callback' => 'h5p_share_access',
-    'access arguments' => array(2),
+    'access arguments' => array(2, false),
     'type' => MENU_CALLBACK,
   );
 
@@ -1830,8 +1830,8 @@ function h5p_share($node) {
     return;
   }
 
-  if (!empty($node->content_hub_id)) {
-    H5PCore::ajaxError(t('Content already shared on the H5P Hub.'));
+  if ($node->h5p_synced === H5PContentHubSyncStatus::WAITING) {
+    H5PCore::ajaxError(t('Content is already being synced.'));
     return;
   }
 
@@ -1852,10 +1852,15 @@ function h5p_share($node) {
     ),
     'summary' => FILTER_SANITIZE_STRING,
     'description' => FILTER_SANITIZE_STRING,
-    'screenshotAltTexts' => array(
+    'screenshot_alt_texts' => array(
       'filter' => FILTER_SANITIZE_STRING,
       'flags' => FILTER_REQUIRE_ARRAY,
-    )
+    ),
+    'remove_screenshots' => array(
+      'filter' => FILTER_SANITIZE_STRING,
+      'flags' => FILTER_REQUIRE_ARRAY,
+    ),
+    'remove_icon' => FILTER_SANITIZE_STRING,
   ));
 
   // Find H5P content for node
@@ -1877,15 +1882,19 @@ function h5p_share($node) {
 
   $core = _h5p_get_instance('core');
   try {
-    $result = $core->hubPublishContent($data, $files);
+    $result = $core->hubPublishContent($data, $files, !empty($node->content_hub_id) ? $node->content_hub_id : NULL);
+
+    $fields = array(
+      'synced' => H5PContentHubSyncStatus::WAITING,
+      'shared' => 1,
+    );
+    if (empty($node->content_hub_id)) {
+      $fields['content_hub_id'] = $result->content->id;
+    }
 
     // Store the content hub id
     db_update('h5p_nodes')
-      ->fields(array(
-        'content_hub_id' => $result->content->id,
-        'synced' => H5PContentHubSyncStatus::WAITING,
-        'shared' => 1,
-      ))
+      ->fields($fields)
       ->condition('content_id', h5p_get_content_id($node))
       ->execute();
 
