@@ -1808,7 +1808,7 @@ function h5p_share_access($node, $context = NULL) {
   if ($context === 'publish' && $node->h5p_shared !== '0') {
     return FALSE; // Cannot Publish unless content is unpublished
   }
-  if (($context === 'edit' || $context === 'unpublish' || $context === 'sync') && !empty($node->content_hub_id) && $node->h5p_shared !== '1') {
+  if (($context === 'edit' || $context === 'unpublish' || $context === 'sync') && (empty($node->content_hub_id) || $node->h5p_shared !== '1')) {
     return FALSE; // Cannot Edit, Unpublish or Sync unless shared
   }
   if ($context === 'sync' && (intval($node->h5p_synced) === H5PContentHubSyncStatus::SYNCED || intval($node->h5p_synced) === H5PContentHubSyncStatus::WAITING)) {
