@@ -137,7 +137,7 @@ function h5p_menu() {
     'page callback' => 'h5p_share',
     'page arguments' => array(2),
     'access callback' => 'h5p_share_access',
-    'access arguments' => array(2, false),
+    'access arguments' => array(2),
     'type' => MENU_CALLBACK,
   );
 
@@ -145,9 +145,9 @@ function h5p_menu() {
     'description' => 'Publish content to the content hub',
     'title' => 'Share',
     'page callback' => 'h5p_publish',
-    'page arguments' => array(1),
+    'page arguments' => array(1, 'publish'),
     'access callback' => 'h5p_share_access',
-    'access arguments' => array(1),
+    'access arguments' => array(1, 'publish'),
     'weight' => 0,
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_PAGE,
@@ -155,11 +155,11 @@ function h5p_menu() {
 
   $items['node/%node/h5p-edit'] = array(
     'description' => 'Edit content details on the content hub',
-    'title' => 'Edit',
-    'page callback' => 'h5p_edit',
-    'page arguments' => array(1),
-    'access callback' => 'h5p_access_edit',
-    'access arguments' => array(1),
+    'title' => 'Edit sharing info',
+    'page callback' => 'h5p_publish',
+    'page arguments' => array(1, 'edit'),
+    'access callback' => 'h5p_share_access',
+    'access arguments' => array(1, 'edit'),
     'weight' => 0,
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_PAGE,
@@ -170,8 +170,8 @@ function h5p_menu() {
     'title' => 'Unshare',
     'page callback' => 'h5p_unpublish',
     'page arguments' => array(1),
-    'access callback' => 'h5p_access_toggle_publish',
-    'access arguments' => array(FALSE, 1),
+    'access callback' => 'h5p_share_access',
+    'access arguments' => array(1, 'unpublish'),
     'weight' => 0,
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_PAGE,
@@ -182,8 +182,8 @@ function h5p_menu() {
     'title' => 'Sync changes',
     'page callback' => 'h5p_sync_to_content_hub',
     'page arguments' => array(1),
-    'access callback' => 'h5p_access_sync',
-    'access arguments' => array(1),
+    'access callback' => 'h5p_share_access',
+    'access arguments' => array(1, 'sync'),
     'weight' => 0,
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_PAGE,
@@ -757,7 +757,7 @@ function h5p_view($node, $view_mode = 'full') {
     //  can not have changed externally
     if (!empty($node->content_hub_id)
       && intval($node->h5p_synced) !== H5PContentHubSyncStatus::NOT_SYNCED
-      && h5p_share_access($node, false)
+      && h5p_share_access($node)
     ) {
       $core    = _h5p_get_instance('core');
       $url     = H5PHubEndpoints::createURL(H5PHubEndpoints::CONTENT);
@@ -1799,22 +1799,26 @@ function h5p_multipart_enc_text($name, $value){
 /**
  * Handler for access to sharing content on the hub
  */
-function h5p_share_access($node, $requireNotShared = true) {
+function h5p_share_access($node, $context = NULL) {
   global $user;
 
-  $isValidShareState = $requireNotShared
-    ? $node->h5p_shared === '0' && empty($node->content_hub_id)
-    : true;
-  if ($node->type == 'h5p_content' && $isValidShareState) {
-    if (user_access('share any h5p content')) {
-      return TRUE;
-    }
-    elseif (user_access('share own h5p content') && $user->uid === $node->uid) {
-      return TRUE;
-    }
+  if ($node->type !== 'h5p_content') {
+    return FALSE; // Refuse access regardless of permissions
+  }
+  if ($context === 'publish' && $node->h5p_shared !== '0') {
+    return FALSE; // Cannot Publish unless content is unpublished
+  }
+  if (($context === 'edit' || $context === 'unpublish' || $context === 'sync') && !empty($node->content_hub_id) && $node->h5p_shared !== '1') {
+    return FALSE; // Cannot Edit, Unpublish or Sync unless shared
+  }
+  if ($context === 'sync' && (intval($node->h5p_synced) === H5PContentHubSyncStatus::SYNCED || intval($node->h5p_synced) === H5PContentHubSyncStatus::WAITING)) {
+    return FALSE; // Cannot sync if already synced or sync in progress
   }
 
-  return FALSE;
+  if (user_access('share any h5p content') || (user_access('share own h5p content') && $user->uid === $node->uid)) {
+    return TRUE; // Access is granted due to right permissions
+  }
+  return FALSE; // Access was not granted
 }
 
 /**
@@ -1831,7 +1835,7 @@ function h5p_share($node) {
   }
 
   if ($node->h5p_synced === H5PContentHubSyncStatus::WAITING) {
-    H5PCore::ajaxError(t('Content is already being synced.'));
+    H5PCore::ajaxError(t('Content is being synced.'));
     return;
   }
 
@@ -1882,19 +1886,23 @@ function h5p_share($node) {
 
   $core = _h5p_get_instance('core');
   try {
-    $result = $core->hubPublishContent($data, $files, !empty($node->content_hub_id) ? $node->content_hub_id : NULL);
-    
-    if (empty($node->content_hub_id)) {
-      // Store the content hub id
-      db_update('h5p_nodes')
-        ->fields(array(
-          'content_hub_id' => $result->content->id,
-          'synced' => H5PContentHubSyncStatus::WAITING,
-          'shared' => 1,
-        ))
-        ->condition('content_id', h5p_get_content_id($node))
-        ->execute();
+    $isEdit = !empty($node->content_hub_id);
+    $result = $core->hubPublishContent($data, $files, $isEdit ? $node->content_hub_id : NULL);
+
+    $fields = array(
+      'shared' => 1, // Content is always shared after sharing or editing
+    );
+    if (!$isEdit) {
+      $fields['content_hub_id'] = $result->content->id;
+      // Sync will not happen on 'edit info', only for 'publish' or 'sync'.
+      $fields['synced'] = H5PContentHubSyncStatus::WAITING;
     }
+
+    // Store the content hub id
+    db_update('h5p_nodes')
+      ->fields($fields)
+      ->condition('content_id', h5p_get_content_id($node))
+      ->execute();
 
     H5PCore::ajaxSuccess();
   }
@@ -1949,40 +1957,14 @@ function h5p_preprocess_menu_local_task(&$variables) {
 }
 
 /**
- * Checks if user has access to publish or unpublish
- *
- * @param bool $isPublishing True if publishing, otherwise unpublishing
- * @param object $node The node
- *
- * @return bool True if the user has access to the action
- */
-function h5p_access_toggle_publish($isPublishing, $node) {
-  if ($node->type !== 'h5p_content') {
-    return FALSE;
-  }
-
-  if ($isPublishing) {
-    // Already published and shared
-    if (!empty($node->content_hub_id) && $node->h5p_shared !== "0") {
-      return FALSE;
-    }
-  }
-  else {
-    // Not associated with a hub id or not shared
-    if (empty($node->content_hub_id) || $node->h5p_shared === "0") {
-      return FALSE;
-    }
-  }
-
-  return h5p_share_access($node, false);
-}
-
-/**
  * Unpublish content
  *
  * @param object $node The node
+ * @param object $context Edit or share
  */
-function h5p_publish($node) {
+function h5p_publish($node, $context) {
+  global $user;
+
   // Redirect to registration if we're not registered yet
   $core = _h5p_get_instance('core');
   if (empty($core->h5pF->getOption('hub_secret', ''))) {
@@ -1992,40 +1974,10 @@ function h5p_publish($node) {
     return t('Your site is not yet registered with the content hub. Please contact an administrator.');
   }
 
-  return h5p_add_share_ui($node);
-}
+  // Try loading existing info from the HUB
+  $hubcontent = !empty($node->content_hub_id) ? $core->hubRetrieveContent($node->content_hub_id) : NULL;
 
-/**
- * Checks if user has access to publish or unpublish
- *
- * @param object $node The node
- *
- * @return bool True if the user has access to the action
- */
-function h5p_access_edit($node) {
-  return $node->type === 'h5p_content' && !empty($node->content_hub_id);
-}
-
-/**
- * Edit content on the Hub
- *
- * @param object $node The node
- */
-function h5p_edit($node) {
-  $core = _h5p_get_instance('core');
-  $hub_content = $core->hubRetrieveContent($node->content_hub_id);
-  return h5p_add_share_ui($node, $hub_content);
-}
-
-/**
- * Add JavaScript UI for sharing or updating published content.
- *
- * @param object $node The node
- * @param object $hub_content Data from the Hub for already shared content
- */
-function h5p_add_share_ui($node, $hub_content = NULL) {
-  global $user;
-
+  // Add the sharing UI via JavaScripts and stylesheets
   $path = drupal_get_path('module', 'h5p');
   drupal_add_js("$path/library/js/h5p-hub-sharing.js");
   drupal_add_js("$path/scripts/h5p-hub-sharing-behavior.js");
@@ -2033,7 +1985,6 @@ function h5p_add_share_ui($node, $hub_content = NULL) {
   drupal_add_css("$path/library/styles/h5p.css");
 
   $h5pcontent = h5p_get_content($node);
-  $core = _h5p_get_instance('core');
   $settings = array(
     'h5pContentHubPublish' => array(
       'token' => H5PCore::createToken('content_hub_token'),
@@ -2043,17 +1994,10 @@ function h5p_add_share_ui($node, $hub_content = NULL) {
       'title' => $h5pcontent['title'],
       'contentType' => H5PCore::libraryToString($h5pcontent['library']),
       'language' => $user->language,
-      'hubContent' => $hub_content,
+      'hubContent' => $hubcontent,
+      'context' => $context,
     ),
   );
-  if ($hub_content) {
-    $settings['h5pContentHubPublish']['l10n']['mainTitle'] = t('Edit info for <strong>:title</strong>');
-    $settings['h5pContentHubPublish']['l10n']['reviewAndShare'] = t('Review & Save');
-    $settings['h5pContentHubPublish']['l10n']['share'] = t('Save changes');
-    $settings['h5pContentHubPublish']['l10n']['shareFailed'] = t('Editing failed.');
-    $settings['h5pContentHubPublish']['l10n']['isNowSubmitted'] = t('A change has been submited for');
-    $settings['h5pContentHubPublish']['l10n']['contentAvailable'] = t('Your content will update soon');
-  }
   drupal_add_js($settings, 'setting');
 
   return '<div id="h5p-publish">Waiting for JavaScript...</div>';
@@ -2080,33 +2024,6 @@ function h5p_unpublish($node) {
   }
 
   drupal_goto("node/{$node->nid}");
-}
-
-/**
- * Checks if the user has access to syncing content
- *
- * @param object $node The node
- *
- * @return bool True if the user can do the action
- */
-function h5p_access_sync($node) {
-  if ($node->type !== 'h5p_content') {
-    return FALSE;
-  }
-
-  // Must have content hub id and be shared to sync
-  if (empty($node->content_hub_id) || $node->h5p_shared === "0") {
-    return false;
-  }
-
-  // Do not show if already in sync or syncing
-  if (intval($node->h5p_synced) === H5PContentHubSyncStatus::SYNCED
-    || intval($node->h5p_synced) === H5PContentHubSyncStatus::WAITING
-  ) {
-    return false;
-  }
-
-  return h5p_share_access($node, false);
 }
 
 /**
@@ -2146,7 +2063,7 @@ function h5p_sync_to_content_hub($node) {
  * @return bool Returns true if content is waiting to be processed
  */
 function h5p_is_waiting_for_content_hub($node) {
-  return intval($node->h5p_synced) === H5PContentHubSyncStatus::WAITING;
+  return $node->type === 'h5p_content' && intval($node->h5p_synced) === H5PContentHubSyncStatus::WAITING;
 }
 
 /**
