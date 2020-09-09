@@ -1975,7 +1975,13 @@ function h5p_publish($node, $context) {
   }
 
   // Try loading existing info from the HUB
-  $hubcontent = !empty($node->content_hub_id) ? $core->hubRetrieveContent($node->content_hub_id) : NULL;
+  try {
+    $hubcontent = !empty($node->content_hub_id) ? $core->hubRetrieveContent($node->content_hub_id) : NULL;
+  }
+  catch (Exception $e) {
+    $core->h5pF->setErrorMessage(!empty($e->errors) ? $e->errors : $e->getMessage());
+    drupal_goto("node/{$node->nid}");
+  }
 
   if (empty($node->content_hub_id)) {
     // Try to populate with license from content
