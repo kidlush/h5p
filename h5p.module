@@ -1977,6 +1977,18 @@ function h5p_publish($node, $context) {
   // Try loading existing info from the HUB
   $hubcontent = !empty($node->content_hub_id) ? $core->hubRetrieveContent($node->content_hub_id) : NULL;
 
+  if (empty($node->content_hub_id)) {
+    // Try to populate with license from content
+    $license = isset($node->metadata['license']) ? $node->metadata['license'] : null;
+    $licenseVersion = isset($license) && isset($node->metadata['licenseVersion'])
+      ? $node->metadata['licenseVersion']
+      : null;
+    $hubcontent = [
+      'license' => $license,
+      'licenseVersion' => $licenseVersion,
+    ];
+  }
+
   // Add the sharing UI via JavaScripts and stylesheets
   $path = drupal_get_path('module', 'h5p');
   drupal_add_js("$path/library/js/h5p-hub-sharing.js");
