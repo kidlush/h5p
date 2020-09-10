@@ -178,62 +178,69 @@ function h5p_admin_settings($form, &$form_state) {
     ),
   );
 
-  $accountInfo = $core->hubAccountInfo();
-  if (!$accountInfo) {
-    $form['h5p_register_hub_account'] = array(
-      '#type'   => 'item',
-      '#title'  => t('Hub Account Settings'),
-      '#markup' => t('Register an account on the Hub <a href="@url">here</a>.',
-        array('@url' => '/admin/config/system/h5p/register')),
-    );
-  }
-  else {
-    $markUp = '<div>
+  try {
+    $accountInfo = $core->hubAccountInfo();
+
+    if (!$accountInfo) {
+      $form['h5p_register_hub_account'] = array(
+        '#type'   => 'item',
+        '#title'  => t('Hub Account Settings'),
+        '#markup' => t('Register an account on the Hub <a href="@url">here</a>.',
+          array('@url' => '/admin/config/system/h5p/register')),
+      );
+    }
+    else {
+      $markUp = '<div>
                 <img src="' . $accountInfo->logo . '" style="max-width: 5em; display: inline-block; vertical-align: top" />
                 <div style="display: inline-block">';
-    if (!empty($accountInfo->name)) {
-      $markUp .= '<div>' . $accountInfo->name . '</div>';
-    }
-    if (!empty($accountInfo->contactPerson)) {
-      $markUp .= '<div>'. $accountInfo->contactPerson . '</div>';
-    }
-    if (!empty($accountInfo->email)) {
-      $markUp .= '<div>'. $accountInfo->email . '</div>';
-    }
-
-    $hasAddress = !empty($accountInfo->address);
-    if ($hasAddress || (!empty($accountInfo->zip) && !empty($accountInfo->city))) {
-      $markUp .= '<div>';
-      if ($hasAddress) {
-        $markUp .= $accountInfo->address;
+      if (!empty($accountInfo->name)) {
+        $markUp .= '<div>' . $accountInfo->name . '</div>';
       }
-      if (!empty($accountInfo->zip) && !empty($accountInfo->city)) {
+      if (!empty($accountInfo->contactPerson)) {
+        $markUp .= '<div>'. $accountInfo->contactPerson . '</div>';
+      }
+      if (!empty($accountInfo->email)) {
+        $markUp .= '<div>'. $accountInfo->email . '</div>';
+      }
+
+      $hasAddress = !empty($accountInfo->address);
+      if ($hasAddress || (!empty($accountInfo->zip) && !empty($accountInfo->city))) {
+        $markUp .= '<div>';
         if ($hasAddress) {
-          $markUp .= ' ';
+          $markUp .= $accountInfo->address;
         }
-        $markUp .= $accountInfo->zip . ' ' . $accountInfo->city;
+        if (!empty($accountInfo->zip) && !empty($accountInfo->city)) {
+          if ($hasAddress) {
+            $markUp .= ' ';
+          }
+          $markUp .= $accountInfo->zip . ' ' . $accountInfo->city;
+        }
+        $markUp .= '</div>';
       }
-      $markUp .= '</div>';
-    }
 
-    if (!empty($accountInfo->country)) {
-      $markUp .= '<div>'. $accountInfo->country . '</div>';
-    }
+      if (!empty($accountInfo->country)) {
+        $markUp .= '<div>'. $accountInfo->country . '</div>';
+      }
 
-    if (!empty($accountInfo->phone)) {
-      $markUp .= '<div>'. $accountInfo->phone . '</div>';
-    }
+      if (!empty($accountInfo->phone)) {
+        $markUp .= '<div>'. $accountInfo->phone . '</div>';
+      }
 
-    $markUp .= '<div style="margin-top: 1em">' . t('Change account settings <a href="@url">here</a>', array('@url' => '/admin/config/system/h5p/register',)) . '</div>
+      $markUp .= '<div style="margin-top: 1em">' . t('Change account settings <a href="@url">here</a>', array('@url' => '/admin/config/system/h5p/register',)) . '</div>
             </div>
           </div>';
 
-    $form['h5p_register_hub_account'] = array(
-      '#type' => 'item',
-      '#title' => t('Hub Account Settings'),
-      '#markup' => $markUp,
-    );
+      $form['h5p_register_hub_account'] = array(
+        '#type' => 'item',
+        '#title' => t('Hub Account Settings'),
+        '#markup' => $markUp,
+      );
+    }
   }
+  catch (Exception $e) {
+    // Not showing account form before secret has been fixed
+  }
+
 
   // Set h5p settings class on form container
   $form['#attributes'] = array('class' => array('h5p-settings-container'));
@@ -942,7 +949,13 @@ function h5p_register_account() {
  */
 function h5p_hub_registration() {
   $core = _h5p_get_instance('core');
-  $accountInfo = $core->hubAccountInfo();
+  try {
+    $accountInfo = $core->hubAccountInfo();
+  }
+  catch (Exception $e) {
+    // Go back to H5P configuration, secret has to be removed manually
+    drupal_goto('admin/config/system/h5p');
+  }
 
   $settings = array(
     'H5PContentHubRegistration' => array(

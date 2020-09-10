@@ -760,58 +760,20 @@ function h5p_view($node, $view_mode = 'full') {
       && h5p_share_access($node)
     ) {
       $core    = _h5p_get_instance('core');
-      $url     = H5PHubEndpoints::createURL(H5PHubEndpoints::CONTENT);
-      $hubId   = $node->content_hub_id;
-      $headers = array(
-        'Authorization' => $core->hubGetAuthorizationHeader(),
+      $newState = $core->getHubContentStatus(
+        $node->content_hub_id,
+        $node->h5p_synced
       );
-      $response = $core->h5pF->fetchExternalData("{$url}/{$hubId}/status",
-        null, true, null, true, $headers);
 
-      if (empty($response) || $response['status'] !== 200) {
-        $msg = $core->h5pF->t('Could not get content hub sync status for content.');
-        $core->h5pF->setErrorMessage($msg);
-      }
-      else {
-        $data = json_decode($response['data']);
+      if ($newState !== false) {
+        db_update('h5p_nodes')
+          ->fields(array(
+            'synced' => $newState,
+          ))
+          ->condition('content_id', $node->h5p_id)
+          ->execute();
 
-        if ($data->messages) {
-          // TODO: Is this the right place/way to display them?
-
-          if (!empty($data->messages->info)) {
-            foreach ($data->messages->info as $info) {
-              $core->h5pF->setInfoMessage($info);
-            }
-          }
-          if (!empty($data->messages->error)) {
-            foreach ($data->messages->error as $error) {
-              $core->h5pF->setErrorMessage($error->message, $error->code);
-            }
-          }
-        }
-
-        $contentStatus = intval($data->status);
-        // Content status updated
-        if ($contentStatus !== H5PContentStatus::STATUS_WAITING) {
-          $newState = H5PContentHubSyncStatus::SYNCED;
-          if ($contentStatus !== H5PContentStatus::STATUS_DOWNLOADED) {
-            $newState = H5PContentHubSyncStatus::FAILED;
-          }
-          else if (intval($node->h5p_synced) !== $contentStatus) {
-            // Content status successfully transitioned to synced/downloaded
-            $successMsg = $core->h5pF->t('Content was successfully shared on the content hub.');
-            $core->h5pF->setInfoMessage($successMsg);
-          }
-
-          db_update('h5p_nodes')
-            ->fields(array(
-              'synced' => $newState,
-            ))
-            ->condition('content_id', $node->h5p_id)
-            ->execute();
-
-          $node->h5p_synced = $newState;
-        }
+        $node->h5p_synced = $newState;
       }
     }
   }
