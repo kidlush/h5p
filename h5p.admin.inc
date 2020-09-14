@@ -184,8 +184,8 @@ function h5p_admin_settings($form, &$form_state) {
     if (!$accountInfo) {
       $form['h5p_register_hub_account'] = array(
         '#type'   => 'item',
-        '#title'  => t('Hub Account Settings'),
-        '#markup' => t('Register an account on the Hub <a href="@url">here</a>.',
+        '#title'  => t('H5P Hub Account Settings'),
+        '#markup' => t('Register an account on the H5P Hub <a href="@url">here</a>.',
           array('@url' => '/admin/config/system/h5p/register')),
       );
     }
