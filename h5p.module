@@ -1849,6 +1849,11 @@ function h5p_share($node) {
   $core = _h5p_get_instance('core');
   try {
     $isEdit = !empty($node->content_hub_id);
+    $updateContent = intval($node->h5p_synced) === H5PContentHubSyncStatus::NOT_SYNCED && $isEdit;
+    if ($updateContent) {
+      // node has been edited since the last time it was published
+      $data['resync'] = 1;
+    }
     $result = $core->hubPublishContent($data, $files, $isEdit ? $node->content_hub_id : NULL);
 
     $fields = array(
@@ -1857,6 +1862,9 @@ function h5p_share($node) {
     if (!$isEdit) {
       $fields['content_hub_id'] = $result->content->id;
       // Sync will not happen on 'edit info', only for 'publish' or 'sync'.
+      $fields['synced'] = H5PContentHubSyncStatus::WAITING;
+    }
+    else if ($updateContent) {
       $fields['synced'] = H5PContentHubSyncStatus::WAITING;
     }
 
