@@ -1224,7 +1224,7 @@ class H5PDrupal implements H5PFrameworkInterface {
     if (!empty($results)) {
       $time = new DateTime();
       $time->setTimestamp($results);
-      $results = $time->format(DateTimeInterface::RFC7231);
+      $results = $time->format("D, d M Y H:i:s \G\M\T");
     }
 
     return $results;
