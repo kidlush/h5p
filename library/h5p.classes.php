@@ -3660,6 +3660,7 @@ class H5PCore {
       'licenseVersionDescription' => $this->h5pF->t('Select a license version'),
       'disciplineLabel' => $this->h5pF->t('Disciplines'),
       'disciplineDescription' => $this->h5pF->t('You can select multiple disciplines'),
+      'disciplineLimitReachedMessage' => $this->h5pF->t('You can select up to :numDisciplines disciplines'),
       'discipline' => array(
         'searchPlaceholder' => $this->h5pF->t('Select one or more disciplines'),
         'in' => $this->h5pF->t('in'),
@@ -3712,7 +3713,7 @@ class H5PCore {
       'successfullyRegistred' => $this->h5pF->t('You have successfully registered an account on the H5P Hub'),
       'successfullyRegistredDescription' => $this->h5pF->t('You account details can be changed'),
       'accountDetailsLinkText' => $this->h5pF->t('here'),
-      'registrationTitle' => $this->h5pF->t('H5P Hub Registration and End User License Agreement (EULA)'),
+      'registrationTitle' => $this->h5pF->t('H5P Hub Registration'),
       'registrationFailed' => $this->h5pF->t('An error occurred'),
       'registrationFailedDescription' => $this->h5pF->t('We were not able to create an account at this point. Something went wrong. Try again later.'),
       'maxLength' => $this->h5pF->t(':length is the maximum number of characters'),
@@ -3724,6 +3725,7 @@ class H5PCore {
       'cancelPublishConfirmationDialogDescription' => $this->h5pF->t('Are you sure you want to cancel the sharing process?'),
       'cancelPublishConfirmationDialogCancelButtonText' => $this->h5pF->t('No'),
       'cancelPublishConfirmationDialogConfirmButtonText' => $this->h5pF->t('Yes'),
+      'add' => $this->h5pF->t('Add')
     );
   }
 
