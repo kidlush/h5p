@@ -232,7 +232,7 @@ function h5p_admin_settings($form, &$form_state) {
 
       $form['h5p_register_hub_account'] = array(
         '#type' => 'item',
-        '#title' => t('Hub Account Settings'),
+        '#title' => t('H5P Hub Account Settings'),
         '#markup' => $markUp,
       );
     }
