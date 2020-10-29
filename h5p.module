@@ -1981,7 +1981,7 @@ function h5p_publish($node, $context) {
       'metadata' => json_decode($core->getUpdatedContentHubMetadataCache($user->language)),
       'title' => $h5pcontent['title'],
       'contentType' => H5PCore::libraryToString($h5pcontent['library']),
-      'language' => $user->language,
+      'language' => !empty($user->language) ? $user->language : 'en',
       'hubContent' => $hubcontent,
       'context' => $context,
     ),
