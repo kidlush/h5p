@@ -2028,21 +2028,25 @@ function h5p_sync_to_content_hub($node) {
   if (!$_POST) {
     return drupal_not_found();
   }
+  if (H5PCore::validToken('content_hub_token', filter_input(INPUT_POST, 'token'))) {
+    $core = _h5p_get_instance('core');
+    $slug = !empty($node->h5p_slug) ? $node->h5p_slug . '-' : '';
+    $h5pName = $slug . $node->h5p_id . '.h5p';
+    $exportPath = _h5p_get_h5p_path() . '/exports/' . $h5pName;
+    $exportUrl = file_create_url($exportPath);
+    $hubId = $node->content_hub_id;
+    $success = $core->hubSyncContent($hubId, $token, $exportUrl);
 
-  $core = _h5p_get_instance('core');
-  $slug = !empty($node->h5p_slug) ? $node->h5p_slug . '-' : '';
-  $h5pName = $slug . $node->h5p_id . '.h5p';
-  $exportPath = _h5p_get_h5p_path() . '/exports/' . $h5pName;
-  $exportUrl = file_create_url($exportPath);
-  $hubId = $node->content_hub_id;
-  $token = filter_input(INPUT_POST, 'token');
-  $success = $core->hubSyncContent($hubId, $token, $exportUrl);
-
-  if ($success) {
-    db_update('h5p_nodes')
-      ->fields(array('synced' => H5PContentHubSyncStatus::WAITING))
-      ->condition('content_id', $node->h5p_id)
-      ->execute();
+    if ($success) {
+      db_update('h5p_nodes')
+        ->fields(array('synced' => H5PContentHubSyncStatus::WAITING))
+        ->condition('content_id', $node->h5p_id)
+        ->execute();
+    }
+  }
+  else {
+    $msg = $this->h5pF->t('Could not sync content because token was invalid. Please try again.');
+    $this->h5pF->setErrorMessage($msg);
   }
 
   drupal_goto("node/{$node->nid}");
