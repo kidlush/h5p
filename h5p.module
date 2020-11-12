@@ -2001,14 +2001,19 @@ function h5p_unpublish($node) {
     return drupal_not_found();
   }
 
-  $token = filter_input(INPUT_POST, 'token');
-  $core = _h5p_get_instance('core');
-  $success = $core->hubUnpublishContent($node->content_hub_id, $token);
-  if ($success) {
-    db_update('h5p_nodes')
-      ->fields(array('shared' => 0))
-      ->condition('content_id', $node->h5p_id)
-      ->execute();
+  if (H5PCore::validToken('content_hub_token', filter_input(INPUT_POST, 'token'))) {
+    $core = _h5p_get_instance('core');
+    $success = $core->hubUnpublishContent($node->content_hub_id, $token);
+    if ($success) {
+      db_update('h5p_nodes')
+        ->fields(array('shared' => 0))
+        ->condition('content_id', $node->h5p_id)
+        ->execute();
+    }
+  }
+  else {
+    $msg = $this->h5pF->t('Could not unpublish content because token was invalid. Please try again.');
+    $this->h5pF->setErrorMessage($msg);
   }
 
   drupal_goto("node/{$node->nid}");
