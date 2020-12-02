@@ -932,7 +932,7 @@ function h5p_set_started($content_id) {
 function h5p_set_finished() {
   global $user;
 
-  if (!H5PCore::validToken('result', filter_input(INPUT_GET, 'token'))) {
+  if (!H5PCore::validToken('result', filter_input(INPUT_GET, '_token'))) {
     return H5PCore::ajaxError(t('Invalid security token.'));
   }
 
@@ -1791,7 +1791,7 @@ function h5p_share($node) {
     return drupal_not_found();
   }
 
-  if (!H5PCore::validToken('content_hub_token', filter_input(INPUT_POST, 'token'))) {
+  if (!H5PCore::validToken('content_hub_token', filter_input(INPUT_POST, '_token'))) {
     H5PCore::ajaxError(t('Invalid security token.'));
     return;
   }
@@ -2001,7 +2001,7 @@ function h5p_unpublish($node) {
     return drupal_not_found();
   }
 
-  if (H5PCore::validToken('content_hub_token', filter_input(INPUT_POST, 'token'))) {
+  if (H5PCore::validToken('content_hub_token', filter_input(INPUT_POST, '_token'))) {
     $core = _h5p_get_instance('core');
     $success = $core->hubUnpublishContent($node->content_hub_id, $token);
     if ($success) {
@@ -2028,7 +2028,7 @@ function h5p_sync_to_content_hub($node) {
   if (!$_POST) {
     return drupal_not_found();
   }
-  if (H5PCore::validToken('content_hub_token', filter_input(INPUT_POST, 'token'))) {
+  if (H5PCore::validToken('content_hub_token', filter_input(INPUT_POST, '_token'))) {
     $core = _h5p_get_instance('core');
     $slug = !empty($node->h5p_slug) ? $node->h5p_slug . '-' : '';
     $h5pName = $slug . $node->h5p_id . '.h5p';

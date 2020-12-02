@@ -14,7 +14,7 @@
     form.classList.add('h5p-hidden-form');
 
     const inputToken = document.createElement('input');
-    inputToken.name = 'token';
+    inputToken.name = '_token';
     inputToken.type = 'hidden';
     inputToken.value = token;
     form.appendChild(inputToken);

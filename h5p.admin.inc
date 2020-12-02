@@ -910,7 +910,10 @@ function h5p_restrict_library_callback($library_id) {
  * Register account with site uuid on the content hub
  */
 function h5p_register_account() {
-  $token = filter_input(INPUT_POST, 'token');
+  if (!H5PCore::validToken('content_hub_registration', filter_input(INPUT_POST, '_token'))) {
+    H5PCore::ajaxError(t('Invalid security token.'));
+    return;
+  }
 
   $logo = isset($_FILES['logo']) ? $_FILES['logo'] : NULL;
 
@@ -928,7 +931,7 @@ function h5p_register_account() {
   ];
 
   $core = _h5p_get_instance('core');
-  $result = $core->hubRegisterAccount($token, $formData, $logo);
+  $result = $core->hubRegisterAccount($formData, $logo);
 
   if ($result['success'] === false) {
     $core->h5pF->setErrorMessage($result['message']);
