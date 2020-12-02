@@ -406,8 +406,9 @@ function h5peditor_content_type_cache_callback() {
  * Callback that returns the content hub metadata cache
  */
 function h5peditor_content_hub_metadata_cache_callback() {
+  global $language;
   $editor = h5peditor_get_instance();
-  $editor->ajax->action(H5PEditorEndpoints::CONTENT_HUB_METADATA_CACHE);
+  $editor->ajax->action(H5PEditorEndpoints::CONTENT_HUB_METADATA_CACHE, $language->language);
 }
 
 /**
