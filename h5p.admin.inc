@@ -826,7 +826,7 @@ function h5p_content_upgrade_progress($library_id) {
                 n.title,
                 h.authors, h.source, h.license, h.license_version, h.license_extras,
                 h.year_from, h.year_to, h.changes, h.author_comments, h.default_language,
-                h.a11y_text
+                h.a11y_title
            FROM {h5p_nodes} h
            JOIN {node} n ON n.nid = h.nid
           WHERE h.main_library_id = :id
