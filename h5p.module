@@ -1827,6 +1827,7 @@ function h5p_share($node) {
       'flags' => FILTER_REQUIRE_ARRAY,
     ),
     'remove_icon' => FILTER_SANITIZE_STRING,
+    'age' => FILTER_SANITIZE_STRING,
   ));
 
   // Find H5P content for node
@@ -1977,6 +1978,7 @@ function h5p_publish($node, $context) {
     'h5pContentHubPublish' => array(
       'token' => H5PCore::createToken('content_hub_token'),
       'publishURL' => url('h5p/share/' . $node->nid),
+      'returnURL' => url("node/{$node->nid}"),
       'l10n' => $core->getLocalization(),
       'metadata' => json_decode($core->getUpdatedContentHubMetadataCache($user->language)),
       'title' => $h5pcontent['title'],
@@ -2003,7 +2005,7 @@ function h5p_unpublish($node) {
 
   if (H5PCore::validToken('content_hub_token', filter_input(INPUT_POST, '_token'))) {
     $core = _h5p_get_instance('core');
-    $success = $core->hubUnpublishContent($node->content_hub_id, $token);
+    $success = $core->hubUnpublishContent($node->content_hub_id);
     if ($success) {
       db_update('h5p_nodes')
         ->fields(array('shared' => 0))
@@ -2035,7 +2037,7 @@ function h5p_sync_to_content_hub($node) {
     $exportPath = _h5p_get_h5p_path() . '/exports/' . $h5pName;
     $exportUrl = file_create_url($exportPath);
     $hubId = $node->content_hub_id;
-    $success = $core->hubSyncContent($hubId, $token, $exportUrl);
+    $success = $core->hubSyncContent($hubId, $exportUrl);
 
     if ($success) {
       db_update('h5p_nodes')
