@@ -2,29 +2,46 @@
 
 namespace Drupal\h5p\Controller;
 
-use Drupal\Core\Url;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Database\Connection;
+use Drupal\h5p\Event\FinishedEvent;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Drupal\h5p\H5PDrupal\H5PDrupal;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Drupal\h5p\Event\FinishedEvent;
 
 class H5PAJAX extends ControllerBase {
 
+  /**
+   * The database connection.
+   *
+   * @var \Drupal\Core\Database\Connection
+   */
   protected $database;
 
+  /**
+   * The Symfony Event dispatcher.
+   *
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
+   */
   protected $eventDispatcher;
 
   /**
-   * DBExample constructor.
+   * Constructs a new H%PAJAX controller.
+   *
+   * @param \Drupal\Core\Database\Connection $database
+   *   The database connection.
+   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   *   The Symfony Event dispatcher.
    */
   public function __construct(Connection $database, EventDispatcherInterface $event_dispatcher) {
     $this->database = $database;
     $this->eventDispatcher = $event_dispatcher;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public static function create(ContainerInterface $container) {
 
     $controller = new static(
@@ -37,9 +54,10 @@ class H5PAJAX extends ControllerBase {
   /**
    * Access callback for the setFinished feature
    *
-   * @return JsonResponse
+   * @return \Symfony\Component\HttpFoundation\JsonResponse
+   *   The AJAX response.
    */
-  function setFinished() {
+  public function setFinished() {
     // Inputs are found as POST parameters
     $content_id = filter_input(INPUT_POST, 'contentId', FILTER_VALIDATE_INT);
     $score = filter_input(INPUT_POST, 'score', FILTER_VALIDATE_INT);
@@ -47,7 +65,7 @@ class H5PAJAX extends ControllerBase {
     $opened = filter_input(INPUT_POST, 'opened', FILTER_VALIDATE_INT);
     $token = filter_input(INPUT_GET, 'token');
 
-    $uid = \Drupal::currentUser()->id();
+    $uid = $this->currentUser()->id();
 
     // Validate input - all parameters needed
     if (! ($content_id && $score !== NULL && $score !== FALSE && $max_score !== NULL && $max_score !== FALSE && $opened && $token && $uid)) {
@@ -106,11 +124,11 @@ class H5PAJAX extends ControllerBase {
    * @param string $data_id
    * @param string $sub_content_id
    *
-   * return JsonResponse
+   * @return \Symfony\Component\HttpFoundation\JsonResponse
+   *   The AJAX response.
    */
-  function contentUserData($content_main_id, $data_id, $sub_content_id) {
-
-    $user = \Drupal::currentUser();
+  public function contentUserData($content_main_id, $data_id, $sub_content_id) {
+    $user = $this->currentUser();
 
     $response = (object) array(
       'success' => TRUE
@@ -128,7 +146,7 @@ class H5PAJAX extends ControllerBase {
 
       if ($data === '0') {
         // Remove data
-        db_delete('h5p_content_user_data')
+        $this->database->delete('h5p_content_user_data')
           ->condition('content_main_id', $content_main_id)
           ->condition('data_id', $data_id)
           ->condition('user_id', $user->id())
@@ -140,23 +158,24 @@ class H5PAJAX extends ControllerBase {
         $invalidate = ($invalidate === '0' ? 0 : 1);
 
         // Determine if we should update or insert
-        $update = db_query("SELECT content_main_id
-                                   FROM {h5p_content_user_data}
-                                   WHERE content_main_id = :content_main_id
-                                     AND user_id = :user_id
-                                     AND data_id = :data_id
-                                     AND sub_content_id = :sub_content_id",
-          array(
+        $update = $this->database->query("
+          SELECT content_main_id
+          FROM {h5p_content_user_data}
+          WHERE content_main_id = :content_main_id
+          AND user_id = :user_id
+          AND data_id = :data_id
+          AND sub_content_id = :sub_content_id",
+          [
             ':content_main_id' => $content_main_id,
             ':user_id' => $user->id(),
             ':data_id' => $data_id,
             ':sub_content_id' => $sub_content_id,
-          ))->fetchField();
+          ])->fetchField();
 
         if ($update === FALSE) {
           // Insert new data
-          db_insert('h5p_content_user_data')
-            ->fields(array(
+          $this->database->insert('h5p_content_user_data')
+            ->fields([
               'user_id' => $user->id(),
               'content_main_id' => $content_main_id,
               'sub_content_id' => $sub_content_id,
@@ -165,18 +184,18 @@ class H5PAJAX extends ControllerBase {
               'data' => $data,
               'preloaded' => $preload,
               'delete_on_content_change' => $invalidate
-            ))
+            ])
             ->execute();
         }
         else {
           // Update old data
-          db_update('h5p_content_user_data')
-            ->fields(array(
+          $this->database->update('h5p_content_user_data')
+            ->fields([
               'timestamp' => time(),
               'data' => $data,
               'preloaded' => $preload,
               'delete_on_content_change' => $invalidate
-            ))
+            ])
             ->condition('user_id', $user->id())
             ->condition('content_main_id', $content_main_id)
             ->condition('data_id', $data_id)
@@ -185,21 +204,21 @@ class H5PAJAX extends ControllerBase {
         }
       }
 
-      \Drupal\Core\Cache\Cache::invalidateTags(['h5p_content:' . $content_main_id]);
-      return new JsonResponse($response);
+      Cache::invalidateTags(['h5p_content:' . $content_main_id]);
     } else {
       // Fetch data
-      $response->data = db_query("SELECT data FROM {h5p_content_user_data}
-                                WHERE user_id = :user_id
-                                  AND content_main_id = :content_main_id
-                                  AND data_id = :data_id
-                                  AND sub_content_id = :sub_content_id",
-        array(
+      $response->data = $this->database->query("
+        SELECT data FROM {h5p_content_user_data}
+        WHERE user_id = :user_id
+        AND content_main_id = :content_main_id
+        AND data_id = :data_id
+        AND sub_content_id = :sub_content_id",
+        [
           ':user_id' => $user->id(),
           ':content_main_id' => $content_main_id,
           ':sub_content_id' => $sub_content_id,
           ':data_id' => $data_id,
-        ))->fetchField();
+        ])->fetchField();
     }
 
     return new JsonResponse($response);

@@ -71,19 +71,20 @@ class H5PEditorDrupalAjax implements \H5PEditorAjaxInterface {
    * @return array|object|null Returns results from querying the database
    */
   public function getContentTypeCache($machineName = NULL) {
+    $database = \Drupal::database();
 
     // Get only the specified content type from cache
     if ($machineName !== NULL) {
-      return db_query(
+      return $database->query(
         "SELECT id, is_recommended
-         FROM {h5p_libraries_hub_cache}
+        FROM {h5p_libraries_hub_cache}
         WHERE machine_name = :name",
         array(':name' => $machineName)
       )->fetchObject();
     }
 
     // Get all cached content types
-    return db_query("SELECT * FROM {h5p_libraries_hub_cache}")->fetchAll();
+    return $database->query("SELECT * FROM {h5p_libraries_hub_cache}")->fetchAll();
   }
 
   /**
@@ -93,13 +94,12 @@ class H5PEditorDrupalAjax implements \H5PEditorAjaxInterface {
    * recently used.
    */
   public function getAuthorsRecentlyUsedLibraries() {
-
     $uid = \Drupal::currentUser()->id();
 
-    $recently_used = array();
+    $recently_used = [];
 
     // Get recently used:
-    $result = db_query("
+    $result = \Drupal::database()->query("
       SELECT library_name, max(created_at) AS max_created_at
       FROM {h5p_events}
       WHERE type='content' AND sub_type = 'create' AND user_id = :uid
@@ -138,21 +138,20 @@ class H5PEditorDrupalAjax implements \H5PEditorAjaxInterface {
     foreach ($libraries as $library) {
       $parsedLib = \H5PCore::libraryFromString($library);
 
-      $translation = db_query("
+      $translation = \Drupal::database()->query("
         SELECT language_json
         FROM {h5p_libraries} lib
         LEFT JOIN {h5p_libraries_languages} lang ON lib.library_id = lang.library_id
         WHERE lib.machine_name = :machine_name AND
               lib.major_version = :major_version AND
               lib.minor_version = :minor_version AND
-              lang.language_code = :language_code
-      ",
-      array(
-        ':machine_name' => $parsedLib['machineName'],
-        ':major_version' => $parsedLib['majorVersion'],
-        ':minor_version' => $parsedLib['minorVersion'],
-        ':language_code' => $language_code)
-      )->fetchField();
+              lang.language_code = :language_code",
+        [
+          ':machine_name' => $parsedLib['machineName'],
+          ':major_version' => $parsedLib['majorVersion'],
+          ':minor_version' => $parsedLib['minorVersion'],
+          ':language_code' => $language_code
+        ])->fetchField();
 
       if ($translation !== FALSE) {
         $translations[$library] = $translation;

@@ -2,12 +2,10 @@
 
 namespace Drupal\h5p\Plugin\Field\FieldFormatter;
 
-use Drupal\Core\Asset\AssetCollectionOptimizerInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\h5p\H5PDrupal\H5PDrupal;
 use Drupal\h5p\Entity\H5PContent;
-
 
 /**
  * Plugin implementation of the 'h5p_default' formatter.

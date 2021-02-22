@@ -7,7 +7,7 @@ use Drupal\h5p\H5PDrupal\H5PDrupal;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use \Drupal\Core\Cache\Cache;
-
+use Drupal\Core\File\FileSystemInterface;
 
 /**
  * Implements the H5P Admin Settings Form.
@@ -204,10 +204,10 @@ class H5PAdminSettingsForm extends FormBase {
     $path = \Drupal::service('file_system')->realpath('public://') . '/' . $h5p_default_path;
     $temp_path = $path . '/' . 'temp';
 
-    if (! file_prepare_directory($path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
+    if (! \Drupal::service('file_system')->prepareDirectory($path, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS)) {
       $form_state->setErrorByName('h5p_default_path', t('You have specified an invalid directory.'));
     }
-    if (! file_prepare_directory($temp_path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
+    if (! \Drupal::service('file_system')->prepareDirectory($temp_path, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS)) {
       $form_state->setErrorByName('h5p_default_path', t('You have specified an invalid directory.'));
     }
 

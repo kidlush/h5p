@@ -2,6 +2,7 @@
 
 namespace Drupal\h5peditor\H5PEditor;
 
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\file\Entity\File;
 use Drupal\h5p\H5PDrupal\H5PDrupal;
 
@@ -18,21 +19,21 @@ class H5PEditorDrupalStorage implements \H5peditorStorage {
    * @return string Translation in JSON format
    */
   public function getLanguage($machineName, $majorVersion, $minorVersion, $languageCode) {
-    $lang = db_query(
+    $lang = \Drupal::database()->query(
       "SELECT language_json
-           FROM {h5p_libraries_languages} hlt
-           JOIN {h5p_libraries} hl
-             ON hl.library_id = hlt.library_id
-          WHERE hl.machine_name = :name
-            AND hl.major_version = :major
-            AND hl.minor_version = :minor
-            AND hlt.language_code = :lang",
-      array(
+        FROM {h5p_libraries_languages} hlt
+        JOIN {h5p_libraries} hl
+          ON hl.library_id = hlt.library_id
+        WHERE hl.machine_name = :name
+          AND hl.major_version = :major
+          AND hl.minor_version = :minor
+          AND hlt.language_code = :lang",
+      [
         ':name' => $machineName,
         ':major' => $majorVersion,
         ':minor' => $minorVersion,
         ':lang' => $languageCode,
-      ))->fetchField();
+      ])->fetchField();
 
     return ($lang === FALSE ? NULL : $lang);
   }
@@ -46,19 +47,19 @@ class H5PEditorDrupalStorage implements \H5peditorStorage {
    * @return array List of possible language codes
    */
   public function getAvailableLanguages($machineName, $majorVersion, $minorVersion) {
-    $results = db_query(
-        "SELECT language_code
-           FROM {h5p_libraries_languages} hlt
-           JOIN {h5p_libraries} hl
-             ON hl.library_id = hlt.library_id
-          WHERE hl.machine_name = :name
-            AND hl.major_version = :major
-            AND hl.minor_version = :minor",
-        array(
-          ':name' => $machineName,
-          ':major' => $majorVersion,
-          ':minor' => $minorVersion
-        ));
+    $results = \Drupal::database()->query(
+      "SELECT language_code
+      FROM {h5p_libraries_languages} hlt
+      JOIN {h5p_libraries} hl
+        ON hl.library_id = hlt.library_id
+      WHERE hl.machine_name = :name
+        AND hl.major_version = :major
+        AND hl.minor_version = :minor",
+      [
+        ':name' => $machineName,
+        ':major' => $majorVersion,
+        ':minor' => $minorVersion
+      ]);
 
     $codes = array('en'); // Semantics is 'en' by default.
     foreach ($results as $result) {
@@ -100,7 +101,7 @@ class H5PEditorDrupalStorage implements \H5peditorStorage {
    * @return array List of all libraries loaded
    */
   public function getLibraries($libraries = NULL) {
-
+    $database = \Drupal::database();
     $user = \Drupal::currentUser();
     $super_user = $user->hasPermission('create restricted h5p content types');
 
@@ -108,18 +109,18 @@ class H5PEditorDrupalStorage implements \H5peditorStorage {
       // Get details for the specified libraries only.
       $librariesWithDetails = array();
       foreach ($libraries as $library) {
-        $details = db_query(
+        $details = $database->query(
           "SELECT title, runnable, restricted, tutorial_url, metadata_settings
-           FROM {h5p_libraries}
-           WHERE machine_name = :name
-           AND major_version = :major
-           AND minor_version = :minor
-           AND semantics IS NOT NULL", // TODO: Consider if semantics is really needed (DB performance-wise)
-          array(
+          FROM {h5p_libraries}
+          WHERE machine_name = :name
+          AND major_version = :major
+          AND minor_version = :minor
+          AND semantics IS NOT NULL", // TODO: Consider if semantics is really needed (DB performance-wise)
+          [
             ':name' => $library->name,
             ':major' => $library->majorVersion,
             ':minor' => $library->minorVersion
-          ))
+          ])
           ->fetchObject();
         if ($details !== FALSE) {
           $library->tutorialUrl = $details->tutorial_url;
@@ -134,9 +135,9 @@ class H5PEditorDrupalStorage implements \H5peditorStorage {
       return $librariesWithDetails;
     }
 
-    $libraries = array();
+    $libraries = [];
 
-    $libraries_result = db_query(
+    $libraries_result = $database->query(
       "SELECT machine_name AS name,
               title,
               major_version,
@@ -144,10 +145,10 @@ class H5PEditorDrupalStorage implements \H5peditorStorage {
               restricted,
               tutorial_url,
               metadata_settings
-       FROM {h5p_libraries}
-       WHERE runnable = 1
-       AND semantics IS NOT NULL
-       ORDER BY title"); // TODO: Consider if semantics is really needed (DB performance-wise)
+      FROM {h5p_libraries}
+      WHERE runnable = 1
+      AND semantics IS NOT NULL
+      ORDER BY title"); // TODO: Consider if semantics is really needed (DB performance-wise)
     foreach ($libraries_result as $library) {
       // Convert result object properties to camelCase.
       $library = \H5PCore::snakeToCamel($library, true);
@@ -219,21 +220,21 @@ class H5PEditorDrupalStorage implements \H5peditorStorage {
     $temp_id = uniqid('h5p-');
 
     $temporary_file_path = "public://{$h5p_path}/temp/{$temp_id}";
-    file_prepare_directory($temporary_file_path, FILE_CREATE_DIRECTORY);
+    $file_service = \Drupal::service('file_system');
+    $file_service->prepareDirectory($temporary_file_path, FileSystemInterface::CREATE_DIRECTORY);
     $name = $temp_id . '.h5p';
     $target = $temporary_file_path . DIRECTORY_SEPARATOR . $name;
     if ($move_file) {
       $file = move_uploaded_file($data, $target);
     }
     else {
-      $file = file_unmanaged_save_data($data, $target);
+      $file = $file_service->saveData($data, $target);
     }
     if (!$file) {
       return FALSE;
     }
 
     // Set session variables necessary for finding the files
-    $file_service = \Drupal::service('file_system');
     $dir = $file_service->realpath($temporary_file_path);
     $interface->getUploadedH5pFolderPath($dir);
     $interface->getUploadedH5pPath("{$dir}/{$name}");
@@ -267,7 +268,7 @@ class H5PEditorDrupalStorage implements \H5peditorStorage {
     }
 
     // Keep track of temporary files so they can be cleaned up later by Drupal
-    $file_data = array(
+    $file_data = [
       'uid' => \Drupal::currentUser()->id(),
       'filename' => $file->getName(),
       'uri' => $uri,
@@ -275,7 +276,7 @@ class H5PEditorDrupalStorage implements \H5peditorStorage {
       'filesize' => $file->size,
       'status' => 0,
       'timestamp' => \Drupal::time()->getRequestTime(),
-    );
+    ];
     $file_managed = File::create($file_data);
     $file_managed->save();
   }

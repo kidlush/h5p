@@ -28,7 +28,7 @@ class H5PEvent extends H5PEventBase {
     $data['user_id'] = \Drupal::currentUser()->id();
 
     // Insert into DB
-    $this->id = db_insert('h5p_events')
+    $this->id = \Drupal::database()->insert('h5p_events')
       ->fields($data)
       ->execute();
 
@@ -42,44 +42,45 @@ class H5PEvent extends H5PEventBase {
    */
   protected function saveStats() {
     $type = $this->type . ' ' . $this->sub_type;
+    $database = \Drupal::database();
 
     // Verify if counter exists
-    $current_num = db_query(
-        "SELECT num
-           FROM {h5p_counters}
-          WHERE type = :type
-            AND library_name = :library_name
-            AND library_version = :library_version
-        ", array(
+    $current_num = $database->query("
+        SELECT num
+        FROM {h5p_counters}
+        WHERE type = :type
+        AND library_name = :library_name
+        AND library_version = :library_version",
+        [
           ':type' => $type,
           ':library_name' => $this->library_name,
           ':library_version' => $this->library_version
-        ))->fetchField();
+        ])->fetchField();
 
     if ($current_num === FALSE) {
       // Insert new counter
-      db_insert('h5p_counters')
-          ->fields(array(
-            'type' => $type,
-            'library_name' => $this->library_name,
-            'library_version' => $this->library_version,
-            'num' => 1
-          ))
-          ->execute();
+      $database->insert('h5p_counters')
+        ->fields([
+          'type' => $type,
+          'library_name' => $this->library_name,
+          'library_version' => $this->library_version,
+          'num' => 1
+        ])
+        ->execute();
     }
     else {
-     // Update counter with num+1
-     db_query(
-         "UPDATE {h5p_counters}
-             SET num = num + 1
-           WHERE type = :type
-             AND library_name = :library_name
-             AND library_version = :library_version
-         ", array(
-           ':type' => $type,
-           ':library_name' => $this->library_name,
-           ':library_version' => $this->library_version
-         ));
+      // Update counter with num+1
+      $database->query("
+        UPDATE {h5p_counters}
+        SET num = num + 1
+        WHERE type = :type
+        AND library_name = :library_name
+        AND library_version = :library_version",
+        [
+          ':type' => $type,
+          ':library_name' => $this->library_name,
+          ':library_version' => $this->library_version
+        ]);
     }
   }
 }
