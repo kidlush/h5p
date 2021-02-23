@@ -1960,9 +1960,22 @@ function h5p_publish($node, $context) {
     $licenseVersion = isset($license) && isset($node->metadata['licenseVersion'])
       ? $node->metadata['licenseVersion']
       : null;
+    $showCopyrightWarning = false;
+
+    // "Undisclosed" and "Copyright" licenses are not allowed on the content hub
+    if ($license === 'U') {
+      $license = null;
+    }
+
+    if ($license === 'C') {
+      $license = null;
+      $showCopyrightWarning = true;
+    }
+
     $hubcontent = [
       'license' => $license,
       'licenseVersion' => $licenseVersion,
+      'showCopyrightWarning' => $showCopyrightWarning,
     ];
   }
 
