@@ -186,7 +186,7 @@ function h5p_admin_settings($form, &$form_state) {
         '#type'   => 'item',
         '#title'  => t('H5P Hub Account Settings'),
         '#markup' => t('Register an account on the H5P Hub <a href="@url">here</a>.',
-          array('@url' => '/admin/config/system/h5p/register')),
+          array('@url' => url('/admin/config/system/h5p/register'))),
       );
     }
     else {
@@ -226,7 +226,7 @@ function h5p_admin_settings($form, &$form_state) {
         $markUp .= '<div>'. $accountInfo->phone . '</div>';
       }
 
-      $markUp .= '<div style="margin-top: 1em">' . t('Change account settings <a href="@url">here</a>', array('@url' => '/admin/config/system/h5p/register',)) . '</div>
+      $markUp .= '<div style="margin-top: 1em">' . t('Change account settings <a href="@url">here</a>', array('@url' => url('/admin/config/system/h5p/register'),)) . '</div>
             </div>
           </div>';
 
