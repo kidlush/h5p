@@ -178,6 +178,70 @@ function h5p_admin_settings($form, &$form_state) {
     ),
   );
 
+  try {
+    $accountInfo = $core->hubAccountInfo();
+
+    if (!$accountInfo) {
+      $form['h5p_register_hub_account'] = array(
+        '#type'   => 'item',
+        '#title'  => t('H5P Hub Account Settings'),
+        '#markup' => t('Register an account on the H5P Hub <a href="@url">here</a>.',
+          array('@url' => url('/admin/config/system/h5p/register'))),
+      );
+    }
+    else {
+      $markUp = '<div>
+                <img src="' . $accountInfo->logo . '" style="max-width: 5em; display: inline-block; vertical-align: top" />
+                <div style="display: inline-block">';
+      if (!empty($accountInfo->name)) {
+        $markUp .= '<div>' . $accountInfo->name . '</div>';
+      }
+      if (!empty($accountInfo->contactPerson)) {
+        $markUp .= '<div>'. $accountInfo->contactPerson . '</div>';
+      }
+      if (!empty($accountInfo->email)) {
+        $markUp .= '<div>'. $accountInfo->email . '</div>';
+      }
+
+      $hasAddress = !empty($accountInfo->address);
+      if ($hasAddress || (!empty($accountInfo->zip) && !empty($accountInfo->city))) {
+        $markUp .= '<div>';
+        if ($hasAddress) {
+          $markUp .= $accountInfo->address;
+        }
+        if (!empty($accountInfo->zip) && !empty($accountInfo->city)) {
+          if ($hasAddress) {
+            $markUp .= ' ';
+          }
+          $markUp .= $accountInfo->zip . ' ' . $accountInfo->city;
+        }
+        $markUp .= '</div>';
+      }
+
+      if (!empty($accountInfo->country)) {
+        $markUp .= '<div>'. $accountInfo->country . '</div>';
+      }
+
+      if (!empty($accountInfo->phone)) {
+        $markUp .= '<div>'. $accountInfo->phone . '</div>';
+      }
+
+      $markUp .= '<div style="margin-top: 1em">' . t('Change account settings <a href="@url">here</a>', array('@url' => url('/admin/config/system/h5p/register'),)) . '</div>
+            </div>
+          </div>';
+
+      $form['h5p_register_hub_account'] = array(
+        '#type' => 'item',
+        '#title' => t('H5P Hub Account Settings'),
+        '#markup' => $markUp,
+      );
+    }
+  }
+  catch (Exception $e) {
+    // Not showing account form before secret has been fixed
+  }
+
+
   // Set h5p settings class on form container
   $form['#attributes'] = array('class' => array('h5p-settings-container'));
 
@@ -770,7 +834,8 @@ function h5p_content_upgrade_progress($library_id) {
                 h.json_content AS params,
                 n.title,
                 h.authors, h.source, h.license, h.license_version, h.license_extras,
-                h.year_from, h.year_to, h.changes, h.author_comments, h.default_language
+                h.year_from, h.year_to, h.changes, h.author_comments, h.default_language,
+                h.a11y_title
            FROM {h5p_nodes} h
            JOIN {node} n ON n.nid = h.nid
           WHERE h.main_library_id = :id
@@ -848,4 +913,81 @@ function h5p_restrict_library_callback($library_id) {
       )
     )),
   ));
+}
+
+/**
+ * Register account with site uuid on the content hub
+ */
+function h5p_register_account() {
+  if (!H5PCore::validToken('content_hub_registration', filter_input(INPUT_POST, '_token'))) {
+    H5PCore::ajaxError(t('Invalid security token.'));
+    return;
+  }
+
+  $logo = isset($_FILES['logo']) ? $_FILES['logo'] : NULL;
+
+  $formData = [
+    'name'           => filter_input(INPUT_POST, 'name'),
+    'email'          => filter_input(INPUT_POST, 'email'),
+    'description'    => filter_input(INPUT_POST, 'description'),
+    'contact_person' => filter_input(INPUT_POST, 'contact_person'),
+    'phone'          => filter_input(INPUT_POST, 'phone'),
+    'address'        => filter_input(INPUT_POST, 'address'),
+    'city'           => filter_input(INPUT_POST, 'city'),
+    'zip'            => filter_input(INPUT_POST, 'zip'),
+    'country'        => filter_input(INPUT_POST, 'country'),
+    'remove_logo'    => filter_input(INPUT_POST, 'remove_logo'),
+  ];
+
+  $core = _h5p_get_instance('core');
+  $result = $core->hubRegisterAccount($formData, $logo);
+
+  if ($result['success'] === false) {
+    $core->h5pF->setErrorMessage($result['message']);
+    drupal_add_http_header('status', $result['status_code']);
+    H5PCore::ajaxError($result['message'], $result['error_code'], $result['status_code']);
+    return;
+  }
+
+  $core->h5pF->setInfoMessage($result['message']);
+  drupal_add_http_header('status', 200);
+  H5PCore::ajaxSuccess($result['message']);
+}
+
+/**
+ * Hub registration page
+ *
+ * @return string html
+ */
+function h5p_hub_registration() {
+  $core = _h5p_get_instance('core');
+  try {
+    $accountInfo = $core->hubAccountInfo();
+  }
+  catch (Exception $e) {
+    // Go back to H5P configuration, secret has to be removed manually
+    drupal_goto('admin/config/system/h5p');
+  }
+
+  $settings = array(
+    'H5PContentHubRegistration' => array(
+      'registrationURL' => url('admin/config/system/h5p/register-account'),
+      'accountSettingsUrl' => '',
+      'token' => H5PCore::createToken('content_hub_registration'),
+      'l10n' => $core->getLocalization(),
+      'licenseAgreementTitle' => 'End User License Agreement (EULA)',
+      'licenseAgreementDescription' => 'Please read the following agreement before proceeding with the ',
+      'licenseAgreementMainText' => 'TODO',
+      'accountInfo' => $accountInfo,
+    ),
+  );
+
+  $path = drupal_get_path('module', 'h5p');
+  drupal_add_js($settings, 'setting');
+  drupal_add_css("$path/library/styles/h5p.css");
+  drupal_add_js("$path/library/js/h5p-hub-registration.js");
+  drupal_add_css("$path/library/styles/h5p-hub-registration.css");
+  drupal_add_js("$path/scripts/h5p-hub-registration.js");
+
+  return '<div id="h5p-hub-registration"/>';
 }

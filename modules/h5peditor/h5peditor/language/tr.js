@@ -49,12 +49,12 @@ H5PEditor.language.core = {
   selectFiletoUpload: 'Yüklenecek dosyayı seçin',
   or: 'veya',
   enterAudioUrl: 'Ses kaynağının URLsini girin',
-  enterVideoUrl: 'Video kaynağının URLsini ya da YouTube linkini girin',
+  enterVideoUrl: 'Enter video URL',
   enterAudioTitle: 'Linki ya da diğer ses kaynağının URLsini yapıştırın',
   enterVideoTitle: 'Youtube linkini ya da diğer video kaynağının URLsini yapıştırın',
   uploadAudioTitle: 'Ses dosyası yükle',
   uploadVideoTitle: 'Video dosyası yükle',
-  addVideoDescription: 'H5P mp4, webm veya ogv formatına sahip tüm dışsal video kaynaklarını destekler, Vimeo Pro yu tutar ve YouTube linklerini destekler.',
+  addVideoDescription: 'H5P supports all external video sources formatted as mp4, webm or ogv, like Vimeo Pro, and has support for YouTube and Panopto links.',
   insert: 'Ekle',
   cancel: 'Vazgeç',
   height: 'yükseklik',
@@ -216,5 +216,5 @@ H5PEditor.language.core = {
   exitFullscreenButtonLabel: 'Tam ekrandan çık',
   a11yTitleShowLabel: 'Show label for AT',
   a11yTitleHideLabel: 'Hide label for AT',
-  reuseSuccess: ':title was successfully reused!',
+  reuseSuccess: ':title was successfully imported from the H5P Hub.'
 };
