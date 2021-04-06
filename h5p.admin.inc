@@ -194,36 +194,36 @@ function h5p_admin_settings($form, &$form_state) {
                 <img src="' . $accountInfo->logo . '" style="max-width: 5em; display: inline-block; vertical-align: top" />
                 <div style="display: inline-block">';
       if (!empty($accountInfo->name)) {
-        $markUp .= '<div>' . $accountInfo->name . '</div>';
+        $markUp .= '<div>' . check_plain($accountInfo->name) . '</div>';
       }
       if (!empty($accountInfo->contactPerson)) {
-        $markUp .= '<div>'. $accountInfo->contactPerson . '</div>';
+        $markUp .= '<div>'. check_plain($accountInfo->contactPerson) . '</div>';
       }
       if (!empty($accountInfo->email)) {
-        $markUp .= '<div>'. $accountInfo->email . '</div>';
+        $markUp .= '<div>'. check_plain($accountInfo->email) . '</div>';
       }
 
       $hasAddress = !empty($accountInfo->address);
       if ($hasAddress || (!empty($accountInfo->zip) && !empty($accountInfo->city))) {
         $markUp .= '<div>';
         if ($hasAddress) {
-          $markUp .= $accountInfo->address;
+          $markUp .= check_plain($accountInfo->address);
         }
         if (!empty($accountInfo->zip) && !empty($accountInfo->city)) {
           if ($hasAddress) {
             $markUp .= ' ';
           }
-          $markUp .= $accountInfo->zip . ' ' . $accountInfo->city;
+          $markUp .= check_plain($accountInfo->zip) . ' ' . check_plain($accountInfo->city);
         }
         $markUp .= '</div>';
       }
 
       if (!empty($accountInfo->country)) {
-        $markUp .= '<div>'. $accountInfo->country . '</div>';
+        $markUp .= '<div>'. check_plain($accountInfo->country) . '</div>';
       }
 
       if (!empty($accountInfo->phone)) {
-        $markUp .= '<div>'. $accountInfo->phone . '</div>';
+        $markUp .= '<div>'. check_plain($accountInfo->phone) . '</div>';
       }
 
       $markUp .= '<div style="margin-top: 1em">' . t('Change account settings <a href="@url">here</a>', array('@url' => url('/admin/config/system/h5p/register'),)) . '</div>
