@@ -190,9 +190,8 @@ function h5p_admin_settings($form, &$form_state) {
       );
     }
     else {
-      $markUp = '<div>
-                <img src="' . $accountInfo->logo . '" style="max-width: 5em; display: inline-block; vertical-align: top" />
-                <div style="display: inline-block">';
+      $markUp = '';
+
       if (!empty($accountInfo->name)) {
         $markUp .= '<div>' . check_plain($accountInfo->name) . '</div>';
       }
@@ -204,14 +203,16 @@ function h5p_admin_settings($form, &$form_state) {
       }
 
       $hasAddress = !empty($accountInfo->address);
-      if ($hasAddress || (!empty($accountInfo->zip) && !empty($accountInfo->city))) {
+      $hasZipAndCity = !empty($accountInfo->zip) && !empty($accountInfo->city);
+
+      if ($hasAddress || $hasZipAndCity) {
         $markUp .= '<div>';
         if ($hasAddress) {
           $markUp .= check_plain($accountInfo->address);
         }
-        if (!empty($accountInfo->zip) && !empty($accountInfo->city)) {
+        if ($hasZipAndCity) {
           if ($hasAddress) {
-            $markUp .= ' ';
+            $markUp .= ', ';
           }
           $markUp .= check_plain($accountInfo->zip) . ' ' . check_plain($accountInfo->city);
         }
@@ -226,14 +227,18 @@ function h5p_admin_settings($form, &$form_state) {
         $markUp .= '<div>'. check_plain($accountInfo->phone) . '</div>';
       }
 
-      $markUp .= '<div style="margin-top: 1em">' . t('Change account settings <a href="@url">here</a>', array('@url' => url('/admin/config/system/h5p/register'),)) . '</div>
-            </div>
-          </div>';
-
       $form['h5p_register_hub_account'] = array(
         '#type' => 'item',
         '#title' => t('H5P Hub Account Settings'),
-        '#markup' => $markUp,
+        '#markup' => '<div>
+          <img src="' . $accountInfo->logo . '" style="max-width: 5em; display: inline-block; vertical-align: top" />
+          <div style="display: inline-block">' .
+            $markUp .
+            '<div style="margin-top: 1em">' . 
+              t('Change account settings <a href="@url">here</a>', array('@url' => url('/admin/config/system/h5p/register'))) . 
+            '</div>
+          </div>
+        </div>'
       );
     }
   }
