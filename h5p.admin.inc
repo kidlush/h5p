@@ -134,7 +134,7 @@ function h5p_admin_settings($form, &$form_state) {
     '#type' => 'textfield',
     '#title' => t('Save content state frequency'),
     '#default_value' => variable_get('h5p_save_content_frequency', 30),
-    '#description' => t("In seconds, how often do you wish the user to auto save their progress. Increase this number if you're having issues with many ajax request."),
+    '#description' => t("In seconds, how often do you wish the user's content state to be saved. Increase this number if you're having issues with too many ajax requests."),
   );
 
   $form['h5p_enable_lrs_content_types'] = array(
