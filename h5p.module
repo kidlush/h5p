@@ -359,8 +359,6 @@ function h5p_form(&$node, $form_state) {
   // We need to use that to get metadata and other H5P-specific data
   $source_node = isset($node->translation_source) ? $node->translation_source : $node;
 
-  $type = node_type_get_type($node);
-
   $form['#validate'][] = 'h5p_form_validate';
 
   $form['title'] = array(
@@ -1617,8 +1615,6 @@ function h5p_embed($nid = NULL) {
 
   $cache_buster = '?' . variable_get('css_js_query_string', '');
 
-  // Get core settings
-  $settings = h5p_get_core_settings();
   // TODO: The non-content specific settings could be apart of a combined
   // h5p-core.js file to avoid sending the same data multiple times.
 
@@ -1656,6 +1652,7 @@ function h5p_embed($nid = NULL) {
   $scripts = array_merge($scripts, $core->getAssetsUrls($files['scripts']));
   $styles = array_merge($styles, $core->getAssetsUrls($files['styles']));
 
+  // Note: $lang is used by library/embed.php
   $lang = isset($node->metadata['defaultLanguage'])
     ? $node->metadata['defaultLanguage']
     : $language->language;
