@@ -140,6 +140,10 @@ abstract class H5PWidgetBase extends WidgetBase {
    */
   private static function doNewRevision(FormStateInterface $form_state) {
     $form_object = $form_state->getFormObject();
+    if (!($form_object instanceof \Drupal\Core\Entity\EntityFormInterface)) {
+      // Not an entity form, nothing to alter.
+      return FALSE;
+    }
     $entity = $form_object->getEntity();
 
     // Determine if this is a new revision
