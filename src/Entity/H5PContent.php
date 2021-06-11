@@ -129,6 +129,12 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
       ->setSetting('max_length', '32')
       ->setDefaultValue(NULL);
 
+    $fields['a11y_title'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Assistive technology title'))
+      ->setDescription(t('Content title for assistive technologies'))
+      ->setSetting('max_length', '255')
+      ->setDefaultValue(NULL);
+
     return $fields;
   }
 
@@ -271,6 +277,7 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
       'authorComments' => $this->get('author_comments')->value,
       'defaultLanguage' => $this->get('default_language')->value,
       'changes' => json_decode($this->get('changes')->value),
+      'a11yTitle' => $this->get('a11y_title')->value,
     ];
     foreach ($metadata as $key => $data) {
       if (is_null($data)) {
@@ -329,13 +336,20 @@ class H5PContent extends ContentEntityBase implements ContentEntityInterface {
     $h5p_module_path = drupal_get_path('module', 'h5p');
     $embed_url = Url::fromUri('internal:/h5p/' . $this->id() . '/embed', ['absolute' => TRUE])->toString(TRUE)->getGeneratedUrl();
     $resizer_url = Url::fromUri('internal:/' . $h5p_module_path . '/vendor/h5p/h5p-core/js/h5p-resizer.js', ['absolute' => TRUE, 'language' => FALSE])->toString(TRUE)->getGeneratedUrl();
+    $metadata = $this->getMetadata();
+    $title = isset($metadata['a11yTitle'])
+      ? $metadata['a11yTitle']
+      : (isset($metadata['title'])
+        ? $metadata['title']
+        : ''
+      );
 
     return array(
       'library' => $this->getLibraryString(),
       'jsonContent' => $filtered_parameters,
       'fullScreen' => $this->library->fullscreen,
       'exportUrl' => $this->getExportURL(),
-      'embedCode' => '<iframe src="' . $embed_url . '" width=":w" height=":h" frameborder="0" allowfullscreen="allowfullscreen"></iframe>',
+      'embedCode' => '<iframe src="' . $embed_url . '" width=":w" height=":h" frameborder="0" allowfullscreen="allowfullscreen" title="' . $title . '"></iframe>',
       'resizeCode' => '<script src="' . $resizer_url . '" charset="UTF-8"></script>',
       'url' => $embed_url,
       'metadata' => $this->getMetadata(),

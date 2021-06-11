@@ -75,7 +75,10 @@ class H5PEmbed extends ControllerBase {
     $styles = array_merge($aggregatedAssets['styles'][0], $aggregatedAssets['styles'][1]);
 
     // Get current language
-    $lang = \Drupal::languageManager()->getCurrentLanguage()->getId();
+    $metadata = $h5p_content->getMetadata();
+    $lang = isset($metadata['defaultLanguage'])
+      ? $metadata['defaultLanguage']
+      : \Drupal::languageManager()->getCurrentLanguage()->getId();
 
     $content = [
       'id' => $id,

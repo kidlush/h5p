@@ -973,3 +973,17 @@ function h5p_update_8004() {
   \Drupal::entityDefinitionUpdateManager()
     ->installFieldStorageDefinition('default_language', 'h5p_content', 'h5p_content', $storage_definition);
 }
+
+/**
+ * Add field for a11y title
+ */
+function h5p_update_8005() {
+  $storage_definition = BaseFieldDefinition::create('string')
+    ->setLabel(t('Assistive technology title'))
+    ->setDescription(t('Content title for assistive technologies'))
+    ->setSetting('max_length', '255')
+    ->setDefaultValue(NULL);
+
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition('a11y_title', 'h5p_content', 'h5p_content', $storage_definition);
+}
