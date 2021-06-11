@@ -22,7 +22,7 @@
     button.parentNode.appendChild(form);
 
     button.href = '#' + button.href.match(/([^\/])+$/i)[0];
-    button.addEventListener('click', function (e)  {
+    button.addEventListener('click', function (e) {
       form.submit();
       e.preventDefault();
     });
@@ -30,13 +30,15 @@
 
   Drupal.behaviors.h5pContentHub = {
     attach: function (context, settings) {
-      const buttons = context.getElementsByClassName('h5p-content-hub-button');
-      for (let i = 0; i < buttons.length; i++) {
-        if (buttons[i].classList.contains('processed')) {
-          continue; // Skip
+      if (typeof context.getElementsByClassName === "function") {
+        const buttons = context.getElementsByClassName('h5p-content-hub-button');
+        for (let i = 0; i < buttons.length; i++) {
+          if (buttons[i].classList.contains('processed')) {
+            continue; // Skip
+          }
+          buttons[i].classList.add('processed');
+          addCSRFToken(buttons[i], settings.h5pContentHub.token);
         }
-        buttons[i].classList.add('processed');
-        addCSRFToken(buttons[i], settings.h5pContentHub.token);
       }
     }
   };
