@@ -52,6 +52,18 @@ class H5PEmbed extends ControllerBase {
     $preloaded_dependencies = $core->loadContentDependencies($id, 'preloaded');
     $files = $core->getDependenciesFiles($preloaded_dependencies, H5PDrupal::getRelativeH5PPath());
 
+    // Invoke any alter hooks
+    $library_list = [];
+    foreach ($preloaded_dependencies as $dependency) {
+      $library_list[$dependency['machineName']] = [
+        'majorVersion' => $dependency['majorVersion'],
+        'minorVersion' => $dependency['minorVersion'],
+      ];
+    }
+    $mode = 'external';
+    \Drupal::moduleHandler()->alter('h5p_scripts', $files['scripts'], $library_list, $mode);
+    \Drupal::moduleHandler()->alter('h5p_styles', $files['styles'], $library_list, $mode);
+
     // Load public files
     $jsFilePaths = array_map(function($asset){ return $asset->path; }, $files['scripts']);
     $cssFilePaths = array_map(function($asset){ return $asset->path; }, $files['styles']);
