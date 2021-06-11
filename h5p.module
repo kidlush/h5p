@@ -5,7 +5,9 @@
  */
 
 // Prepare autoloading of dependencies
-require __DIR__ . '/vendor/autoload.php';
+if (!class_exists('H5PCore')) {
+  require __DIR__ . '/vendor/autoload.php';
+}
 
 use Drupal\h5p\H5PDrupal\H5PDrupal;
 
