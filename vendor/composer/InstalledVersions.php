@@ -32,7 +32,7 @@ private static $installed = array (
     'aliases' => 
     array (
     ),
-    'reference' => 'ef27a0329584e706184d7d6fdde323a24222baf7',
+    'reference' => '61eb9eda5fdab967fe94d6f39c7d9b98c76642fd',
     'name' => 'drupal/h5p',
   ),
   'versions' => 
@@ -44,7 +44,7 @@ private static $installed = array (
       'aliases' => 
       array (
       ),
-      'reference' => 'ef27a0329584e706184d7d6fdde323a24222baf7',
+      'reference' => '61eb9eda5fdab967fe94d6f39c7d9b98c76642fd',
     ),
     'h5p/h5p-core' => 
     array (
@@ -57,12 +57,12 @@ private static $installed = array (
     ),
     'h5p/h5p-editor' => 
     array (
-      'pretty_version' => '1.24.1',
-      'version' => '1.24.1.0',
+      'pretty_version' => '1.24.3',
+      'version' => '1.24.3.0',
       'aliases' => 
       array (
       ),
-      'reference' => '9361892a22ac6ab91e010e0b8a0a0e836f45a16a',
+      'reference' => '338ae5bad572fe3d7c0a355d8ba8e24f360bb698',
     ),
   ),
 );
