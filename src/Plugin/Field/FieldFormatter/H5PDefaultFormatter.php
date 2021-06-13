@@ -90,13 +90,11 @@ class H5PDefaultFormatter extends FormatterBase {
 
         // set html
         $metadata = $h5p_content->getMetadata();
-        $title = isset($metadata['a11yTitle'])
-          ? $metadata['a11yTitle']
-          : (isset($metadata['title'])
-            ? $metadata['title']
-            : ''
-          );
-        $html = '<div class="h5p-iframe-wrapper"><iframe id="h5p-iframe-' . $h5p_content->id() . '" class="h5p-iframe" data-content-id="' . $h5p_content->id() . '" style="height:1px" frameBorder="0" scrolling="no" title="' . $title . '"></iframe></div>';
+        $language = isset($metadata['defaultLanguage'])
+          ? $metadata['defaultLanguage']
+          : 'en';
+        
+        $html = '<div class="h5p-iframe-wrapper"><iframe id="h5p-iframe-' . $h5p_content->id() . '" class="h5p-iframe" data-content-id="' . $h5p_content->id() . '" style="height:1px" frameBorder="0" scrolling="no" lang="' . $language . '"></iframe></div>';
 
         // Load public files
         $jsFilePaths = array_map(function($asset){ return $asset->path; }, $files['scripts']);

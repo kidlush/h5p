@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/h5p/h5p-php-library.git",
-                "reference": "db3da7a1441ae6c9ffacbb8110f41758c85beaa0"
+                "reference": "eb52ec25a09e33e9b42f5ee82fe3b013c03ec856"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/h5p/h5p-php-library/zipball/db3da7a1441ae6c9ffacbb8110f41758c85beaa0",
-                "reference": "db3da7a1441ae6c9ffacbb8110f41758c85beaa0",
+                "url": "https://api.github.com/repos/h5p/h5p-php-library/zipball/eb52ec25a09e33e9b42f5ee82fe3b013c03ec856",
+                "reference": "eb52ec25a09e33e9b42f5ee82fe3b013c03ec856",
                 "shasum": ""
             },
             "require": {
@@ -61,11 +61,7 @@
                 "interactive",
                 "quiz"
             ],
-            "support": {
-                "issues": "https://github.com/h5p/h5p-php-library/issues",
-                "source": "https://github.com/h5p/h5p-php-library/tree/wp-1.15.2"
-            },
-            "time": "2021-04-22T09:30:45+00:00"
+            "time": "2020-08-28T09:17:19+00:00"
         },
         {
             "name": "h5p/h5p-editor",
