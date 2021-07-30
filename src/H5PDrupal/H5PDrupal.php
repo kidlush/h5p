@@ -277,7 +277,7 @@ class H5PDrupal implements \H5PFrameworkInterface {
    */
   public function getPlatformInfo() {
 
-    $h5p_info = \Drupal::service('extension.list.module')->getExtensionInfo('module', 'h5p');
+    $h5p_info = \Drupal::service('extension.list.module')->getExtensionInfo('h5p');
 
     return [
       'name' => 'drupal',
