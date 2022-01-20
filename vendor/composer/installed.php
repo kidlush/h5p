@@ -1,24 +1,24 @@
 <?php return array (
   'root' => 
   array (
-    'pretty_version' => 'dev-8.x-1.x',
-    'version' => 'dev-8.x-1.x',
+    'pretty_version' => '2.0.0.x-dev',
+    'version' => '2.0.0.9999999-dev',
     'aliases' => 
     array (
     ),
-    'reference' => '61eb9eda5fdab967fe94d6f39c7d9b98c76642fd',
+    'reference' => 'b9b9d02c6cf42d7e7f4b6723fefc78f96630f06e',
     'name' => 'drupal/h5p',
   ),
   'versions' => 
   array (
     'drupal/h5p' => 
     array (
-      'pretty_version' => 'dev-8.x-1.x',
-      'version' => 'dev-8.x-1.x',
+      'pretty_version' => '2.0.0.x-dev',
+      'version' => '2.0.0.9999999-dev',
       'aliases' => 
       array (
       ),
-      'reference' => '61eb9eda5fdab967fe94d6f39c7d9b98c76642fd',
+      'reference' => 'b9b9d02c6cf42d7e7f4b6723fefc78f96630f06e',
     ),
     'h5p/h5p-core' => 
     array (
@@ -31,12 +31,12 @@
     ),
     'h5p/h5p-editor' => 
     array (
-      'pretty_version' => '1.24.3',
-      'version' => '1.24.3.0',
+      'pretty_version' => '1.24.4',
+      'version' => '1.24.4.0',
       'aliases' => 
       array (
       ),
-      'reference' => '338ae5bad572fe3d7c0a355d8ba8e24f360bb698',
+      'reference' => 'dd70892f9e28c99f13bee2881601329d5c6c4a8e',
     ),
   ),
 );
